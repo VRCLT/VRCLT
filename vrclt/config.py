@@ -2,6 +2,7 @@
 import logging
 import math
 import os
+import re
 import sys
 import copy
 import tempfile
@@ -20,6 +21,8 @@ CLOSE_ACTIONS = ("tray", "exit")
 PROVIDERS = ("gemini", "qwen", "openai", "soniox")
 QWEN_ENDPOINTS = ("intl", "beijing")
 QWEN_VOICE_CLONE_MODES = ("once", "always", "off")
+QWEN_DEFAULT_MODEL = "qwen3.8-livetranslate-flash-realtime"
+_QWEN_VERSION_RE = re.compile(r"qwen(\d+)\.(\d+)-livetranslate", re.IGNORECASE)
 # source-transcript ASR inside a gpt-realtime-translate session; "" = no
 # original-language subtitles (and no transcription charge)
 OPENAI_TRANSCRIBE_MODELS = ("gpt-realtime-whisper", "gpt-live-transcribe", "")
@@ -81,7 +84,8 @@ DEFAULTS = {
     "model": "gemini-3.5-live-translate-preview",
     "qwen": {                           # Alibaba DashScope realtime translation
         "api_key": "",                  # empty -> use DASHSCOPE_API_KEY env var
-        "model": "qwen3.5-livetranslate-flash-realtime",
+        "model": QWEN_DEFAULT_MODEL,     # qwen3.8: auto source language + speaker IDs;
+                                        # qwen3.5-livetranslate-flash-realtime still works
         "endpoint": "intl",             # intl (Singapore) | beijing; keys are region-bound
         "workspace_id": "",             # Model Studio workspace ID -> uses the
                                         # {id}.<region>.maas.aliyuncs.com domain.
@@ -173,9 +177,9 @@ DEFAULTS = {
     "outbound": {                       # pipeline A: my voice -> others
         "enabled": True,
         "target_language": "ja",        # BCP-47
-        "source_language": "",          # my spoken language; Qwen cannot auto-detect
+        "source_language": "",          # my spoken language; Qwen 3.5 cannot auto-detect
                                         # ("" -> server default en); Soniox uses a hint;
-                                        # Gemini and OpenAI auto-detect
+                                        # Gemini, OpenAI and Qwen 3.8 auto-detect
         "echo_target_language": False,
         "mic_device": "",               # substring; empty = default input device
         # translated voice -> loopback device -> target app mic
@@ -192,7 +196,7 @@ DEFAULTS = {
     "inbound": {                        # pipeline B: others' voices -> me (subtitles)
         "enabled": True,
         "target_language": "ko",
-        "source_language": "",          # source setting for Qwen / optional Soniox hint
+        "source_language": "",          # source setting for Qwen 3.5 / optional Soniox hint
         "languages": ["ko", "en", "ja", "zh-Hans", "zh-Hant"],  # wrist menu cycles subtitles through these
         "process": platform_support.process_name("VRChat"),
         # per-process capture needs Windows 11 (build 20348+). Where it is
@@ -526,6 +530,31 @@ def provider(cfg: dict) -> str:
 def qwen_api_key(cfg: dict) -> str:
     qw = cfg.get("qwen") or {}
     return (qw.get("api_key") or os.environ.get("DASHSCOPE_API_KEY", "")).strip()
+
+
+def qwen_model(cfg: dict) -> str:
+    qw = cfg.get("qwen") or {}
+    return str(qw.get("model") or "").strip() or QWEN_DEFAULT_MODEL
+
+
+def is_qwen38_model(model: str) -> bool:
+    """qwen3.8+ LiveTranslate protocol: nested audio session config, delta
+    events, automatic source-language detection and speaker IDs."""
+    match = _QWEN_VERSION_RE.search(str(model or ""))
+    return bool(match) and (int(match.group(1)), int(match.group(2))) >= (3, 8)
+
+
+def has_speaker_ids(cfg: dict) -> bool:
+    """Whether the selected engine labels transcripts with speaker IDs."""
+    prov = provider(cfg)
+    return prov == "soniox" or (prov == "qwen" and is_qwen38_model(qwen_model(cfg)))
+
+
+def uses_source_language(cfg: dict) -> bool:
+    """Whether the spoken-language pickers reach the engine: required by
+    Qwen 3.5, an optional hint for Soniox; the others auto-detect."""
+    prov = provider(cfg)
+    return prov == "soniox" or (prov == "qwen" and not is_qwen38_model(qwen_model(cfg)))
 
 
 def openai_api_key(cfg: dict) -> str:

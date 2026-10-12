@@ -67,14 +67,15 @@ STRINGS = {
     "label_in_src_lang": {"ko": "상대 발화 언어", "en": "Their spoken language",
                           "ja": "相手の発話言語", "zh": "对方语音语言"},
     "tip_src_lang": {
-        "ko": "Qwen은 발화 언어 지정이 필요합니다 (비우면 영어). Soniox에서는 선택 사항인 "
-              "언어 힌트이며, 비우면 자동 감지합니다. Gemini는 자동 감지합니다.",
-        "en": "Qwen requires a spoken language (empty = English). Soniox uses this as an "
-              "optional language hint; leave empty to auto-detect. Gemini auto-detects.",
-        "ja": "Qwenは発話言語の指定が必要です（空欄は英語）。Sonioxでは任意の言語ヒントで、"
-              "空欄なら自動検出します。Geminiは自動検出します。",
-        "zh": "Qwen 需要指定语音语言（留空为英语）。Soniox 将此用作可选语言提示，"
-              "留空时自动检测。Gemini 自动检测。"},
+        "ko": "Qwen 3.5는 발화 언어 지정이 필요합니다 (비우면 영어). Soniox에서는 선택 사항인 "
+              "언어 힌트이며, 비우면 자동 감지합니다. Gemini와 Qwen 3.8은 자동 감지합니다.",
+        "en": "Qwen 3.5 requires a spoken language (empty = English). Soniox uses this as an "
+              "optional language hint; leave empty to auto-detect. Gemini and Qwen 3.8 "
+              "auto-detect.",
+        "ja": "Qwen 3.5は発話言語の指定が必要です（空欄は英語）。Sonioxでは任意の言語ヒントで、"
+              "空欄なら自動検出します。GeminiとQwen 3.8は自動検出します。",
+        "zh": "Qwen 3.5 需要指定语音语言（留空为英语）。Soniox 将此用作可选语言提示，"
+              "留空时自动检测。Gemini 和 Qwen 3.8 自动检测。"},
     "ph_src_auto": {"ko": "언어 검색 (비우면 자동/영어)", "en": "Search language (empty = auto/en)",
                     "ja": "言語を検索 (空欄 = 自動/英語)", "zh": "搜索语言（留空 = 自动/英语）"},
     "dash_src_out": {"ko": "내 발화 언어", "en": "My spoken language",
@@ -828,13 +829,13 @@ STRINGS = {
     # ---- settings field tooltips (f.<path>.tip; optional — shown when present) ----
     "f.provider.tip": {
         "ko": "Gemini, Qwen, OpenAI, Soniox 중에서 선택합니다. 선택한 엔진의 API 키와 "
-              "모델 설정만 표시됩니다. Qwen은 발화 언어 지정이 필요합니다.",
+              "모델 설정만 표시됩니다. Qwen 3.5는 발화 언어 지정이 필요합니다.",
         "en": "Choose Gemini, Qwen, OpenAI, or Soniox. Only the selected engine's API "
-              "key and models are shown. Qwen requires a spoken language.",
+              "key and models are shown. Qwen 3.5 requires a spoken language.",
         "ja": "Gemini、Qwen、OpenAI、Sonioxから選択します。選択したエンジンのAPIキーと"
-              "モデル設定のみ表示します。Qwenは発話言語の指定が必要です。",
+              "モデル設定のみ表示します。Qwen 3.5は発話言語の指定が必要です。",
         "zh": "选择 Gemini、Qwen、OpenAI 或 Soniox。仅显示所选引擎的 API 密钥和模型设置。"
-              "Qwen 需要指定语音语言。"},
+              "Qwen 3.5 需要指定语音语言。"},
     "f.api_key.tip": {
         "ko": "Google AI Studio(aistudio.google.com/apikey)에서 발급. "
               "비워두면 GEMINI_API_KEY 환경변수를 사용합니다.",
@@ -908,6 +909,18 @@ STRINGS = {
         "ja": "near_field = ヘッドセット/口元マイク、far_field = 室内の離れたマイク。"
               "空欄でサーバー側ノイズ抑制を使用しません。",
         "zh": "near_field = 头戴/近讲麦克风；far_field = 房间麦克风。留空则不使用服务端降噪。"},
+    "f.qwen.model.tip": {
+        "ko": "qwen3.8-livetranslate-flash-realtime(기본)은 발화 언어를 자동 감지하고 "
+              "화자를 구분합니다. qwen3.5-livetranslate-flash-realtime은 발화 언어 지정이 "
+              "필요합니다.",
+        "en": "qwen3.8-livetranslate-flash-realtime (default) auto-detects the spoken "
+              "language and separates speakers. qwen3.5-livetranslate-flash-realtime "
+              "needs a spoken language.",
+        "ja": "qwen3.8-livetranslate-flash-realtime（既定）は発話言語を自動検出し、"
+              "話者を区別します。qwen3.5-livetranslate-flash-realtimeは発話言語の指定が"
+              "必要です。",
+        "zh": "qwen3.8-livetranslate-flash-realtime（默认）自动检测语音语言并区分说话人。"
+              "qwen3.5-livetranslate-flash-realtime 需要指定语音语言。"},
     "f.qwen.endpoint.tip": {
         "ko": "intl = 국제(싱가포르, Model Studio), beijing = 중국 본토(Bailian). "
               "API 키는 각 서버 전용입니다.",

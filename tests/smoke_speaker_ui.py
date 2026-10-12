@@ -82,6 +82,15 @@ def main():
     ctl.cfg["provider"] = "gemini"
     win._refresh()
     assert win._speaker_badge.isHidden()
+    # Qwen 3.8 labels speakers and detects the spoken language; 3.5 needs it set.
+    ctl.cfg["provider"] = "qwen"
+    win._refresh()
+    assert not win._speaker_badge.isHidden()
+    assert win._src_lang.isHidden() and win._in_src_lang.isHidden()
+    ctl.cfg["qwen"]["model"] = "qwen3.5-livetranslate-flash-realtime"
+    win._refresh()
+    assert win._speaker_badge.isHidden()
+    assert not win._src_lang.isHidden() and win._src_lang.isEnabled()
     win._quitting = True
     win.close()
     print("smoke_speaker_ui: OK")

@@ -8,7 +8,8 @@ model: gemini-3.5-live-translate-preview
 
 qwen:                        # Alibaba Cloud Model Studio (DashScope) realtime
   api_key: ""                # empty -> DASHSCOPE_API_KEY env var; keys are region-bound!
-  model: qwen3.5-livetranslate-flash-realtime
+  model: qwen3.8-livetranslate-flash-realtime  # auto source language + speaker IDs;
+                             # qwen3.5-livetranslate-flash-realtime still works
   endpoint: intl             # intl (Singapore) | beijing (mainland China)
   workspace_id: ""           # Model Studio workspace ID ({id}.<region>.maas domain).
                              # REQUIRED for intl; beijing may leave it empty
@@ -92,9 +93,9 @@ hotkeys:                       # Windows global hotkeys for PC/desktop controls
 outbound:                 # my voice -> others (VRChat hears the translation)
   enabled: true
   target_language: ja     # BCP-47: ja, en, ko, zh-Hans, ...
-  source_language: ""     # my spoken language; REQUIRED for Qwen (no auto-detect,
+  source_language: ""     # my spoken language; REQUIRED for Qwen 3.5 (no auto-detect,
                           # "" is treated as English). Optional hint for Soniox;
-                          # Gemini and OpenAI auto-detect.
+                          # Gemini, OpenAI and Qwen 3.8 auto-detect.
   echo_target_language: false
   mic_device: ""          # substring of device name; "" = default input
   tts_device: CABLE Input # VB-Cable playback side (VRChat mic = CABLE Output)
@@ -109,7 +110,7 @@ outbound:                 # my voice -> others (VRChat hears the translation)
 inbound:                  # others' voices -> me (subtitles)
   enabled: true
   target_language: ko
-  source_language: ""     # Qwen source language / optional Soniox recognition hint
+  source_language: ""     # Qwen 3.5 source language / optional Soniox recognition hint
   languages: [ko, en, ja] # wrist menu cycles subtitle language through these
   process: VRChat.exe
   allow_system_audio: false  # per-process capture needs Windows 11 (build 20348+);

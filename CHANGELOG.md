@@ -7,6 +7,41 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 Release artifacts are attached to [GitHub Releases](https://github.com/shgeum/VRCLT/releases)
 as `vrclt-v<version>-windows-x64.exe` plus a `.sha256` checksum.
 
+## [0.20.0] - 2026-10-12
+
+### Added
+
+- Qwen3.8 LiveTranslate (`qwen3.8-livetranslate-flash-realtime`). Sessions use
+  the 3.8 protocol: `output_modalities`, `audio.input.turn_detection` set to
+  `speaker_detection`, and incremental `.delta` transcript events per item. The
+  spoken language is detected automatically.
+- Qwen 3.8 speaker separation. Speaker IDs are linked to each utterance's
+  original and translated text and shown with the same speaker labels as Soniox
+  in the PC preview, desktop overlay, and VR overlay. The Dashboard shows the
+  speaker-separation badge for Qwen 3.8.
+- A Settings tooltip for `qwen.model` describing the Qwen 3.8 and 3.5
+  differences, plus local mock-WebSocket regression coverage for both models.
+
+### Changed
+
+- New configurations default `qwen.model` to
+  `qwen3.8-livetranslate-flash-realtime`. Saved configurations keep their
+  current model; `qwen3.5-livetranslate-flash-realtime` remains supported with
+  unchanged behavior.
+- With Qwen 3.8, the My/Their spoken-language pickers are hidden on the PC
+  Dashboard and disabled on the SteamVR Dashboard because the model detects the
+  language itself. Qwen 3.5 still requires them.
+- With Qwen 3.8, a subtitle line is not ended at the end of a translation
+  response while the next utterance is already being transcribed, so that
+  utterance's original text stays with its translation.
+- Soniox speech recognition and translated voice send the API key in the
+  WebSocket upgrade `Authorization: Bearer` header instead of the start message.
+  Soniox refuses start-message keys after 2027-01-15, so earlier vrclt versions
+  stop connecting to Soniox from that date.
+- README files in all four languages, Settings tooltips, and
+  `config.example.yaml` describe Qwen 3.8 as the default and limit the
+  spoken-language requirement to Qwen 3.5.
+
 ## [0.19.1] - 2026-09-09
 
 ### Changed

@@ -20,8 +20,15 @@ qwen3.5-livetranslate-flash-realtime):
 - Closing without a session.finish -> session.finished handshake can lose the
   final segment and leave the connection hanging, so the watchdog always
   finishes (with a timeout in case the server never answers).
-- Whether transcript events carry incremental deltas or cumulative text is
-  undocumented; _CumulativeTextAdapter handles both shapes.
+- qwen3.5: whether transcript events carry incremental deltas or cumulative
+  text is undocumented; _CumulativeTextAdapter handles both shapes.
+- qwen3.8-livetranslate-flash-realtime (and later) changes the protocol: the
+  session takes output_modalities and a nested audio.input.turn_detection
+  (speaker_detection, the default, which tags each utterance with a
+  speaker_id), transcription is always on with automatic source-language
+  detection, and text arrives as documented incremental ".delta" events keyed
+  by item_id. A translation item names its source item in previous_item_id,
+  which is how speaker IDs reach the translated text.
 
 Exposes the same surface as vrclt.gemini.session.LiveTranslateSession so the
 pipelines and app controller stay provider-agnostic.
@@ -34,6 +41,7 @@ import time
 
 import websockets
 
+from ..config import is_qwen38_model
 from ..languages import (QWEN_AUDIO_LANGUAGES, QWEN_TEXT_LANGUAGES,
                          canonical_language_code, qwen_language_code)
 from ..session_base import (AudioSource, FatalSessionError,
@@ -74,6 +82,11 @@ GAP_FILL_MAX_SEC = 2.5
 _INPUT_RATE = 16000  # 16 kHz mono int16, same as the AudioSource contract
 # raw server events logged at DEBUG on each connect, to verify event shapes
 _RAW_EVENT_LOG_COUNT = 30
+# qwen3.8+: per-session item maps, bounded in case an item never finishes
+_ITEM_HISTORY = 64
+# qwen3.8+: a source item with no transcript delta for this long no longer
+# holds back the end of the previous turn (its completed event was lost)
+SOURCE_IN_FLIGHT_SEC = 2.0
 
 
 class _ServerErrorEvent(Exception):
@@ -152,6 +165,39 @@ class _CumulativeTextAdapter:
         self._acc = ""
 
 
+def _remember(mapping: dict, key: str, value) -> None:
+    mapping[key] = value
+    while len(mapping) > _ITEM_HISTORY:
+        mapping.pop(next(iter(mapping)))
+
+
+class _ItemTexts:
+    """qwen3.8+ text per item_id. Deltas are documented as incremental and
+    pass through verbatim; the final done/completed text contributes only
+    what the deltas missed. Source and translation items of consecutive
+    utterances interleave, so one shared buffer would cross-match them."""
+
+    def __init__(self):
+        self._text: dict[str, str] = {}
+
+    def delta(self, item_id: str, delta) -> str:
+        if not isinstance(delta, str) or not delta:
+            return ""
+        _remember(self._text, item_id, self._text.get(item_id, "") + delta)
+        return delta
+
+    def done(self, item_id: str, text: str) -> str:
+        if not item_id:
+            return ""  # unattributable final; its deltas were already shown
+        seen = self._text.pop(item_id, "")
+        if not seen:
+            return text
+        return text[len(seen):] if text.startswith(seen) else ""
+
+    def clear(self) -> None:
+        self._text.clear()
+
+
 class QwenLiveTranslateSession:
     def __init__(self, *, api_key: str, model: str, source: AudioSource, name: str,
                  get_target_language, get_source_language=lambda: "",
@@ -163,9 +209,11 @@ class QwenLiveTranslateSession:
                  turn_end_silence_sec: float = 0.55,
                  glossary: str = "",
                  on_src=None, on_dst=None, on_audio=None, on_turn_complete=None,
-                 on_interrupted=None, on_session_state=None):
+                 on_interrupted=None, on_session_state=None,
+                 speaker_metadata: bool = False):
         self._api_key = api_key
         self._model = model
+        self._delta_protocol = is_qwen38_model(model)
         self._get_target = get_target_language
         self._get_source = get_source_language
         self._endpoint = endpoint if endpoint in ENDPOINTS else "intl"
@@ -196,6 +244,8 @@ class QwenLiveTranslateSession:
         self._on_turn_complete = on_turn_complete
         self._on_interrupted = on_interrupted  # never fired: no barge-in event
         self._on_session_state = on_session_state
+        # qwen3.8+ speaker IDs; the callbacks then take a trailing speaker_id
+        self._speaker_metadata = speaker_metadata
         self._phrases = _parse_glossary(glossary)
         self.connected = False
         # last-failure diagnostics for the status UIs (written on the session
@@ -209,7 +259,13 @@ class QwenLiveTranslateSession:
         self._finished = asyncio.Event()
         self._src_adapter = _CumulativeTextAdapter()
         self._dst_adapter = _CumulativeTextAdapter()
-        self._src_display_lang = ""   # configured source shown as detected lang
+        self._src_display_lang = ""   # configured (3.5) or detected (3.8) source
+        # qwen3.8+ per-item state, reset on every connect (IDs are session-local)
+        self._src_items = _ItemTexts()
+        self._dst_items = _ItemTexts()
+        self._speaker_of: dict[str, str] = {}   # source item -> speaker_id
+        self._source_of: dict[str, str] = {}    # translation item -> source item
+        self._src_open: dict[str, float] = {}   # source item -> last delta time
         self._raw_log_left = 0
         # diagnostics (logged every 15s by the watchdog while connected)
         self._st_sent = 0
@@ -227,14 +283,29 @@ class QwenLiveTranslateSession:
         self._restart = True
 
     def _session_config(self, target: str, src_lang: str, audio_out: bool) -> dict:
-        session = {
-            "modalities": ["text", "audio"] if audio_out else ["text"],
-            "input_audio_format": "pcm",
-            "translation": {"language": target},
-            "input_audio_transcription": {"model": ASR_MODEL},
-        }
+        modalities = ["text", "audio"] if audio_out else ["text"]
+        if self._delta_protocol:
+            # 16 kHz PCM in / 24 kHz PCM out are the defaults; transcription
+            # cannot be disabled and the source language is detected.
+            # speaker_detection (also the default) segments on silence like
+            # server VAD and tags each utterance with a speaker_id.
+            session = {
+                "output_modalities": modalities,
+                "audio": {"input": {"turn_detection": {"type": "speaker_detection"}}},
+                "translation": {"language": target},
+            }
+        else:
+            session = {
+                "modalities": modalities,
+                "input_audio_format": "pcm",
+                "translation": {"language": target},
+                "input_audio_transcription": {"model": ASR_MODEL},
+            }
+            if src_lang:
+                session["input_audio_transcription"]["language"] = src_lang
         if audio_out:
-            session["output_audio_format"] = "pcm"  # 24 kHz mono int16
+            if not self._delta_protocol:
+                session["output_audio_format"] = "pcm"  # 24 kHz mono int16
             if self._voice_clone in ("always", "once"):
                 # server clones the speaker's voice; "voice" MUST be the
                 # literal "default" in this mode
@@ -250,8 +321,6 @@ class QwenLiveTranslateSession:
             # else: omit "voice" entirely -> the model's stock default voice
         if self._phrases:
             session["translation"]["corpus"] = {"phrases": dict(self._phrases)}
-        if src_lang:
-            session["input_audio_transcription"]["language"] = src_lang
         return session
 
     async def run(self, stop: asyncio.Event) -> None:
@@ -298,8 +367,12 @@ class QwenLiveTranslateSession:
     async def _session_once(self, stop: asyncio.Event) -> bool:
         """One realtime session. Returns True if it ended cleanly."""
         target = qwen_language_code(self._get_target())
-        src_cfg = canonical_language_code(self._get_source())
-        src_lang = qwen_language_code(src_cfg)
+        if self._delta_protocol:
+            # detected per utterance; a stale picker value must not label it
+            src_cfg = src_lang = ""
+        else:
+            src_cfg = canonical_language_code(self._get_source())
+            src_lang = qwen_language_code(src_cfg)
         self._src_display_lang = src_cfg
         audio_out = bool(self._on_audio) and target in QWEN_AUDIO_LANGUAGES
         if self._on_audio and not audio_out:
@@ -308,14 +381,15 @@ class QwenLiveTranslateSession:
         if target not in QWEN_TEXT_LANGUAGES:
             log.warning("[%s] target %s is not a known Qwen language - sending anyway",
                         self.name, target)
-        if not src_lang:
+        if not src_lang and not self._delta_protocol:
             log.warning("[%s] no source language configured - Qwen cannot "
                         "auto-detect and will assume English", self.name)
         url = endpoint_url(self._endpoint, self._workspace_id, self._base_url) \
             + f"?model={self._model}"
         headers = {"Authorization": f"Bearer {self._api_key}"}
         log.info("[%s] connecting (model=%s target=%s source=%s endpoint=%s)",
-                 self.name, self._model, target, src_lang or "(server default)",
+                 self.name, self._model, target,
+                 src_lang or ("auto" if self._delta_protocol else "(server default)"),
                  self._endpoint)
         async with websockets.connect(url, additional_headers=headers) as ws:
             self._closing = False
@@ -323,6 +397,11 @@ class QwenLiveTranslateSession:
             self._finished = asyncio.Event()
             self._src_adapter.reset()
             self._dst_adapter.reset()
+            self._src_items.clear()
+            self._dst_items.clear()
+            self._speaker_of.clear()
+            self._source_of.clear()
+            self._src_open.clear()
             self._raw_log_left = _RAW_EVENT_LOG_COUNT
             await ws.send(json.dumps({
                 "type": "session.update",
@@ -381,6 +460,8 @@ class QwenLiveTranslateSession:
                 log.debug("[%s] non-JSON frame ignored", self.name)
                 continue
             etype = str(event.get("type") or "")
+            if self._delta_protocol and self._handle_item_event(etype, event):
+                continue
             if etype in ("session.created", "session.updated"):
                 self._ready.set()
             elif etype == "conversation.item.input_audio_transcription.text":
@@ -420,7 +501,7 @@ class QwenLiveTranslateSession:
                 self._dst_adapter.reset()
                 self._turn_text_at = 0.0
                 self._turn_audio_logged = False
-                if self._on_turn_complete:
+                if self._on_turn_complete and not self._source_in_flight():
                     self._on_turn_complete()
             elif etype == "session.finished":
                 self._finished.set()
@@ -440,17 +521,69 @@ class QwenLiveTranslateSession:
             else:
                 log.debug("[%s] unhandled event type %s", self.name, etype)
 
-    def _emit_src(self, fragment: str) -> None:
+    def _handle_item_event(self, etype: str, event: dict) -> bool:
+        """qwen3.8+ transcript events, attributed per item. True if handled."""
+        item_id = str(event.get("item_id") or "")
+        if etype == "input_audio_buffer.speech_started":
+            speaker = event.get("speaker_id")
+            if item_id and speaker is not None and speaker != "":
+                _remember(self._speaker_of, item_id, str(speaker))
+            return False  # not consumed: keep the generic debug logging
+        if etype == "conversation.item.created":
+            item = event.get("item") or {}
+            source_id = event.get("previous_item_id")
+            if item.get("role") == "assistant" and item.get("id") and source_id:
+                _remember(self._source_of, str(item["id"]), str(source_id))
+            return False
+        if etype == "conversation.item.input_audio_transcription.delta":
+            _remember(self._src_open, item_id, time.monotonic())
+            self._emit_src(self._src_items.delta(item_id, event.get("delta")),
+                           self._speaker_of.get(item_id))
+        elif etype == "conversation.item.input_audio_transcription.completed":
+            self._src_open.pop(item_id, None)
+            language = str(event.get("language") or "").strip()
+            if language:
+                self._src_display_lang = canonical_language_code(language) or language
+            self._emit_src(self._src_items.done(item_id, _event_text(event)),
+                           self._speaker_of.get(item_id))
+        elif etype in ("response.text.delta", "response.audio_transcript.delta"):
+            self._emit_dst(self._dst_items.delta(item_id, event.get("delta")),
+                           self._translation_speaker(item_id))
+        elif etype in ("response.text.done", "response.audio_transcript.done"):
+            self._emit_dst(self._dst_items.done(item_id, _event_text(event)),
+                           self._translation_speaker(item_id))
+        else:
+            return False
+        return True
+
+    def _translation_speaker(self, item_id: str):
+        return self._speaker_of.get(self._source_of.get(item_id, ""))
+
+    def _source_in_flight(self) -> bool:
+        """qwen3.8+: the next utterance is already being transcribed. Ending
+        the turn now would split its source text from its translation, so
+        the segmenter's speaker change, silence and length limits end it."""
+        cutoff = time.monotonic() - SOURCE_IN_FLIGHT_SEC
+        return any(at >= cutoff for at in self._src_open.values())
+
+    def _emit_src(self, fragment: str, speaker=None) -> None:
         if fragment and self._on_src:
             self._st_src += 1
-            self._on_src(fragment, self._src_display_lang or None)
+            lang = self._src_display_lang or None
+            if self._speaker_metadata:
+                self._on_src(fragment, lang, speaker)
+            else:
+                self._on_src(fragment, lang)
 
-    def _emit_dst(self, fragment: str) -> None:
+    def _emit_dst(self, fragment: str, speaker=None) -> None:
         if fragment and self._on_dst:
             self._st_dst += 1
             if not self._turn_text_at:
                 self._turn_text_at = time.time()
-            self._on_dst(fragment)
+            if self._speaker_metadata:
+                self._on_dst(fragment, speaker)
+            else:
+                self._on_dst(fragment)
 
     async def _append_audio(self, ws, pcm: bytes) -> None:
         await ws.send(json.dumps({

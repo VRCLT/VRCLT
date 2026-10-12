@@ -17,6 +17,12 @@ DEFAULT_VOICE = "Daniel"
 MAX_PENDING_CHARS = 10000
 
 
+def auth_headers(api_key: str) -> dict:
+    """Soniox realtime APIs authenticate the WebSocket upgrade, not the start
+    message (start-message keys are refused after 2027-01-15)."""
+    return {"Authorization": f"Bearer {api_key}"}
+
+
 class StreamingSpeech:
     def __init__(self, *, api_key, model, voice, language, on_audio,
                  can_play, check_error, wire_logger):
@@ -72,11 +78,11 @@ class StreamingSpeech:
         self._counter += 1
         stream_id = f"vrclt-{self._counter}"
         async with websockets.connect(
-            TTS_URL, open_timeout=10, close_timeout=2, max_size=2**21,
+            TTS_URL, additional_headers=auth_headers(self._api_key),
+            open_timeout=10, close_timeout=2, max_size=2**21,
             logger=self._wire_logger,
         ) as ws:
             await ws.send(json.dumps({
-                "api_key": self._api_key,
                 "model": self._model,
                 "language": self._language,
                 "voice": self._voice,

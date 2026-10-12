@@ -12,7 +12,7 @@
 - 托盘菜单支持打开应用、打开设置、切换翻译/字幕和退出
 - 出站翻译: 你的麦克风 -> selected engine -> 翻译语音 -> 目标应用麦克风
 - 入站字幕: 目标应用音频 -> selected engine -> 翻译字幕
-- 四种翻译引擎: Google Gemini Live（默认）、Alibaba Qwen3.5 LiveTranslate、OpenAI gpt-realtime-translate，以及 Soniox
+- 四种翻译引擎: Google Gemini Live（默认）、Alibaba Qwen3.8 LiveTranslate、OpenAI gpt-realtime-translate，以及 Soniox
 - 支持 VRChat OSC 聊天框输出、角色 OSC 控制、SteamVR 字幕和手腕菜单
 - 支持 SteamVR 仪表板设置面板和随 SteamVR 自动启动（注册到启动/叠加层应用）
 - VRChat 仅文本模式: 保留原始语音直通，只向 OSC 聊天框追加翻译文本
@@ -93,7 +93,7 @@ API 密钥会以明文保存在该文件中。
 ### 3b. 备选: Qwen API 密钥（无法访问 Gemini 的地区）
 
 如果所在地区无法访问 Google 服务（例如中国大陆），vrclt 可以使用
-**Alibaba Qwen3.5 LiveTranslate** 代替 Gemini:
+**Alibaba Qwen3.8 LiveTranslate** 代替 Gemini:
 
 1. 创建阿里云账号并开通 **百炼 (Model Studio)**:
    - 中国大陆: [bailian.console.aliyun.com](https://bailian.console.aliyun.com/)
@@ -111,14 +111,16 @@ API 密钥会以明文保存在该文件中。
    填入 **Qwen 工作空间 ID** 字段。`beijing` 端点可以留空（经典共享
    `dashscope` 域名）。
    参见 [Obtain the workspace ID](https://www.alibabacloud.com/help/en/model-studio/obtain-api-key-app-id-and-workspace-id)。
-5. 设置 **我的语音语言** 和 **对方语音语言** — Qwen 无法自动检测语音语言
+5. 默认模型 `qwen3.8-livetranslate-flash-realtime` 会自动检测语音语言并区分
+   说话人。仅当把 **Qwen 模型** 改为 `qwen3.5-livetranslate-flash-realtime` 时，
+   才需要设置 **我的语音语言** 和 **对方语音语言** — Qwen 3.5 无法自动检测语音语言
    （见下文"翻译引擎"一节）。
 
 ### 3c. Soniox 设置
 
 1. 打开 [Soniox 控制台](https://console.soniox.com)，注册账号并登录。
 2. 打开 **My First Project** 或要使用的项目，在 **API Keys** 中创建密钥。
-   参见[官方入门指南](https://soniox.com/docs/stt/get-started)。v0.19.1 使用美国(US)服务器，
+   参见[官方入门指南](https://soniox.com/docs/stt/get-started)。v0.20.0 使用美国(US)服务器，
    如果可以选择区域，请使用 **US 项目**；目前尚无切换其他区域服务器的设置。
    [区域说明](https://soniox.com/docs/data-residency)
 3. 在 [Billing overview](https://console.soniox.com/org/billing/overview/) 查看 API 余额，
@@ -186,8 +188,10 @@ Soniox 按整个连接时长计费，包括静音和 keepalive，
       并选择与密钥地域匹配的 **Qwen 服务器**（中国大陆选 `beijing`，
       其他地区选 `intl`）。
    3. 使用 `intl` 时: 填写 **Qwen 工作空间 ID**（见 3b 节）。
-   4. 设置 **我的语音语言**（你说的语言）和 **对方语音语言**（游戏里
-      对方说的语言）。Qwen 无法自动检测，留空会按英语处理。这两项之后
+   4. 使用默认模型 `qwen3.8-livetranslate-flash-realtime` 时到此为止 — 它会
+      自动检测语音语言。使用 `qwen3.5-livetranslate-flash-realtime` 时，还需设置
+      **我的语音语言**（你说的语言）和 **对方语音语言**（游戏里对方说的语言）。
+      Qwen 3.5 无法自动检测，留空会按英语处理。使用 Qwen 3.5 时，这两项之后
       也可以在仪表盘标签页或 SteamVR 仪表盘面板上修改。
 
    **使用 Gemini（默认，需要能访问 Google 服务）**
@@ -207,7 +211,7 @@ Soniox 按整个连接时长计费，包括静音和 keepalive，
 - 运行时提示需要 API 密钥: 在设置中输入密钥，或设置 `GEMINI_API_KEY`（Qwen 引擎为 `DASHSCOPE_API_KEY`）。
 - Qwen 密钥被拒绝或连接立即失败: 检查 `qwen.endpoint` 是否与密钥的地域匹配 — `beijing` 密钥和 `intl` 密钥不能混用 — 并确认使用 `intl` 时已设置工作空间 ID。
 - Qwen 报错 `Voice '...' is not supported`: 字面值音色 `default` 只在声音复刻启用时可用。请保持 `qwen.voice_clone` 开启，或将 **Qwen 语音 ID** 留空以使用模型默认音色。
-- Qwen 从错误的语言进行翻译: 设置 **我的语音语言** / **对方语音语言**（在设置、仪表板或 SteamVR 面板中均可）。Qwen 无法自动检测；留空按英语处理。
+- Qwen 3.5 从错误的语言进行翻译: 设置 **我的语音语言** / **对方语音语言**（在设置、仪表板或 SteamVR 面板中均可）。Qwen 3.5 无法自动检测；留空按英语处理。默认模型 Qwen 3.8 会自动检测。
 - VR 叠加层不显示: 确认 SteamVR 正在运行，且 `overlay.enabled` / `wrist_ui.enabled` 已启用。
 - passthrough 或字幕延迟较大: 先使用本 README 中的默认值；如果连接稳定，再谨慎降低 `audio.turn_end_silence_sec`、`audio.inbound_turn_end_silence_sec` 或 `audio.subtitle_finalize_silence_sec`。
 - 想重置设置: 使用设置标签页中的 **恢复默认设置**。它会保留 API 密钥、输出语言列表、字幕语言列表、UI 语言、窗口关闭行为和已选择音频设备，并将其他设置恢复默认。应用更新后，vrclt 也会就此重置询问一次。
@@ -217,20 +221,24 @@ Soniox 按整个连接时长计费，包括静音和 keepalive，
 vrclt 支持四种实时翻译引擎，通过 **翻译引擎** 设置（`config.yaml` 中的
 `provider`）选择。该选择同时作用于两个方向: 你的语音和入站字幕。
 
-| | Gemini Live（默认） | Qwen3.5 LiveTranslate | gpt-realtime-translate | Soniox |
+| | Gemini Live（默认） | Qwen3.8 LiveTranslate | gpt-realtime-translate | Soniox |
 | --- | --- | --- | --- | --- |
 | 提供方 / 密钥 | Google AI Studio (`GEMINI_API_KEY`) | 阿里云百炼 / DashScope (`DASHSCOPE_API_KEY`) | OpenAI (`OPENAI_API_KEY`) | Soniox (`SONIOX_API_KEY`) |
-| 必要设置 | 仅需 API 密钥 | 引擎设为 `qwen`、API 密钥 + 服务器（`intl` 还需工作空间 ID）、**我的/对方语音语言** | 引擎设为 `openai`，仅需 API 密钥 | 引擎 `soniox` + API 密钥 |
+| 必要设置 | 仅需 API 密钥 | 引擎设为 `qwen`、API 密钥 + 服务器（`intl` 还需工作空间 ID）；Qwen 3.5 还需 **我的/对方语音语言** | 引擎设为 `openai`，仅需 API 密钥 | 引擎 `soniox` + API 密钥 |
 | 中国大陆可用性 | 需要能访问 Google 服务 | 可直连 `beijing` 端点 | 需要能访问 OpenAI 服务 | 未验证 |
-| 语音语言检测 | 自动检测 | **手动** — 需设置"我的/对方语音语言" | 自动检测（语音语言设置会被忽略） | 自动检测；语音语言为可选提示 |
+| 语音语言检测 | 自动检测 | 自动检测（Qwen 3.5: **手动** — 需设置"我的/对方语音语言"） | 自动检测（语音语言设置会被忽略） | 自动检测；语音语言为可选提示 |
 | 支持语言 | 70+ 种 BCP-47 目标语言，含 `zh-Hans`/`zh-Hant` | 29 种带语音 + 另外 31 种仅文本；中文只有 `zh`（不区分简体/繁体）；粤语（`yue`）仅文本 | 输入 70+ 种，但目标语言仅 **13 种**（`en es pt fr ja ru zh de ko hi id vi it`）；中文只有 `zh`；每个会话一种目标语言 | 应用支持 60 种语言；中文使用 `zh`，不支持粤语（`yue`） |
 | 翻译语音 | 复刻说话者音色 | 通过服务端声音复刻还原说话者音色（`qwen.voice_clone`，默认 `once`）；关闭复刻时使用固定音色 | 自动贴合说话人音色；无音色选项 | 单独 TTS；默认 `Daniel` 或自定义语音；无自动克隆 |
 | 抢话打断（barge-in） | 支持 | 不支持 — 同时说话时音频可能排队播放 | 不支持 — 同时说话时音频可能排队播放 | 不支持 — 重叠语音可能排队播放 |
 
 Qwen 注意事项:
 
-- **必须设置语音语言。** 可在设置标签页、仪表板标签页或 SteamVR 仪表板面板的
-  **对话**页面设置。留空按英语处理。
+- `qwen.model` 默认为 `qwen3.8-livetranslate-flash-realtime`。它会自动检测语音语言，
+  并像 Soniox 一样在字幕中区分说话人。已保存的配置会保留原有模型；如需切换，
+  请修改 **Qwen 模型**。
+- `qwen3.5-livetranslate-flash-realtime` 仍可使用，但**必须设置语音语言**。可在
+  设置标签页、仪表板标签页或 SteamVR 仪表板面板的**对话**页面设置。留空按英语
+  处理。Qwen 3.5 不显示说话人区分。
 - `zh-Hans`/`zh-Hant` 目标语言发送给 Qwen 时都会作为 `zh`。
 - 如果所选目标语言没有 Qwen 语音支持，vrclt 会自动以仅文本方式运行会话
   （聊天框/字幕仍正常工作）。
@@ -287,7 +295,7 @@ Qwen 注意事项:
 - 输出语言和字幕语言，并可搜索添加 Gemini Live Translation 支持的 70+ 种语言
 - 麦克风输入和翻译语音输出设备选择，附输出测试音按钮；刷新设备会重启运行时并识别后插入的设备
 - 翻译语音音量滑块和带检测阈值标记的实时麦克风电平表
-- 我的/对方语音语言: Qwen 必填，Soniox 为可选识别提示，Gemini/OpenAI 自动检测
+- 我的/对方语音语言: Qwen 3.5 必填，Soniox 为可选识别提示，Gemini/OpenAI/Qwen 3.8 自动检测
 - PC 字幕位置移动/重置、字幕框大小和字号
 - 实时字幕预览
 
@@ -344,7 +352,7 @@ VRChat 模式可使用:
 - 降低高度的紧凑 SteamVR 手腕菜单。首页**对话**集中翻译、字幕、输出/字幕语言、连接状态、独立的**语音 / 文本**选择按钮及运行时重启。**设置**集中 UI 语言、字幕字号、面板移动/位置重置和 Soniox 说话人上下文保持。保留原有的视线与握持操作
 - 手腕菜单默认宽度为 **14 厘米**，面板高度也已降低。保留已保存的宽度，可在应用设置中调整手腕菜单宽度。小于 16 厘米的设置现在也能正确生效
 - 分为**对话 / 音频 / 位置与应用**三页的 SteamVR 仪表板（在 SteamVR 菜单中选择 vrclt 图标）。**对话**集中翻译、字幕、语言及连接/错误状态；**音频**包含麦克风、语音输出选择及翻译语音音量；**位置与应用**集中面板位置和应用控制。设备变更会在最后一次点击稍后随运行时重启一起生效
-- SteamVR 仪表板可设置 Qwen 的语音语言及 Soniox 的可选识别提示；手腕菜单可选择翻译输出语言和字幕语言。选择 Soniox 时，两个 VR 面板均显示**保持说话人上下文**及当前生效的静音超时时间，与 PC UI 共用保存值。关闭此开关后，说话人分离本身仍保持开启
+- SteamVR 仪表板可设置 Qwen 3.5 的语音语言及 Soniox 的可选识别提示；手腕菜单可选择翻译输出语言和字幕语言。选择 Soniox 时，两个 VR 面板均显示**保持说话人上下文**及当前生效的静音超时时间，与 PC UI 共用保存值。关闭此开关后，说话人分离本身仍保持开启
 - 随 SteamVR 自动启动: 发布版 exe 会自动注册到 SteamVR 设置 > 启动/叠加层应用，可在 SteamVR 设置或 vrclt 设置中开关自动启动
 - 更新到新版本后请先运行一次新 exe。注册本身会保留，但自动启动指向的 exe 路径需要首次运行时才会更新为新文件
 - VR 字幕编辑 laser/cursor 显示和角落尺寸调整手柄
@@ -376,7 +384,7 @@ VRChat 模式可使用:
 | `api_key` | `""` | Gemini API 密钥。留空时可使用 `GEMINI_API_KEY` 环境变量。 |
 | `model` | `gemini-3.5-live-translate-preview` | Gemini Live 模型名。 |
 | `qwen.api_key` | `""` | DashScope API 密钥。留空时可使用 `DASHSCOPE_API_KEY` 环境变量。 |
-| `qwen.model` | `qwen3.5-livetranslate-flash-realtime` | Qwen 实时翻译模型名。 |
+| `qwen.model` | `qwen3.8-livetranslate-flash-realtime` | Qwen 实时翻译模型名。Qwen 3.8 支持自动检测语音语言和区分说话人；`qwen3.5-livetranslate-flash-realtime` 需要设置语音语言。 |
 | `qwen.endpoint` | `intl` | `intl`（新加坡）或 `beijing`（中国大陆）。密钥与地域绑定。 |
 | `qwen.workspace_id` | `""` | 百炼工作空间 ID（`maas.aliyuncs.com` 域名）。`intl` 必填；`beijing` 可留空。 |
 | `qwen.base_url` | `""` | 高级: 覆盖完整 `wss://` URL。 |
@@ -428,7 +436,7 @@ PC 热键:
 | --- | --- | --- |
 | `outbound.enabled` | `true` | 启用出站管线。 |
 | `outbound.target_language` | `ja` | 翻译你说话内容的默认 BCP-47 语言代码。可在 UI 中搜索并选择 Gemini Live Translation 支持的 70+ 种语言。 |
-| `outbound.source_language` | `""` | 我的语音语言。Qwen 必填（留空为英语），Soniox 为可选提示，Gemini/OpenAI 忽略。 |
+| `outbound.source_language` | `""` | 我的语音语言。Qwen 3.5 必填（留空为英语），Soniox 为可选提示，Gemini/OpenAI/Qwen 3.8 忽略。 |
 | `outbound.echo_target_language` | `false` | 对已经是目标语言的输入也进行复述。 |
 | `outbound.mic_device` | `""` | 麦克风设备名片段。留空时使用默认输入。 |
 | `outbound.tts_device` | `CABLE Input` | 翻译语音和原声直通的输出设备。 |
@@ -549,14 +557,14 @@ dist\vrclt.exe
 创建发布产物:
 
 ```powershell
-.\scripts\package_release.ps1 -Version 0.19.1
+.\scripts\package_release.ps1 -Version 0.20.0
 ```
 
 发布脚本会生成:
 
 ```text
-release\vrclt-v0.19.1-windows-x64.exe
-release\vrclt-v0.19.1-windows-x64.exe.sha256
+release\vrclt-v0.20.0-windows-x64.exe
+release\vrclt-v0.20.0-windows-x64.exe.sha256
 ```
 
 ## 冒烟测试
@@ -565,7 +573,7 @@ release\vrclt-v0.19.1-windows-x64.exe.sha256
 .\.venv\Scripts\python.exe -m compileall vrclt
 .\.venv\Scripts\python.exe -m vrclt --help
 .\.venv\Scripts\pyinstaller.exe vrclt.spec --noconfirm
-.\scripts\package_release.ps1 -Version 0.19.1 -SkipBuild
+.\scripts\package_release.ps1 -Version 0.20.0 -SkipBuild
 ```
 
 实际运行时测试流程: 运行 exe，在原生 UI 中保存设置，确认

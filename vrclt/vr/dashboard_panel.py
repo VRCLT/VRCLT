@@ -94,7 +94,7 @@ PICKER_COLS, PICKER_ROWS = 4, 5
 
 
 def _build_widgets() -> tuple:
-    source_hints = lambda p: p._get_provider() in ("qwen", "soniox")
+    source_hints = lambda p: p._uses_source_language()
     free = lambda p: not (p._devices_applying or p._context_applying or p._restart_pending)
     settled = lambda p: free(p) and p._pending_mic is None and p._pending_out is None
     widgets = []
@@ -177,7 +177,8 @@ class DashboardPanel:
                  get_tts_gain=lambda: 1.0,
                  get_provider=lambda: "gemini",
                  get_speaker_context=lambda: (True, 60.0),
-                 set_speaker_context=lambda enabled, on_done: on_done(False)):
+                 set_speaker_context=lambda enabled, on_done: on_done(False),
+                 uses_source_language=None):
         self._state = state
         self._languages = languages or ["en"]
         self._inbound_languages = inbound_languages or ["ko", "en"]
@@ -195,6 +196,9 @@ class DashboardPanel:
         self._on_tts_gain = on_tts_gain
         self._get_tts_gain = get_tts_gain
         self._get_provider = get_provider
+        # spoken-language pickers reach the engine (Qwen 3.5 / Soniox hints)
+        self._uses_source_language = uses_source_language or (
+            lambda: self._get_provider() in ("qwen", "soniox"))
         self._get_speaker_context = get_speaker_context
         self._set_speaker_context = set_speaker_context
         self._context_applying = False
@@ -522,12 +526,12 @@ class DashboardPanel:
             step = 0.1 if button == "vol_plus" else -0.1
             self._on_tts_gain(float(self._get_tts_gain()) + step)
         elif button in ("src_prev", "src_next"):
-            if self._get_provider() in ("qwen", "soniox"):
+            if self._uses_source_language():
                 st.source_language = cycle(
                     self._source_languages(self._languages), st.source_language,
                     1 if button == "src_next" else -1)
         elif button in ("insrc_prev", "insrc_next"):
-            if self._get_provider() in ("qwen", "soniox"):
+            if self._uses_source_language():
                 st.inbound_source_language = cycle(
                     self._source_languages(self._inbound_languages), st.inbound_source_language,
                     1 if button == "insrc_next" else -1)
@@ -749,7 +753,7 @@ class DashboardPanel:
                  "dash_src_out", "src"),
                 (BTN_INSRC_PREV, LBL_INSRC_LANG, BTN_INSRC_NEXT, st.inbound_source_language,
                  "dash_src_in", "insrc")):
-            if self._get_provider() in ("qwen", "soniox"):
+            if self._uses_source_language():
                 self._btn(d, prev, "◀", fonts=(self._font_mid,), name=prefix+"_prev")
                 self._btn(d, next_, "▶", fonts=(self._font_mid,), name=prefix+"_next")
                 value = (tr(lang, "vr_auto_language") if not code and self._get_provider() == "soniox"

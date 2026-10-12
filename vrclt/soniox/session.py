@@ -1,11 +1,14 @@
 """Soniox live STT/translation with optional streaming TTS and reconnect.
 
-Protocol: JSON config, 16 kHz mono PCM16 binary frames, final token deltas,
-<end>/<fin> utterance boundaries, empty text frame then finished on close.
+Protocol: API key in the upgrade request's Authorization header (a key in
+the start message is refused after 2027-01-15), JSON config, 16 kHz mono PCM16
+binary frames, final token deltas, <end>/<fin> utterance boundaries, empty
+text frame then finished on close.
 Provisional tokens are deliberately not appended to the shared Segmenter or
 spoken: the API replaces them on every response. Committed tokens stream
 immediately and are emitted once, without accumulating session transcripts.
 https://soniox.com/docs/api-reference/stt/websocket-api
+https://soniox.com/docs/guides/websocket-authentication
 """
 import asyncio
 import json
@@ -18,11 +21,11 @@ from ..languages import SONIOX_LANGUAGES, soniox_language_code
 from ..session_base import (AudioSource, FatalSessionError,
                             RECONNECT_MIN_BACKOFF, RECONNECT_MAX_BACKOFF,
                             sleep_interruptible)
-from .tts import DEFAULT_VOICE, TTS_MODEL, StreamingSpeech
+from .tts import DEFAULT_VOICE, TTS_MODEL, StreamingSpeech, auth_headers
 
 log = logging.getLogger(__name__)
-# Config frames contain the API key. Do not let the websockets DEBUG frame
-# logger expose it even when the application's diagnostic level is DEBUG.
+# The upgrade request carries the API key. Do not let the websockets DEBUG
+# handshake logger expose it even when the application's diagnostic level is DEBUG.
 _wire_log = logging.getLogger("vrclt.soniox.wire")
 _wire_log.setLevel(logging.WARNING)
 
@@ -124,7 +127,6 @@ class SonioxLiveTranslateSession:
                 f"Soniox does not support the source language hint {source}. "
                 "Choose a supported source language or Auto.")
         cfg = {
-            "api_key": self._api_key,
             "model": self._model,
             "audio_format": "pcm_s16le",
             "sample_rate": 16000,
@@ -201,8 +203,8 @@ class SonioxLiveTranslateSession:
             check_error=self._check_error, wire_logger=_wire_log,
         ) if self._on_audio else None
         async with websockets.connect(
-            TRANSCRIBE_URL, open_timeout=10, close_timeout=2, max_size=2**21,
-            logger=_wire_log,
+            TRANSCRIBE_URL, additional_headers=auth_headers(self._api_key),
+            open_timeout=10, close_timeout=2, max_size=2**21, logger=_wire_log,
         ) as ws:
             await ws.send(json.dumps(cfg, ensure_ascii=False))
             self.connected = True

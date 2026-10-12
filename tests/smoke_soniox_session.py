@@ -280,12 +280,13 @@ class SonioxConfigTests(unittest.TestCase):
 class SonioxWireTests(unittest.IsolatedAsyncioTestCase):
     async def test_streaming_transcription_tts_and_finished_handshake(self):
         src, dst, audio, states = [], [], [], []
-        configs, text_frames, input_audio, closes = [], [], [], []
+        configs, text_frames, input_audio, closes, auth = [], [], [], [], []
         first_text, tts_done = asyncio.Event(), asyncio.Event()
         source = FakeSource()
         stop = asyncio.Event()
 
         async def stt_server(ws):
+            auth.append(ws.request.headers.get("Authorization"))
             configs.append(json.loads(await ws.recv()))
             seen_audio = False
             async for raw in ws:
@@ -304,6 +305,7 @@ class SonioxWireTests(unittest.IsolatedAsyncioTestCase):
                     await ws.send(json.dumps({"tokens": [token(" world!"), token("<end>")]}))
 
         async def tts_server(ws):
+            auth.append(ws.request.headers.get("Authorization"))
             cfg = json.loads(await ws.recv())
             configs.append(cfg)
             stream_id = cfg["stream_id"]
@@ -334,6 +336,10 @@ class SonioxWireTests(unittest.IsolatedAsyncioTestCase):
                 finally:
                     stop.set()
                     await asyncio.wait_for(task, 5)
+        # The key authenticates the upgrade; start messages must not carry it.
+        self.assertEqual(auth, ["Bearer test-soniox-key"] * 2)
+        self.assertNotIn("api_key", configs[0])
+        self.assertNotIn("api_key", configs[1])
         self.assertEqual(configs[0]["audio_format"], "pcm_s16le")
         self.assertEqual(configs[0]["sample_rate"], 16000)
         self.assertEqual(configs[0]["num_channels"], 1)

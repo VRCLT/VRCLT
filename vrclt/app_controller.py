@@ -159,7 +159,8 @@ def make_dashboard_panel(cfg, state, get_status_info, on_text_only_toggle,
                          get_devices, get_mic_device, get_tts_device,
                          set_audio_devices, on_tts_gain, get_tts_gain,
                          get_provider, get_speaker_context=lambda: (True, 60.0),
-                         set_speaker_context=lambda enabled, on_done: on_done(False)):
+                         set_speaker_context=lambda enabled, on_done: on_done(False),
+                         uses_source_language=None):
     from .vr.dashboard_panel import DashboardPanel
     w = cfg.get("wrist_ui", {})
     return DashboardPanel(
@@ -183,6 +184,7 @@ def make_dashboard_panel(cfg, state, get_status_info, on_text_only_toggle,
         get_provider=get_provider,
         get_speaker_context=get_speaker_context,
         set_speaker_context=set_speaker_context,
+        uses_source_language=uses_source_language,
     )
 
 
@@ -1147,7 +1149,9 @@ class AppController:
                         get_tts_gain=self.tts_gain,
                         get_provider=self.get_provider,
                         get_speaker_context=self.get_speaker_context,
-                        set_speaker_context=self.set_speaker_context))
+                        set_speaker_context=self.set_speaker_context,
+                        uses_source_language=lambda: config_mod.uses_source_language(
+                            self.cfg)))
                 if panels:
                     from .vr.render import VrRenderer
                     renderer = created_renderer = VrRenderer(

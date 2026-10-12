@@ -12,7 +12,7 @@ Cable 経由で対象アプリのマイク入力へ送り、相手の発話は�
 - アプリを開く、設定を開く、翻訳/字幕の切り替え、終了ができるトレイメニュー
 - 送信側翻訳: 自分のマイク -> selected engine -> 翻訳音声 -> 対象アプリのマイク
 - 受信側字幕: 対象アプリの音声 -> selected engine -> 翻訳字幕
-- 4 つの翻訳エンジン: Google Gemini Live（既定）、Alibaba Qwen3.5 LiveTranslate、OpenAI gpt-realtime-translate、Soniox
+- 4 つの翻訳エンジン: Google Gemini Live（既定）、Alibaba Qwen3.8 LiveTranslate、OpenAI gpt-realtime-translate、Soniox
 - VRChat OSC チャットボックス、アバター OSC 制御、SteamVR 字幕、手首メニュー対応
 - SteamVR ダッシュボード設定パネルと SteamVR 自動起動（スタートアップ/オーバーレイアプリ登録）対応
 - 元の声をそのまま通し、OSC チャットボックスに翻訳テキストだけを追加する VRChat テキストのみモード
@@ -91,7 +91,7 @@ VRChat または Discord に翻訳音声をマイクとして受け取らせる�
 ### 3b. 代替: Qwen API キー（Gemini を利用できない地域向け）
 
 お住まいの地域で Google サービスを利用できない場合（例: 中国本土）、vrclt は
-Gemini の代わりに **Alibaba Qwen3.5 LiveTranslate** を使えます。
+Gemini の代わりに **Alibaba Qwen3.8 LiveTranslate** を使えます。
 
 1. Alibaba Cloud アカウントを作成し、**Model Studio** を有効化します。
    - 中国本土: [bailian.console.aliyun.com](https://bailian.console.aliyun.com/)
@@ -110,15 +110,17 @@ Gemini の代わりに **Alibaba Qwen3.5 LiveTranslate** を使えます。
    コピーし、**QwenワークスペースID** 欄に貼り付けます。`beijing`
    エンドポイントは空のままで構いません（従来の共有 `dashscope` ドメイン）。
    参考: [Obtain the workspace ID](https://www.alibabacloud.com/help/en/model-studio/obtain-api-key-app-id-and-workspace-id)
-5. **自分の発話言語** と **相手の発話言語** を設定します — Qwen は発話言語を
-   自動検出できません（下の「翻訳エンジン」セクションを参照）。
+5. 既定のモデル `qwen3.8-livetranslate-flash-realtime` は発話言語を自動検出し、
+   話者を区別します。**Qwenモデル** を `qwen3.5-livetranslate-flash-realtime` に
+   変更した場合のみ、**自分の発話言語** と **相手の発話言語** を設定します —
+   Qwen 3.5 は発話言語を自動検出できません（下の「翻訳エンジン」セクションを参照）。
 
 ### 3c. Soniox の設定
 
 1. [Soniox コンソール](https://console.soniox.com)でアカウントを作成し、ログインします。
 2. **My First Project** または使用するプロジェクトを開き、**API Keys** でキーを作成します。
    [公式の開始ガイド](https://soniox.com/docs/stt/get-started)を参照してください。
-   v0.19.1 は米国(US)サーバーを使用するため、リージョンを選べる場合は **US プロジェクト**を
+   v0.20.0 は米国(US)サーバーを使用するため、リージョンを選べる場合は **US プロジェクト**を
    使用します。他リージョンへの切り替え設定は未対応です。[リージョン案内](https://soniox.com/docs/data-residency)
 3. [Billing overview](https://console.soniox.com/org/billing/overview/) で API 残高を確認し、
    必要に応じてチャージします。[API 料金表](https://soniox.com/pricing)も確認してください。
@@ -195,9 +197,11 @@ Soniox のダッシュボードにはチェック状態と適用中の無音タ�
       キーのリージョンに合った **Qwenサーバー**（中国本土は `beijing`、
       それ以外は `intl`）を選択します。
    3. `intl` の場合: **QwenワークスペースID** を入力します（手順 3b）。
-   4. **自分の発話言語**（自分が話す言語）と **相手の発話言語**（ゲーム内で
-      聞こえてくる言語）を設定します。Qwen は自動検出できず、空のままだと
-      英語として扱われます。どちらもダッシュボードタブや SteamVR
+   4. 既定のモデル `qwen3.8-livetranslate-flash-realtime` ならここまでです —
+      発話言語を自動検出します。`qwen3.5-livetranslate-flash-realtime` を使う
+      場合は **自分の発話言語**（自分が話す言語）と **相手の発話言語**（ゲーム内で
+      聞こえてくる言語）も設定します。Qwen 3.5 は自動検出できず、空のままだと
+      英語として扱われます。Qwen 3.5 ではどちらもダッシュボードタブや SteamVR
       ダッシュボードパネルで後から変更できます。
 
 3. アプリモードを `vrchat`、`discord`、`custom` から選びます (`custom` は設定でキャプチャするアプリを選択)。
@@ -213,7 +217,7 @@ Soniox のダッシュボードにはチェック状態と適用中の無音タ�
 - API キーが必要と表示される: 設定にキーを入力するか、`GEMINI_API_KEY` を設定します（Qwen エンジンの場合: `DASHSCOPE_API_KEY`）。
 - Qwen キーが拒否される、または接続が即座に失敗する: `qwen.endpoint` がキーのリージョンと一致しているか確認します — `beijing` のキーと `intl` のキーは互換性がありません — さらに `intl` を使う場合はワークスペースID が設定されているか確認します。
 - Qwen エラー `Voice '...' is not supported`: リテラルの音声 `default` は音声クローンが有効な間だけ使えます。`qwen.voice_clone` を有効のままにするか、モデル既定の声を使うなら **QwenボイスID** を空にします。
-- Qwen が違う言語から翻訳する: **自分の発話言語** / **相手の発話言語** を設定します（設定、ダッシュボード、または SteamVR パネル）。Qwen は自動検出できず、空の場合は英語として扱われます。
+- Qwen 3.5 が違う言語から翻訳する: **自分の発話言語** / **相手の発話言語** を設定します（設定、ダッシュボード、または SteamVR パネル）。Qwen 3.5 は自動検出できず、空の場合は英語として扱われます。既定のモデルである Qwen 3.8 は自動検出します。
 - VR オーバーレイが出ない: SteamVR が実行中で、`overlay.enabled` / `wrist_ui.enabled` が有効か確認します。
 - passthrough や字幕の遅延が大きい: まずこの README の既定値を使い、接続が安定している場合だけ `audio.turn_end_silence_sec`、`audio.inbound_turn_end_silence_sec`、`audio.subtitle_finalize_silence_sec` を慎重に下げます。
 - 設定を初期化したい: 設定タブの **既定値リセット** を使います。API キー、出力言語リスト、字幕言語リスト、UI 言語、ウィンドウを閉じる動作、選択したオーディオデバイスは保持し、それ以外を既定値に戻します。アプリ更新後にも vrclt がこのリセットを 1 回確認します。
@@ -224,20 +228,25 @@ vrclt は 4 つのリアルタイム翻訳エンジンに対応し、**翻訳エ
 （`config.yaml` の `provider`）で選択します。選択したエンジンは、自分の音声と
 受信側字幕の両方向に適用されます。
 
-| | Gemini Live（既定） | Qwen3.5 LiveTranslate | gpt-realtime-translate | Soniox |
+| | Gemini Live（既定） | Qwen3.8 LiveTranslate | gpt-realtime-translate | Soniox |
 | --- | --- | --- | --- | --- |
 | プロバイダー / キー | Google AI Studio (`GEMINI_API_KEY`) | Alibaba Cloud Model Studio / DashScope (`DASHSCOPE_API_KEY`) | OpenAI (`OPENAI_API_KEY`) | Soniox (`SONIOX_API_KEY`) |
-| 必要な設定 | API キーのみ | エンジンを `qwen` に、API キー + サーバー（`intl` はワークスペース ID も）、**自分/相手の発話言語** | エンジンを `openai` に、API キーのみ | エンジン `soniox` + API キー |
+| 必要な設定 | API キーのみ | エンジンを `qwen` に、API キー + サーバー（`intl` はワークスペース ID も）。Qwen 3.5 は **自分/相手の発話言語** も必要 | エンジンを `openai` に、API キーのみ | エンジン `soniox` + API キー |
 | 中国本土での利用 | 不可 | 可（`beijing` エンドポイント） | 不可 | 未検証 |
-| 発話言語の検出 | 自動検出 | **手動** — 「自分/相手の発話言語」を設定 | 自動検出（発話言語の設定は無視されます） | 自動検出。発話言語は任意のヒント |
+| 発話言語の検出 | 自動検出 | 自動検出（Qwen 3.5: **手動** — 「自分/相手の発話言語」を設定） | 自動検出（発話言語の設定は無視されます） | 自動検出。発話言語は任意のヒント |
 | 対応言語 | `zh-Hans`/`zh-Hant` を含む 70 以上の BCP-47 対象言語 | 音声付き 29 + テキストのみ 31; 中国語は `zh` のみ（簡体字/繁体字の区別なし）; 広東語（`yue`）はテキストのみ | 入力は 70 以上だが対象言語は **13 のみ**（`en es pt fr ja ru zh de ko hi id vi it`）; 中国語は `zh` のみ; セッションごとに 1 言語 | アプリ対応 60 言語。中国語は `zh`、広東語（`yue`）は非対応 |
 | 翻訳音声 | 話者の声を再現 | サーバー側の音声クローンで話者の声を再現（`qwen.voice_clone`、既定 `once`）。クローンをオフにすると固定の声 | 話者の声に自動で合わせます。ボイス選択はありません | 別の TTS。既定 `Daniel` またはカスタム音声。自動クローンなし |
 | 割り込み（barge-in） | 対応 | 非対応 — 発話が重なると音声がキューに溜まることがあります | 非対応 — 発話が重なると音声がキューに溜まることがあります | 非対応 — 発話が重なると音声がキューに溜まることがあります |
 
 Qwen の注意点:
 
-- **発話言語の設定が必須です。** 設定タブ、ダッシュボードタブ、または SteamVR
-  ダッシュボードの **会話** ページで設定します。空の場合は英語として扱われます。
+- `qwen.model` の既定値は `qwen3.8-livetranslate-flash-realtime` です。発話言語を
+  自動検出し、Soniox と同様に字幕で話者を区別して表示します。保存済みの設定は
+  既存のモデルのまま維持されるため、切り替えるには **Qwenモデル** を変更してください。
+- `qwen3.5-livetranslate-flash-realtime` も引き続き使えますが、**発話言語の設定が
+  必須です。** 設定タブ、ダッシュボードタブ、または SteamVR ダッシュボードの
+  **会話** ページで設定します。空の場合は英語として扱われます。Qwen 3.5 は
+  話者を区別して表示しません。
 - `zh-Hans`/`zh-Hant` の対象言語は、どちらも `zh` として Qwen に送られます。
 - 選んだ対象言語に Qwen の音声対応がない場合、vrclt は自動でセッションを
   テキストのみで実行します（チャットボックス/字幕は動作し続けます）。
@@ -296,7 +305,7 @@ Discord Canary または PTB を使う場合は、設定または `app.profiles.
 - 出力言語と字幕言語、Gemini Live Translation の 70 以上の対応言語を検索して追加
 - マイク入力と翻訳音声出力デバイスの選択、出力テストトーンボタン付き。デバイス更新はランタイムを再起動し、後から挿したデバイスも認識します
 - 翻訳音声の音量スライダーと、検出しきい値マーカー付きリアルタイムマイクレベルメーター
-- 自分/相手の発話言語: Qwen は必須、Soniox は任意の認識ヒント、Gemini/OpenAI は自動検出
+- 自分/相手の発話言語: Qwen 3.5 は必須、Soniox は任意の認識ヒント、Gemini/OpenAI/Qwen 3.8 は自動検出
 - PC 字幕の位置移動/リセット、ボックスサイズ、文字サイズ
 - リアルタイム字幕プレビュー
 
@@ -354,7 +363,7 @@ VRChat モードでは次の機能を使えます。
 - 高さを抑えたコンパクトな SteamVR 手首メニュー。最初の **会話** ページには翻訳・字幕・出力/字幕言語・接続状態、独立した **音声 / テキスト** 選択ボタン、ランタイム再起動があります。**設定**には UI 言語・字幕サイズ・パネル移動/位置リセット・Soniox の話者コンテキスト維持をまとめています。既存の視線・グリップ操作も引き続き利用できます
 - 手首メニューの既定幅は **14 cm** で、パネルの高さも抑えています。保存済みの幅は維持され、アプリ設定の手首メニュー幅から調整できます。16 cm 未満の幅も正しく反映されます
 - **会話 / 音声 / 配置・アプリ** に分かれた SteamVR ダッシュボード（SteamVR メニューで vrclt アイコンを選択）。**会話**には翻訳・字幕・言語・接続/エラー状態、**音声**にはマイク・音声出力の選択と翻訳音声の音量、**配置・アプリ**にはパネル位置とアプリの操作があります。デバイス変更は最後のクリックから少し後にランタイム再起動とともに適用されます
-- SteamVR ダッシュボードでは Qwen の発話言語と Soniox の任意の認識ヒントを設定でき、手首メニューでは翻訳の出力言語と字幕言語を選択できます。Soniox 選択時は両方の VR パネルに **話者コンテキストの維持** と適用中の無音タイムアウトが表示され、PC UI と同じ保存値を使用します。このスイッチを無効にしても話者分離自体は有効です
+- SteamVR ダッシュボードでは Qwen 3.5 の発話言語と Soniox の任意の認識ヒントを設定でき、手首メニューでは翻訳の出力言語と字幕言語を選択できます。Soniox 選択時は両方の VR パネルに **話者コンテキストの維持** と適用中の無音タイムアウトが表示され、PC UI と同じ保存値を使用します。このスイッチを無効にしても話者分離自体は有効です
 - SteamVR 自動起動: リリース版 exe は SteamVR 設定 > スタートアップ/オーバーレイアプリに自動登録され、自動起動は SteamVR 設定または vrclt 設定で切り替えます
 - 新しいバージョンに更新した後は、新しい exe を一度起動してください。登録自体は維持されますが、自動起動が参照する exe パスは初回起動時に新しいファイルへ更新されます
 - VR 字幕編集 laser/cursor 表示と角ハンドルでのサイズ調整
@@ -388,7 +397,7 @@ VR オーバーレイを強制的に有効にするには `ui.mode: vr`、無効
 | `api_key` | `""` | Gemini API キー。空の場合は `GEMINI_API_KEY` 環境変数を使えます。 |
 | `model` | `gemini-3.5-live-translate-preview` | Gemini Live モデル名。 |
 | `qwen.api_key` | `""` | DashScope API キー。空の場合は `DASHSCOPE_API_KEY` 環境変数を使えます。 |
-| `qwen.model` | `qwen3.5-livetranslate-flash-realtime` | Qwen リアルタイム翻訳モデル名。 |
+| `qwen.model` | `qwen3.8-livetranslate-flash-realtime` | Qwen リアルタイム翻訳モデル名。Qwen 3.8 は発話言語の自動検出と話者の区別に対応し、`qwen3.5-livetranslate-flash-realtime` は発話言語の設定が必要です。 |
 | `qwen.endpoint` | `intl` | `intl`（シンガポール）または `beijing`（中国本土）。キーはリージョンに紐づきます。 |
 | `qwen.workspace_id` | `""` | Model Studio ワークスペースID（`maas.aliyuncs.com` ドメイン）。`intl` では必須。`beijing` は空でも構いません。 |
 | `qwen.base_url` | `""` | 上級者向け: `wss://` URL 全体の上書き。 |
@@ -440,7 +449,7 @@ PC ホットキー:
 | --- | --- | --- |
 | `outbound.enabled` | `true` | 送信側パイプラインを有効にします。 |
 | `outbound.target_language` | `ja` | 自分の発話を翻訳する既定の BCP-47 言語コード。UI で Gemini Live Translation の 70 以上の対応言語を検索して選択できます。 |
-| `outbound.source_language` | `""` | 自分の発話言語。Qwen は必須（空なら英語）、Soniox は任意のヒント、Gemini/OpenAI は無視。 |
+| `outbound.source_language` | `""` | 自分の発話言語。Qwen 3.5 は必須（空なら英語）、Soniox は任意のヒント、Gemini/OpenAI/Qwen 3.8 は無視。 |
 | `outbound.echo_target_language` | `false` | すでに対象言語の入力も復唱します。 |
 | `outbound.mic_device` | `""` | マイクデバイス名の一部。空なら既定入力を使います。 |
 | `outbound.tts_device` | `CABLE Input` | 翻訳音声と原音送出の出力デバイス。 |
@@ -561,14 +570,14 @@ dist\vrclt.exe
 リリース成果物を作成:
 
 ```powershell
-.\scripts\package_release.ps1 -Version 0.19.1
+.\scripts\package_release.ps1 -Version 0.20.0
 ```
 
 リリーススクリプトの結果:
 
 ```text
-release\vrclt-v0.19.1-windows-x64.exe
-release\vrclt-v0.19.1-windows-x64.exe.sha256
+release\vrclt-v0.20.0-windows-x64.exe
+release\vrclt-v0.20.0-windows-x64.exe.sha256
 ```
 
 ## スモークテスト
@@ -577,7 +586,7 @@ release\vrclt-v0.19.1-windows-x64.exe.sha256
 .\.venv\Scripts\python.exe -m compileall vrclt
 .\.venv\Scripts\python.exe -m vrclt --help
 .\.venv\Scripts\pyinstaller.exe vrclt.spec --noconfirm
-.\scripts\package_release.ps1 -Version 0.19.1 -SkipBuild
+.\scripts\package_release.ps1 -Version 0.20.0 -SkipBuild
 ```
 
 実際のランタイムテストは、exe を起動し、ネイティブ UI で設定を保存し、

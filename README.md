@@ -13,7 +13,7 @@ people's speech.
 - Tray menu for opening the app, opening settings, toggling translation/subtitles, and quitting
 - Outbound translation: your microphone -> selected engine -> translated voice -> target app mic
 - Inbound subtitles: target app audio -> selected engine -> translated subtitles
-- Four translation engines: Google Gemini Live (default), Alibaba Qwen3.5 LiveTranslate, OpenAI gpt-realtime-translate, and Soniox
+- Four translation engines: Google Gemini Live (default), Alibaba Qwen3.8 LiveTranslate, OpenAI gpt-realtime-translate, and Soniox
 - VRChat support for OSC chatbox output, avatar OSC controls, SteamVR subtitles, and the wrist menu
 - SteamVR dashboard settings panel and auto-start with SteamVR (Startup/Overlay Apps registration)
 - VRC Text Only mode for sending translated chatbox text while passing your original voice through
@@ -92,7 +92,7 @@ Keep your real microphone selected in vrclt. Do not set VRChat or Discord to you
 ### 3b. Alternative: Qwen API Key (for regions without Gemini access)
 
 If Google services are not available in your region (for example mainland
-China), vrclt can use **Alibaba Qwen3.5 LiveTranslate** instead of Gemini:
+China), vrclt can use **Alibaba Qwen3.8 LiveTranslate** instead of Gemini:
 
 1. Create an Alibaba Cloud account and enable **Model Studio**:
    - Mainland China: [bailian.console.aliyun.com](https://bailian.console.aliyun.com/)
@@ -111,15 +111,18 @@ China), vrclt can use **Alibaba Qwen3.5 LiveTranslate** instead of Gemini:
    into the **Qwen workspace ID** field. The `beijing` endpoint can leave it
    empty (classic shared `dashscope` domain).
    See [Obtain the workspace ID](https://www.alibabacloud.com/help/en/model-studio/obtain-api-key-app-id-and-workspace-id).
-5. Set **My spoken language** and **Others' spoken language** — Qwen cannot
-   auto-detect the spoken language (see [Translation Engines](#translation-engines)).
+5. The default model, `qwen3.8-livetranslate-flash-realtime`, detects the
+   spoken language and separates speakers automatically. Only if you set
+   **Qwen model** to `qwen3.5-livetranslate-flash-realtime`, also set **My
+   spoken language** and **Others' spoken language** — Qwen 3.5 cannot
+   auto-detect them (see [Translation Engines](#translation-engines)).
 
 ### 3c. Soniox API Key
 
 1. Open the [Soniox Console](https://console.soniox.com), create an account, and sign in.
 2. Open **My First Project** or your chosen project, then create a key under
    **API Keys**. See the [official setup guide](https://soniox.com/docs/stt/get-started).
-   v0.19.1 uses US endpoints, so choose a **US project** if region selection is
+   v0.20.0 uses US endpoints, so choose a **US project** if region selection is
    available; switching to other regional endpoints is not yet configurable.
    See [Soniox regions](https://soniox.com/docs/data-residency).
 3. Check your API balance in [Billing overview](https://console.soniox.com/org/billing/overview/)
@@ -216,10 +219,13 @@ live preview; take turns with multiple speakers to check separation. Enable
       pick the **Qwen endpoint** matching the key's region (`beijing` for
       mainland China, `intl` otherwise).
    3. `intl` only: fill in the **Qwen workspace ID** (step 3b).
-   4. Set **My spoken language** (the language you speak) and **Others'
-      spoken language** (the language you expect to hear in-game). Qwen
-      cannot auto-detect them — empty is treated as English. Both can be
-      changed later on the Dashboard tab or the SteamVR dashboard panel.
+   4. That is all for the default `qwen3.8-livetranslate-flash-realtime`
+      model — it detects spoken languages automatically. With
+      `qwen3.5-livetranslate-flash-realtime`, also set **My spoken language**
+      (the language you speak) and **Others' spoken language** (the language
+      you expect to hear in-game); Qwen 3.5 cannot auto-detect them, and
+      empty is treated as English. For Qwen 3.5 both can be changed later on
+      the Dashboard tab or the SteamVR dashboard panel.
 
    **Using Soniox**: select `soniox` and enter your key as described in step 3c.
    **Using OpenAI**: select `openai` and enter your OpenAI API key.
@@ -237,7 +243,7 @@ live preview; take turns with multiple speakers to check separation. Enable
 - Runtime says API key is required: enter the selected engine's key in Settings or set `GEMINI_API_KEY`, `DASHSCOPE_API_KEY`, `OPENAI_API_KEY`, or `SONIOX_API_KEY`.
 - Qwen key rejected or connection fails immediately: check that `qwen.endpoint` matches the key's region — `beijing` keys and `intl` keys are not interchangeable — and that the workspace ID is set when using `intl`.
 - Qwen error `Voice '...' is not supported`: the literal voice `default` only works while voice cloning is enabled. Keep `qwen.voice_clone` on, or leave **Qwen voice ID** empty for the model's default voice.
-- Qwen translates from the wrong language: set **My spoken language** / **Others' spoken language** (Settings, Dashboard, or the SteamVR panel). Qwen cannot auto-detect; empty is treated as English.
+- Qwen 3.5 translates from the wrong language: set **My spoken language** / **Others' spoken language** (Settings, Dashboard, or the SteamVR panel). Qwen 3.5 cannot auto-detect; empty is treated as English. Qwen 3.8 (the default model) detects it automatically.
 - VR overlays do not appear: confirm SteamVR is running and `overlay.enabled` / `wrist_ui.enabled` are enabled.
 - Passthrough or subtitles feel late: start from the defaults in this README, then lower `audio.turn_end_silence_sec`, `audio.inbound_turn_end_silence_sec`, or `audio.subtitle_finalize_silence_sec` carefully if your connection is stable.
 - Need a clean config: use **Reset defaults** in Settings. It resets current settings while preserving the API key, output language list, subtitle language list, UI language, window close action, and selected audio devices. After an app update, vrclt also asks once whether to do this reset.
@@ -248,20 +254,26 @@ vrclt supports four realtime translation engines, selected by the **Translation
 engine** setting (`provider` in `config.yaml`). The choice applies to both
 directions: your voice and the inbound subtitles.
 
-| | Gemini Live (default) | Qwen3.5 LiveTranslate | gpt-realtime-translate | Soniox |
+| | Gemini Live (default) | Qwen3.8 LiveTranslate | gpt-realtime-translate | Soniox |
 | --- | --- | --- | --- | --- |
 | Provider / key | Google AI Studio (`GEMINI_API_KEY`) | Alibaba Cloud Model Studio / DashScope (`DASHSCOPE_API_KEY`) | OpenAI (`OPENAI_API_KEY`) | Soniox (`SONIOX_API_KEY`) |
-| Required setup | API key only | Engine to `qwen`, API key + endpoint (workspace ID on `intl`), **My/Their spoken language** | Engine to `openai`, API key only | Engine to `soniox`, API key |
+| Required setup | API key only | Engine to `qwen`, API key + endpoint (workspace ID on `intl`); Qwen 3.5 also needs **My/Their spoken language** | Engine to `openai`, API key only | Engine to `soniox`, API key |
 | Works in mainland China | No | Yes (`beijing` endpoint) | No | Not verified |
-| Spoken-language detection | Automatic | **Manual** — set "My/Their spoken language" | Automatic (the spoken-language settings are ignored) | Automatic; optional spoken-language hints |
+| Spoken-language detection | Automatic | Automatic (Qwen 3.5: **manual** — set "My/Their spoken language") | Automatic (the spoken-language settings are ignored) | Automatic; optional spoken-language hints |
 | Languages | 70+ BCP-47 targets, incl. `zh-Hans`/`zh-Hant` | 29 with voice + 31 more text-only; plain `zh` only (no Simplified/Traditional split); Cantonese (`yue`) is text-only | 70+ inputs, but only **13 targets** (`en es pt fr ja ru zh de ko hi id vi it`); plain `zh` only; one target per session | 60 in vrclt; plain `zh` only; no Cantonese (`yue`) |
 | Translated voice | Replicates the speaker's voice | Replicates the speaker via server-side voice cloning (`qwen.voice_clone`, default `once`); or a fixed voice with cloning off | Adapts to the speaker automatically; no voice option | Separate TTS; stock/custom voice, default `Daniel`; no automatic cloning |
 | Barge-in (voice interrupts) | Yes | No — overlapping speech can queue audio | No — overlapping speech can queue audio | No — overlapping speech can queue audio |
 
 Qwen notes:
 
-- **Spoken language is required.** Set it in Settings, on the Dashboard tab,
-  or on the SteamVR Dashboard's **Live** page. Empty is treated as English.
+- `qwen.model` defaults to `qwen3.8-livetranslate-flash-realtime`. It detects
+  the spoken language automatically and labels subtitles by speaker, like
+  Soniox. Saved configs keep the model they already have; change **Qwen
+  model** to switch.
+- `qwen3.5-livetranslate-flash-realtime` still works, but **requires the
+  spoken language**: set it in Settings, on the Dashboard tab, or on the
+  SteamVR Dashboard's **Live** page. Empty is treated as English. Qwen 3.5
+  has no speaker labels.
 - `zh-Hans`/`zh-Hant` targets are both sent to Qwen as `zh`.
 - If the chosen target has no Qwen voice support, vrclt automatically runs the
   session text-only (chatbox/subtitles keep working).
@@ -321,7 +333,7 @@ Dashboard:
   hot-plugged devices
 - Translated-voice volume slider and a live mic level meter with the
   detection-threshold marker
-- My/Their spoken language pickers: required for Qwen, optional recognition hints for Soniox; Gemini and OpenAI auto-detect
+- My/Their spoken language pickers: required for Qwen 3.5, optional recognition hints for Soniox; Gemini, OpenAI, and Qwen 3.8 auto-detect
 - PC subtitle position, box size, and font size controls
 - Live subtitle preview
 
@@ -386,7 +398,7 @@ VRChat mode can use:
 - A compact SteamVR wrist menu with **Live** and **Settings** pages. **Live** contains translation, subtitles, output/subtitle languages, connection status, separate **Voice / Text** buttons, and runtime restart. **Settings** groups UI language, subtitle size, panel movement/reset, and Soniox speaker-context retention. Gaze/grip interactions remain available
 - The wrist menu defaults to **14 cm** wide with a shorter panel shape. Existing saved widths are preserved; adjust the wrist width in Settings to resize it. Widths below 16 cm now apply correctly
 - SteamVR Dashboard with **Live**, **Audio**, and **Layout & app** pages (open the SteamVR menu and pick the vrclt icon). **Live** groups translation, subtitles, languages, and connection/error status; **Audio** contains microphone/voice-output selection and translated-voice volume; **Layout & app** groups panel positioning and app controls. Device changes apply shortly after the last click with a runtime restart
-- The SteamVR Dashboard offers spoken-language controls for Qwen and optional recognition hints for Soniox; the wrist menu selects translation output and subtitle languages. With Soniox selected, both VR panels show **Keep speaker context** and the effective silence timeout; the switch shares the saved setting with the PC UI. Speaker diarization stays enabled when the switch is off
+- The SteamVR Dashboard offers spoken-language controls for Qwen 3.5 and optional recognition hints for Soniox; the wrist menu selects translation output and subtitle languages. With Soniox selected, both VR panels show **Keep speaker context** and the effective silence timeout; the switch shares the saved setting with the PC UI. Speaker diarization stays enabled when the switch is off
 - Auto-start with SteamVR: the release exe registers itself in SteamVR Settings > Startup/Overlay Apps; toggle auto-launch there or in vrclt Settings
 - After updating to a new release, run the new exe once so auto-start points at the new file (the registration itself survives updates; only the recorded exe path needs that first run to refresh)
 - Visible VR subtitle edit laser/cursor with corner resize handles
@@ -420,7 +432,7 @@ Top-level and app profile settings:
 | `api_key` | `""` | Gemini API key. Empty means `GEMINI_API_KEY` can be used. |
 | `model` | `gemini-3.5-live-translate-preview` | Gemini Live model name. |
 | `qwen.api_key` | `""` | DashScope API key. Empty means `DASHSCOPE_API_KEY` can be used. |
-| `qwen.model` | `qwen3.5-livetranslate-flash-realtime` | Qwen realtime translation model name. |
+| `qwen.model` | `qwen3.8-livetranslate-flash-realtime` | Qwen realtime translation model name. Qwen 3.8 auto-detects the spoken language and labels speakers; `qwen3.5-livetranslate-flash-realtime` needs the spoken language. |
 | `qwen.endpoint` | `intl` | `intl` (Singapore) or `beijing` (mainland China). Keys are region-bound. |
 | `qwen.workspace_id` | `""` | Model Studio workspace ID (`maas.aliyuncs.com` domain). Required for `intl`; `beijing` may leave it empty. |
 | `qwen.base_url` | `""` | Advanced: full `wss://` URL override. |
@@ -472,7 +484,7 @@ Outbound translation:
 | --- | --- | --- |
 | `outbound.enabled` | `true` | Enables the outbound pipeline. |
 | `outbound.target_language` | `ja` | Default BCP-47 language code for translating your speech. The UI can search the 70+ Gemini Live Translation languages. |
-| `outbound.source_language` | `""` | My spoken language. Required for Qwen (empty = English), optional hint for Soniox, ignored by Gemini/OpenAI. |
+| `outbound.source_language` | `""` | My spoken language. Required for Qwen 3.5 (empty = English), optional hint for Soniox, ignored by Gemini/OpenAI/Qwen 3.8. |
 | `outbound.echo_target_language` | `false` | Also repeats source audio that is already in the target language. |
 | `outbound.mic_device` | `""` | Microphone device name substring. Empty uses the default input. |
 | `outbound.tts_device` | `CABLE Input` | Output device for translated voice and passthrough audio. |
@@ -594,14 +606,14 @@ dist\vrclt.exe
 Create release artifacts:
 
 ```powershell
-.\scripts\package_release.ps1 -Version 0.19.1
+.\scripts\package_release.ps1 -Version 0.20.0
 ```
 
 The release script creates:
 
 ```text
-release\vrclt-v0.19.1-windows-x64.exe
-release\vrclt-v0.19.1-windows-x64.exe.sha256
+release\vrclt-v0.20.0-windows-x64.exe
+release\vrclt-v0.20.0-windows-x64.exe.sha256
 ```
 
 ## Smoke Tests
@@ -610,7 +622,7 @@ release\vrclt-v0.19.1-windows-x64.exe.sha256
 .\.venv\Scripts\python.exe -m compileall vrclt
 .\.venv\Scripts\python.exe -m vrclt --help
 .\.venv\Scripts\pyinstaller.exe vrclt.spec --noconfirm
-.\scripts\package_release.ps1 -Version 0.19.1 -SkipBuild
+.\scripts\package_release.ps1 -Version 0.20.0 -SkipBuild
 ```
 
 For a real runtime test, run the exe, save settings in the native UI, confirm

@@ -12,7 +12,7 @@
 - 창 열기, 설정 열기, 번역/자막 토글, 종료를 제공하는 트레이 메뉴
 - 아웃바운드 번역: 내 마이크 -> selected engine -> 번역 음성 -> 대상 앱 마이크
 - 인바운드 자막: 대상 앱 오디오 -> selected engine -> 번역 자막
-- 네 가지 번역 엔진: Google Gemini Live(기본), Alibaba Qwen3.5 LiveTranslate, OpenAI gpt-realtime-translate, Soniox
+- 네 가지 번역 엔진: Google Gemini Live(기본), Alibaba Qwen3.8 LiveTranslate, OpenAI gpt-realtime-translate, Soniox
 - VRChat OSC 챗박스, 아바타 OSC 제어, SteamVR 자막, 손목 메뉴 지원
 - SteamVR 대시보드 설정 패널과 SteamVR 자동 시작(시작/오버레이 앱 등록) 지원
 - 원래 목소리는 그대로 보내고 OSC 챗박스 번역 텍스트만 추가하는 VRChat 텍스트 전용 모드
@@ -91,7 +91,7 @@ VRChat 또는 Discord가 번역 음성을 마이크처럼 받게 하려면 VB-Au
 ### 3b. 대안: Qwen API 키 (Gemini를 사용할 수 없는 지역용)
 
 거주 지역에서 Google 서비스를 사용할 수 없다면(예: 중국 본토), vrclt는 Gemini
-대신 **Alibaba Qwen3.5 LiveTranslate**를 사용할 수 있습니다.
+대신 **Alibaba Qwen3.8 LiveTranslate**를 사용할 수 있습니다.
 
 1. Alibaba Cloud 계정을 만들고 **Model Studio**를 활성화합니다.
    - 중국 본토: [bailian.console.aliyun.com](https://bailian.console.aliyun.com/)
@@ -110,15 +110,17 @@ VRChat 또는 Discord가 번역 음성을 마이크처럼 받게 하려면 VB-Au
    붙여넣습니다. `beijing` 엔드포인트는 비워 둘 수 있습니다(기존 공용
    `dashscope` 도메인 사용).
    참고: [Obtain the workspace ID](https://www.alibabacloud.com/help/en/model-studio/obtain-api-key-app-id-and-workspace-id)
-5. **내 발화 언어**와 **상대 발화 언어**를 설정합니다 — Qwen은 발화 언어를
-   자동 감지하지 못합니다(아래 "번역 엔진" 섹션 참고).
+5. 기본 모델 `qwen3.8-livetranslate-flash-realtime`은 발화 언어를 자동 감지하고
+   화자를 구분합니다. **Qwen 모델**을 `qwen3.5-livetranslate-flash-realtime`으로
+   바꾼 경우에만 **내 발화 언어**와 **상대 발화 언어**를 설정합니다 — Qwen 3.5는
+   발화 언어를 자동 감지하지 못합니다(아래 "번역 엔진" 섹션 참고).
 
 ### 3c. Soniox 설정
 
 1. [Soniox 콘솔](https://console.soniox.com)을 열어 계정을 만들고 로그인합니다.
 2. **My First Project** 또는 사용할 프로젝트를 열고 **API Keys**에서 키를 만듭니다.
    [공식 시작 안내](https://soniox.com/docs/stt/get-started)의 프로젝트별 키 발급 절차를 따릅니다.
-   v0.19.1은 미국(US) 서버를 사용하므로 리전을 선택할 수 있다면 **US 프로젝트**를 사용하세요.
+   v0.20.0은 미국(US) 서버를 사용하므로 리전을 선택할 수 있다면 **US 프로젝트**를 사용하세요.
    다른 리전 서버로 전환하는 설정은 아직 없습니다. [리전 안내](https://soniox.com/docs/data-residency)
 3. [Billing overview](https://console.soniox.com/org/billing/overview/)에서 API 사용 잔액을
    확인하고 필요한 경우 충전합니다. 요금은 [API 요금표](https://soniox.com/pricing)를
@@ -196,10 +198,12 @@ Soniox 대시보드에는 체크 상태와 현재 적용되는 무음 종료 시
       리전에 맞는 **Qwen 서버**(중국 본토는 `beijing`, 그 외에는 `intl`)를
       선택합니다.
    3. `intl`인 경우: **Qwen 워크스페이스 ID**를 입력합니다(3b 단계).
-   4. **내 발화 언어**(내가 말하는 언어)와 **상대 발화 언어**(게임에서
-      들려올 언어)를 설정합니다. Qwen은 자동 감지가 없어 비워 두면 영어로
-      간주합니다. 두 값은 나중에 대시보드 탭이나 SteamVR 대시보드 패널에서도
-      바꿀 수 있습니다.
+   4. 기본 모델 `qwen3.8-livetranslate-flash-realtime`은 여기까지면 됩니다 —
+      발화 언어를 자동 감지합니다. `qwen3.5-livetranslate-flash-realtime`을
+      쓴다면 **내 발화 언어**(내가 말하는 언어)와 **상대 발화 언어**(게임에서
+      들려올 언어)도 설정합니다. Qwen 3.5는 자동 감지가 없어 비워 두면 영어로
+      간주합니다. Qwen 3.5에서는 두 값을 나중에 대시보드 탭이나 SteamVR
+      대시보드 패널에서도 바꿀 수 있습니다.
 
 3. 앱 모드를 `vrchat`, `discord`, `custom` 중에서 선택합니다(`custom`은 설정에서 캡처할 앱을 고릅니다).
 4. **마이크 입력**에는 실제 마이크를 선택합니다.
@@ -214,7 +218,7 @@ Soniox 대시보드에는 체크 상태와 현재 적용되는 무음 종료 시
 - API 키 필요 상태: 설정에 키를 입력하거나 `GEMINI_API_KEY`를 설정합니다(Qwen 엔진: `DASHSCOPE_API_KEY`).
 - Qwen 키가 거부되거나 연결이 바로 실패함: `qwen.endpoint`가 키의 리전과 맞는지 확인합니다 — `beijing` 키와 `intl` 키는 서로 호환되지 않습니다 — 그리고 `intl` 사용 시 워크스페이스 ID가 설정되어 있는지 확인합니다.
 - Qwen 오류 `Voice '...' is not supported`: 리터럴 음성 `default`는 음성 복제가 켜져 있을 때만 동작합니다. `qwen.voice_clone`을 켜 두거나, 모델 기본 음성을 쓰려면 **Qwen 음성 ID**를 비워 둡니다.
-- Qwen이 엉뚱한 언어에서 번역함: **내 발화 언어** / **상대 발화 언어**를 설정합니다(설정, 대시보드, 또는 SteamVR 패널). Qwen은 자동 감지가 없으며, 비어 있으면 영어로 간주합니다.
+- Qwen 3.5가 엉뚱한 언어에서 번역함: **내 발화 언어** / **상대 발화 언어**를 설정합니다(설정, 대시보드, 또는 SteamVR 패널). Qwen 3.5는 자동 감지가 없으며, 비어 있으면 영어로 간주합니다. 기본 모델인 Qwen 3.8은 자동 감지합니다.
 - VR 오버레이가 안 뜸: SteamVR이 실행 중이고 `overlay.enabled` / `wrist_ui.enabled`가 켜져 있는지 확인합니다.
 - passthrough나 자막 지연이 큼: 먼저 이 README의 기본값을 사용하고, 연결이 안정적이면 `audio.turn_end_silence_sec`, `audio.inbound_turn_end_silence_sec`, `audio.subtitle_finalize_silence_sec`를 조심해서 낮춥니다.
 - 설정을 초기화하고 싶음: 설정 탭의 **기본값 리셋**을 사용합니다. API 키, 출력 언어 목록, 자막 언어 목록, UI 언어, 창 닫기 동작, 선택한 오디오 장치는 유지하고 나머지를 기본값으로 되돌립니다. 앱 업데이트 후에도 vrclt가 이 리셋을 한 번 물어봅니다.
@@ -225,20 +229,25 @@ vrclt는 네 가지 실시간 번역 엔진을 지원하며, **번역 엔진** �
 `provider`)으로 선택합니다. 선택한 엔진은 내 음성과 인바운드 자막 양쪽 방향에
 모두 적용됩니다.
 
-| | Gemini Live (기본) | Qwen3.5 LiveTranslate | gpt-realtime-translate | Soniox |
+| | Gemini Live (기본) | Qwen3.8 LiveTranslate | gpt-realtime-translate | Soniox |
 | --- | --- | --- | --- | --- |
 | 제공자 / 키 | Google AI Studio (`GEMINI_API_KEY`) | Alibaba Cloud Model Studio / DashScope (`DASHSCOPE_API_KEY`) | OpenAI (`OPENAI_API_KEY`) | Soniox (`SONIOX_API_KEY`) |
-| 필요한 설정 | API 키만 입력 | 엔진을 `qwen`으로, API 키 + 서버(`intl`은 워크스페이스 ID까지), **내/상대 발화 언어** | 엔진을 `openai`로, API 키만 입력 | 엔진 `soniox` + API 키 |
+| 필요한 설정 | API 키만 입력 | 엔진을 `qwen`으로, API 키 + 서버(`intl`은 워크스페이스 ID까지); Qwen 3.5는 **내/상대 발화 언어**도 필요 | 엔진을 `openai`로, API 키만 입력 | 엔진 `soniox` + API 키 |
 | 중국 본토에서 사용 | 불가 | 가능 (`beijing` 엔드포인트) | 불가 | 미검증 |
-| 발화 언어 감지 | 자동 감지 | **수동** — "내/상대 발화 언어"를 설정해야 함 | 자동 감지 (발화 언어 설정은 무시됨) | 자동 감지; 발화 언어는 선택적 힌트 |
+| 발화 언어 감지 | 자동 감지 | 자동 감지 (Qwen 3.5: **수동** — "내/상대 발화 언어"를 설정해야 함) | 자동 감지 (발화 언어 설정은 무시됨) | 자동 감지; 발화 언어는 선택적 힌트 |
 | 지원 언어 | `zh-Hans`/`zh-Hant`를 포함한 70개 이상 BCP-47 도착어 | 음성 지원 29개 + 텍스트 전용 31개; 중국어는 `zh` 하나뿐(간체/번체 구분 없음); 광둥어(`yue`)는 텍스트 전용 | 입력은 70개 이상이지만 도착어는 **13개뿐**(`en es pt fr ja ru zh de ko hi id vi it`); 중국어는 `zh` 하나; 세션당 도착어 1개 | 앱 지원 60개; 중국어는 `zh`, 광둥어(`yue`) 미지원 |
 | 번역 음성 | 화자 목소리 재현 | 서버 측 음성 복제로 화자 목소리 재현 (`qwen.voice_clone`, 기본 `once`); 복제를 끄면 고정 음성 | 화자 목소리를 자동으로 따라감; 음성 선택 옵션 없음 | 별도 TTS; 기본 `Daniel` 또는 커스텀 음성; 자동 복제 없음 |
 | 끼어들기(barge-in) | 지원 | 미지원 — 발화가 겹치면 오디오가 줄지어 재생될 수 있음 | 미지원 — 발화가 겹치면 오디오가 줄지어 재생될 수 있음 | 미지원 — 발화가 겹치면 오디오가 줄지어 재생될 수 있음 |
 
 Qwen 참고 사항:
 
-- **발화 언어 설정이 필수입니다.** 설정 탭, 대시보드 탭, 또는 SteamVR 대시보드
-  패널의 **대화** 페이지에서 설정합니다. 비어 있으면 영어로 간주합니다.
+- `qwen.model` 기본값은 `qwen3.8-livetranslate-flash-realtime`입니다. 발화 언어를
+  자동 감지하고, Soniox처럼 자막에 화자를 구분해 표시합니다. 이미 저장된 설정은
+  기존 모델을 그대로 유지하므로, 바꾸려면 **Qwen 모델**을 변경하세요.
+- `qwen3.5-livetranslate-flash-realtime`도 계속 사용할 수 있지만 **발화 언어
+  설정이 필수입니다.** 설정 탭, 대시보드 탭, 또는 SteamVR 대시보드 패널의
+  **대화** 페이지에서 설정합니다. 비어 있으면 영어로 간주합니다. Qwen 3.5는
+  화자 구분을 표시하지 않습니다.
 - `zh-Hans`/`zh-Hant` 도착어는 둘 다 `zh`로 Qwen에 전달됩니다.
 - 선택한 도착어에 Qwen 음성 지원이 없으면 vrclt가 자동으로 세션을 텍스트 전용으로
   실행합니다(챗박스/자막은 계속 동작합니다).
@@ -297,7 +306,7 @@ Windows 오디오 세션을 가진 프로세스가 나열되며, 지금 소리�
 - 출력 언어와 자막 언어, Gemini Live Translation 70개 이상 지원 언어 검색/추가
 - 마이크 입력과 번역 음성 출력 장치 선택, 출력 테스트 사운드 버튼 포함; 장치 새로고침은 런타임을 재시작하며 나중에 꽂은 장치도 인식합니다
 - 번역 음성 볼륨 슬라이더와 감지 임계값 표시가 있는 실시간 마이크 레벨 미터
-- 내/상대 발화 언어: Qwen은 필수, Soniox는 선택적 인식 힌트, Gemini/OpenAI는 자동 감지
+- 내/상대 발화 언어: Qwen 3.5는 필수, Soniox는 선택적 인식 힌트, Gemini/OpenAI/Qwen 3.8은 자동 감지
 - PC 자막 위치 이동/리셋, 상자 크기, 글자 크기 조절
 - 실시간 자막 미리보기
 
@@ -355,7 +364,7 @@ VRChat 모드에서는 다음 기능을 사용할 수 있습니다.
 - 높이를 줄인 간결한 SteamVR 손목 메뉴. 첫 **대화** 화면에 번역·자막·출력/자막 언어·연결 상태와 별도의 **음성 / 텍스트** 선택 버튼, 런타임 재시작을 모았습니다. **설정**에는 UI 언어·자막 크기·패널 이동/위치 초기화·Soniox 화자 구분 유지를 배치했습니다. 기존 시선·그립 조작도 유지합니다
 - 손목 메뉴 기본 너비는 **14cm**이며 패널 높이도 줄였습니다. 기존에 저장한 너비는 유지하고, 앱 설정의 손목 너비에서 원하는 크기로 조절할 수 있습니다. 16cm 미만의 너비도 정상 적용됩니다
 - **대화 / 오디오 / 위치 · 앱**으로 나눈 SteamVR 대시보드(SteamVR 메뉴에서 vrclt 아이콘 선택). **대화**에는 번역·자막·언어·연결/오류 상태, **오디오**에는 마이크·음성 출력 선택과 번역 음성 볼륨, **위치 · 앱**에는 패널 위치와 앱 제어를 모았습니다. 디바이스 변경은 마지막 클릭 후 잠시 뒤 런타임 재시작과 함께 적용됩니다
-- SteamVR 대시보드에서 Qwen의 발화 언어와 Soniox의 선택적 인식 힌트를 설정할 수 있으며, 손목 메뉴에서는 번역 출력 언어와 자막 언어를 선택합니다. Soniox를 선택하면 두 VR 패널 모두 **무음 중 화자 구분 유지**와 적용 중인 무음 종료 시간을 표시하며, PC UI와 같은 저장값을 사용합니다. 이 스위치를 꺼도 화자 분리 자체는 켜져 있습니다
+- SteamVR 대시보드에서 Qwen 3.5의 발화 언어와 Soniox의 선택적 인식 힌트를 설정할 수 있으며, 손목 메뉴에서는 번역 출력 언어와 자막 언어를 선택합니다. Soniox를 선택하면 두 VR 패널 모두 **무음 중 화자 구분 유지**와 적용 중인 무음 종료 시간을 표시하며, PC UI와 같은 저장값을 사용합니다. 이 스위치를 꺼도 화자 분리 자체는 켜져 있습니다
 - SteamVR 자동 시작: 릴리스 exe가 SteamVR 설정 > 시작/오버레이 앱에 자동 등록되며, 자동 시작은 SteamVR 설정 또는 vrclt 설정에서 켜고 끕니다
 - 새 버전으로 업데이트한 뒤에는 새 exe를 한 번 실행해 주세요. 등록 자체는 유지되지만, 자동 시작이 가리키는 exe 경로는 첫 실행 때 새 파일로 갱신됩니다
 - VR 자막 편집 laser/cursor 표시와 모서리 크기 조절 핸들
@@ -387,7 +396,7 @@ VRChat 모드에서는 다음 기능을 사용할 수 있습니다.
 | `api_key` | `""` | Gemini API 키. 비어 있으면 `GEMINI_API_KEY` 환경 변수를 사용할 수 있습니다. |
 | `model` | `gemini-3.5-live-translate-preview` | Gemini Live 모델 이름. |
 | `qwen.api_key` | `""` | DashScope API 키. 비어 있으면 `DASHSCOPE_API_KEY` 환경 변수를 사용할 수 있습니다. |
-| `qwen.model` | `qwen3.5-livetranslate-flash-realtime` | Qwen 실시간 번역 모델 이름. |
+| `qwen.model` | `qwen3.8-livetranslate-flash-realtime` | Qwen 실시간 번역 모델 이름. Qwen 3.8은 발화 언어 자동 감지와 화자 구분을 지원하고, `qwen3.5-livetranslate-flash-realtime`은 발화 언어 설정이 필요합니다. |
 | `qwen.endpoint` | `intl` | `intl`(싱가포르) 또는 `beijing`(중국 본토). 키는 리전에 묶여 있습니다. |
 | `qwen.workspace_id` | `""` | Model Studio 워크스페이스 ID(`maas.aliyuncs.com` 도메인). `intl`에서는 필수이며 `beijing`은 비워 둘 수 있습니다. |
 | `qwen.base_url` | `""` | 고급: 전체 `wss://` URL 재정의. |
@@ -439,7 +448,7 @@ PC 핫키:
 | --- | --- | --- |
 | `outbound.enabled` | `true` | 아웃바운드 파이프라인을 켭니다. |
 | `outbound.target_language` | `ja` | 내 말 번역의 기본 BCP-47 언어 코드. UI에서 Gemini Live Translation 70개 이상 지원 언어를 검색해 선택할 수 있습니다. |
-| `outbound.source_language` | `""` | 내 발화 언어. Qwen은 필수(공란은 영어), Soniox는 선택적 힌트, Gemini/OpenAI는 무시. |
+| `outbound.source_language` | `""` | 내 발화 언어. Qwen 3.5는 필수(공란은 영어), Soniox는 선택적 힌트, Gemini/OpenAI/Qwen 3.8은 무시. |
 | `outbound.echo_target_language` | `false` | 이미 대상 언어인 입력도 따라 말합니다. |
 | `outbound.mic_device` | `""` | 마이크 장치 이름 일부. 비어 있으면 기본 입력을 사용합니다. |
 | `outbound.tts_device` | `CABLE Input` | 번역 음성과 원음 전달을 내보낼 출력 장치. |
@@ -560,14 +569,14 @@ dist\vrclt.exe
 릴리스 산출물 생성:
 
 ```powershell
-.\scripts\package_release.ps1 -Version 0.19.1
+.\scripts\package_release.ps1 -Version 0.20.0
 ```
 
 릴리스 스크립트 결과:
 
 ```text
-release\vrclt-v0.19.1-windows-x64.exe
-release\vrclt-v0.19.1-windows-x64.exe.sha256
+release\vrclt-v0.20.0-windows-x64.exe
+release\vrclt-v0.20.0-windows-x64.exe.sha256
 ```
 
 ## 스모크 테스트
@@ -576,7 +585,7 @@ release\vrclt-v0.19.1-windows-x64.exe.sha256
 .\.venv\Scripts\python.exe -m compileall vrclt
 .\.venv\Scripts\python.exe -m vrclt --help
 .\.venv\Scripts\pyinstaller.exe vrclt.spec --noconfirm
-.\scripts\package_release.ps1 -Version 0.19.1 -SkipBuild
+.\scripts\package_release.ps1 -Version 0.20.0 -SkipBuild
 ```
 
 실제 런타임 테스트는 exe 실행, 자체 UI에서 설정 저장,

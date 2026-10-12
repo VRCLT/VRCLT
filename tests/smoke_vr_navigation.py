@@ -255,8 +255,32 @@ def check_text_only_lifecycle():
     assert len(notifications) >= len(done)
 
 
+def check_auto_detecting_qwen_hides_source_controls():
+    """Qwen 3.8 detects the spoken language; its pickers must not pretend otherwise."""
+    cfg = copy.deepcopy(config.DEFAULTS)
+    cfg["provider"] = "qwen"
+    state = AppState()
+    panel = make_dashboard_panel(
+        cfg, state, lambda: (False, "status_stopped", ""), lambda x: None,
+        lambda x: None, lambda: 27, lambda: None, lambda x: None, lambda: None,
+        lambda: ([""], [""]), lambda: "", lambda: "", lambda m, t, d: d(True),
+        lambda x: None, lambda: 1.0, lambda: config.provider(cfg),
+        uses_source_language=lambda: config.uses_source_language(cfg))
+    try:
+        assert not panel._enabled("src_next") and not panel._enabled("insrc_prev")
+        panel._on_click("src_next")
+        assert state.source_language == ""
+        cfg["qwen"]["model"] = "qwen3.5-livetranslate-flash-realtime"
+        assert panel._enabled("src_next")
+        panel._on_click("src_next")
+        assert state.source_language == "en"  # blank cycles from the first entry
+    finally:
+        panel.detach()
+
+
 if __name__ == "__main__":
     check_navigation()
+    check_auto_detecting_qwen_hides_source_controls()
     check_controller_bridge()
     check_wrist_width()
     check_text_only_lifecycle()

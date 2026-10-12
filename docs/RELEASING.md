@@ -45,7 +45,7 @@ Expected release-related source files include:
 - `README.zh.md`
 - `CHANGELOG.md`
 - `docs/RELEASING.md`
-- `docs/releases/v0.19.1.md`
+- `docs/releases/v0.20.0.md`
 - `config.example.yaml`
 - `requirements.txt`
 - `vrclt.spec`
@@ -61,13 +61,13 @@ Run the lightweight checks first:
 .\.venv\Scripts\python.exe -m vrclt --help
 ```
 
-For v0.19.1, also run the regression scripts for Soniox, speech activity,
+For v0.20.0, also run the regression scripts for Qwen, Soniox, speech activity,
 speaker displays/context controls, VR pages and interaction, settings navigation,
 logs, reconnect waits, audio passthrough, and startup:
 
 ```powershell
 $releaseChecks = @(
-  'smoke_soniox_session.py', 'smoke_speech_activity.py',
+  'smoke_qwen_session.py', 'smoke_soniox_session.py', 'smoke_speech_activity.py',
   'smoke_subtitle_speakers.py', 'smoke_speaker_context.py',
   'smoke_speaker_ui.py', 'smoke_vr_speakers.py',
   'smoke_vr_render.py', 'test_vr_button_table.py',
@@ -83,7 +83,7 @@ foreach ($releaseCheck in $releaseChecks) {
 ```
 
 Record local test results separately from live-provider and physical-device
-checks. Mock Soniox sessions and rendered VR images do not establish live
+checks. Mock Qwen/Soniox sessions and rendered VR images do not establish live
 speaker-recognition accuracy or behavior on a headset.
 
 Confirm that the public CLI only exposes `run` plus the optional app override:
@@ -134,25 +134,25 @@ executable before copying it. Windows file and product versions also use the
 application version from the spec.
 
 ```powershell
-.\scripts\package_release.ps1 -Version 0.19.1
+.\scripts\package_release.ps1 -Version 0.20.0
 ```
 
 If `dist\vrclt.exe` has already been built and only the release copy needs to be
 refreshed:
 
 ```powershell
-.\scripts\package_release.ps1 -Version 0.19.1 -SkipBuild
+.\scripts\package_release.ps1 -Version 0.20.0 -SkipBuild
 ```
 
 Use `-SkipBuild` only when that executable was built from the exact source being
 released. Confirm `vrclt/__init__.py`, the changelog, and the artifact name all
-use `0.19.1`.
+use `0.20.0`.
 
 Expected output:
 
 ```text
-release\vrclt-v0.19.1-windows-x64.exe
-release\vrclt-v0.19.1-windows-x64.exe.sha256
+release\vrclt-v0.20.0-windows-x64.exe
+release\vrclt-v0.20.0-windows-x64.exe.sha256
 ```
 
 ## 5. Smoke Test The Executable
@@ -167,9 +167,9 @@ Repeat the launch check with the packaged release executable, which is the file
 users download:
 
 ```powershell
-.\release\vrclt-v0.19.1-windows-x64.exe
-Get-FileHash .\release\vrclt-v0.19.1-windows-x64.exe -Algorithm SHA256
-Get-Content .\release\vrclt-v0.19.1-windows-x64.exe.sha256
+.\release\vrclt-v0.20.0-windows-x64.exe
+Get-FileHash .\release\vrclt-v0.20.0-windows-x64.exe -Algorithm SHA256
+Get-Content .\release\vrclt-v0.20.0-windows-x64.exe.sha256
 ```
 
 The computed hash must match the checksum file. An existing process or a
@@ -224,10 +224,26 @@ Minimum manual checks:
 - Language changes from Dashboard apply immediately.
 - Settings that require a rebuild restart the runtime without duplicate pipelines.
 
+Qwen release checks:
+
+- Set the engine to `qwen` with the default `qwen3.8-livetranslate-flash-realtime`
+  model, leave both spoken languages unset, and confirm original and translated
+  text in both directions. The spoken-language pickers are hidden on the PC
+  Dashboard and disabled on the SteamVR Dashboard.
+- Use two speakers and confirm speaker labels, original/translated association,
+  and turn order. An utterance that starts while the previous translation is
+  finishing should not be split into a separate source-only line.
+- Check translated voice with `qwen.voice_clone` set to `once` and to `off`.
+- Switch `qwen.model` to `qwen3.5-livetranslate-flash-realtime` and confirm the
+  spoken-language pickers return and translation still works.
+
 Soniox release checks:
 
 - Set the engine to `soniox` and configure its API key in Settings, or supply
   `SONIOX_API_KEY` in the environment.
+- Confirm recognition and translated voice connect with the key sent only in
+  the WebSocket upgrade `Authorization` header. An invalid key must stop with
+  the API key error instead of reconnecting.
 - Use two speakers and confirm speaker numbers/colors, original/translated text
   association, and turn order in the Dashboard, desktop overlay, and VR overlay.
 - Confirm **Keep speaker context** is enabled by default, its effective silence
@@ -250,8 +266,9 @@ VR page checks:
 - On the wrist menu, switch between Live and Settings and exercise translation,
   subtitles, language selection, subtitle sizing, restart, and panel positioning.
   Check gaze/grip behavior and controller pointer targets on a physical headset.
-- On the SteamVR Dashboard, confirm Qwen source-language choices and optional
-  Soniox recognition hints are available. Check translation output and subtitle
+- On the SteamVR Dashboard, confirm Qwen 3.5 source-language choices and optional
+  Soniox recognition hints are available, and that the source-language buttons
+  are disabled for Qwen 3.8. Check translation output and subtitle
   language choices on both VR panels. With Soniox, change the speaker-context
   switch in either VR panel and confirm the
   other panels and PC settings display the same saved value and timeout.
@@ -265,17 +282,17 @@ After validation, commit only source changes:
 
 ```powershell
 git status
-git add README.md README.ko.md README.en.md README.ja.md README.zh.md CHANGELOG.md docs/RELEASING.md docs/releases/v0.19.1.md config.example.yaml requirements.txt vrclt.spec scripts/package_release.ps1 vrclt tests
+git add README.md README.ko.md README.en.md README.ja.md README.zh.md CHANGELOG.md docs/RELEASING.md docs/releases/v0.20.0.md config.example.yaml requirements.txt vrclt.spec scripts/package_release.ps1 vrclt tests
 git status
-git commit -m "chore: prepare v0.19.1 release"
+git commit -m "chore: prepare v0.20.0 release"
 ```
 
 Create and push the tag:
 
 ```powershell
-git tag v0.19.1
+git tag v0.20.0
 git push origin main
-git push origin v0.19.1
+git push origin v0.20.0
 ```
 
 Use a new version number if the tag already exists.
@@ -285,18 +302,18 @@ Use a new version number if the tag already exists.
 Upload these files to a GitHub Release:
 
 ```text
-release\vrclt-v0.19.1-windows-x64.exe
-release\vrclt-v0.19.1-windows-x64.exe.sha256
+release\vrclt-v0.20.0-windows-x64.exe
+release\vrclt-v0.20.0-windows-x64.exe.sha256
 ```
 
 With GitHub CLI:
 
 ```powershell
-gh release create v0.19.1 `
-  .\release\vrclt-v0.19.1-windows-x64.exe `
-  .\release\vrclt-v0.19.1-windows-x64.exe.sha256 `
-  --title "vrclt v0.19.1" `
-  --notes-file .\docs\releases\v0.19.1.md
+gh release create v0.20.0 `
+  .\release\vrclt-v0.20.0-windows-x64.exe `
+  .\release\vrclt-v0.20.0-windows-x64.exe.sha256 `
+  --title "vrclt v0.20.0" `
+  --notes-file .\docs\releases\v0.20.0.md
 ```
 
 ## 9. Release Notes Checklist
@@ -306,6 +323,12 @@ Include these points in the release body:
 - Windows-only single executable.
 - VB-Audio Virtual Cable is required.
 - The selected engine's API key is configured in the Settings tab.
+- Qwen 3.8 is the default Qwen model for new configurations; it detects the
+  spoken language and labels speakers. Saved configurations keep their model,
+  and Qwen 3.5 still requires the spoken-language settings.
+- Soniox now authenticates through the WebSocket `Authorization` header. Soniox
+  refuses keys in the start message after 2027-01-15, so Soniox users must
+  update before then.
 - Soniox speaker labels preserve turn order and are local to the current session.
 - SteamVR Dashboard pages group Live, Audio, and Layout & app controls; the wrist
   menu separates Live controls from Settings.
@@ -313,8 +336,8 @@ Include these points in the release body:
   adjustable from 5 to 600 seconds. The context switch and effective timeout
   appear in both VR panels. The full connected recognition stream remains
   billable, including silence; existing saved switch choices are preserved.
-- State whether live Soniox calls, packaged-window launch, and physical VR/audio
-  checks were completed; do not equate local mock tests with those checks.
+- State whether live Qwen and Soniox calls, packaged-window launch, and physical
+  VR/audio checks were completed; do not equate local mock tests with those checks.
 - User settings are stored in `%LOCALAPPDATA%\vrclt\config.yaml`.
 - The app uses a native PySide6 UI and tray menu.
 - There is no web UI or local web server.

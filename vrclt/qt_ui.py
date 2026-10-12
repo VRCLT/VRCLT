@@ -1560,7 +1560,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         cfg = self._controller.cfg
         prov = config_mod.provider(cfg)
-        self._speaker_badge.setVisible(prov == "soniox")
+        self._speaker_badge.setVisible(config_mod.has_speaker_ids(cfg))
         self._sync_speaker_context()
         self._engine_button.setText({
             "gemini": "Gemini Live", "qwen": "Qwen Live",
@@ -1614,7 +1614,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._sync_combo(self._sub_lang, [
             language_label(c) for c in self._controller.cfg.get("inbound", {}).get("languages", ["ko"])
         ], language_label(st.inbound_language))
-        has_source_hint = prov in ("qwen", "soniox")
+        has_source_hint = config_mod.uses_source_language(cfg)
         for label in self._source_language_labels:
             label.setVisible(has_source_hint)
         for combo, code in ((self._src_lang, st.source_language),

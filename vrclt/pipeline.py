@@ -280,7 +280,8 @@ class _TranslationPipeline:
         au = cfg["audio"]
         self.state = state
         self._audio_sinks = tuple(audio_sinks)
-        segmenter_class = SpeakerSegmenter if config_mod.provider(cfg) == "soniox" else Segmenter
+        speakers = config_mod.has_speaker_ids(cfg)
+        segmenter_class = SpeakerSegmenter if speakers else Segmenter
         self.segmenter = segmenter_class(finalize_silence_sec, self._on_final,
                                    self._on_partial,
                                    partial_interval_sec=partial_interval_sec,
@@ -335,13 +336,14 @@ class _TranslationPipeline:
         elif prov == "qwen":
             qw = cfg.get("qwen", {})
             self.session = QwenLiveTranslateSession(
-                model=qw.get("model", "qwen3.5-livetranslate-flash-realtime"),
+                model=config_mod.qwen_model(cfg),
                 endpoint=qw.get("endpoint", "intl"),
                 workspace_id=qw.get("workspace_id", ""),
                 base_url=qw.get("base_url", ""),
                 voice=qw.get("voice", ""),
                 voice_clone=qw.get("voice_clone", "once"),
                 get_source_language=get_source_language,
+                speaker_metadata=speakers,
                 **common,
             )
         else:

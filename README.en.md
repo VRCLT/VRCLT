@@ -18,6 +18,13 @@ Dashboard shows the synchronized checkbox and effective timeout. Connections
 remain billable during silence; speaker diarization stays enabled with either
 choice. See the setup section for details.
 
+In v0.20.0, Qwen's default model is `qwen3.8-livetranslate-flash-realtime`. It
+detects the spoken language automatically and labels speakers like Soniox.
+Saved configurations keep their model, and `qwen3.5-livetranslate-flash-realtime`
+still requires the spoken-language settings. Soniox now sends the API key when
+the connection opens, which Soniox requires from 15 January 2027. See
+[Translation Engines](README.md#translation-engines).
+
 In v0.19.1, the SteamVR Dashboard groups controls into **Live**, **Audio**, and
 **Layout & app** pages. The compact wrist menu's **Live** page includes separate
 **Voice / Text** buttons and runtime restart alongside translation and subtitle
