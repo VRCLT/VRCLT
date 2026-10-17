@@ -611,14 +611,16 @@ class QtTests(unittest.TestCase):
             win.show()
             win._refresh()
             self.app.processEvents()
-            full_only = (win._text_only, win._out_language_options,
+            full_only = (win._out_language_options,
                          win._in_language_options, win._audio_output_column,
                          win._close_action, win._audio_group,
                          win._engine_button)
             self.assertTrue(all(widget.isHidden() for widget in full_only))
-            # subtitle size/position and the UI language: both views, unfolded
-            both_views = (win._overlay_font_size, win._btn_overlay_move,
-                          win._btn_overlay_reset, win._ui_lang)
+            # VRChat text-only, subtitle size/position and the UI language:
+            # both views, unfolded
+            both_views = (win._text_only, win._overlay_font_size,
+                          win._btn_overlay_move, win._btn_overlay_reset,
+                          win._ui_lang)
             self.assertTrue(all(not widget.isHidden() for widget in both_views))
             self.assertFalse(win._easy_mic_meter.isHidden())
             self.assertFalse(win._easy_mic_wrap.isHidden())          # mic + Find

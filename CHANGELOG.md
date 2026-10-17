@@ -7,7 +7,12 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 Release artifacts are attached to [GitHub Releases](https://github.com/VRCLT/VRCLT/releases)
 as `vrclt-v<version>-windows-x64.exe` plus a `.sha256` checksum.
 
-## [Unreleased]
+## [1.0.1] - 2026-10-17
+
+### Added
+
+- The `VRCLT_NO_UPDATE_CHECK` environment variable skips the automatic update
+  check at startup; **Check for updates** still works.
 
 ### Changed
 
@@ -15,9 +20,18 @@ as `vrclt-v<version>-windows-x64.exe` plus a `.sha256` checksum.
   subtitle pos**, and the UI language in both the Simple and Full views, right
   below the language cards. They used to be folded away at the bottom of the
   Full view only. The window close action stays in the Full view.
+- The project moved to [github.com/VRCLT/VRCLT](https://github.com/VRCLT/VRCLT).
+  The update check, links, and website use the new address; GitHub redirects
+  the old one, so 1.0.0 still finds new releases.
+- User guides moved from the README to the
+  [wiki](https://github.com/VRCLT/VRCLT/wiki), including step-by-step API key
+  guides for Gemini, Qwen, OpenAI, and Soniox. The Qwen guide uses the `ws-`
+  workspace ID shown by the current Model Studio console.
 
 ### Fixed
 
+- The Simple view shows VRChat's **Text only** switch again; 1.0.0 had moved it
+  to the Full view.
 - At a width of 780 px the Full view no longer scrolls sideways: the audio
   device columns stack when they do not fit.
 

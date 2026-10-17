@@ -423,15 +423,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self._apply_view_mode()
 
     def _apply_view_mode(self) -> None:
-        """The simple view keeps the setup check, the app choice, runtime
-        restart, on/off, languages, a mic level, subtitle size and position,
-        the UI language and the live subtitles; devices, the engine and
-        rarely used options live in the full view."""
+        """The simple view keeps the setup check, the app choice with VRChat's
+        text-only switch, runtime restart, on/off, languages, a mic level,
+        subtitle size and position, the UI language and the live subtitles;
+        devices, the engine and rarely used options live in the full view."""
         easy = self._easy_mode()
         for value, button in self._view_buttons.items():
             if button.isChecked() != (value == easy):
                 button.setChecked(value == easy)
-        for widget in (self._text_only, self._out_language_options,
+        for widget in (self._out_language_options,
                        self._in_language_options, self._audio_output_column,
                        self._close_action_label, self._close_action,
                        self._audio_group, self._engine_button):
