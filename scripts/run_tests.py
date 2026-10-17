@@ -24,7 +24,9 @@ def main(argv: list[str]) -> int:
         if not scripts:
             print(f"no test script matches {' '.join(argv)}")
             return 2
-    env = dict(os.environ, PYTHONUTF8="1", PYTHONIOENCODING="utf-8")
+    # no GitHub update check from the windows the tests build
+    env = dict(os.environ, PYTHONUTF8="1", PYTHONIOENCODING="utf-8",
+               VRCLT_NO_UPDATE_CHECK="1")
     failed = []
     for script in scripts:
         started = time.monotonic()
