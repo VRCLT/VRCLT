@@ -102,7 +102,7 @@ def main() -> None:
         "[vrclt.github.io](https://vrclt.github.io/)\n\n"
         "Static pages in English, Korean, Japanese, Simplified Chinese and Traditional Chinese.\n"
         "The root detects the browser language; explicit language choices are remembered locally.\n"
-        "v1.0 is a preview; downloads link to the latest published release.\n\n"
+        "v1.0 is released; downloads link to the latest published release.\n\n"
         "[Application source and downloads](https://github.com/shgeum/VRCLT)\n\n"
         "The website templates live in the application checkout's `site/` directory,\n"
         "built with `scripts/build_site.py`. This repository contains the public\n"

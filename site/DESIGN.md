@@ -1,8 +1,8 @@
 # VRCLT — editorial product direction
 
 The page introduces a Windows voice translation tool to VRChat and Discord
-users. The primary action is to download the latest public release; v1.0
-remains a preview.
+users. The primary action is to download the latest public release. v1.0 is
+released; the gallery uses illustrative app screens with sample conversations.
 
 ## References inspected
 
@@ -29,7 +29,7 @@ not copied. Live reference sites may differ from their award submission.
 - The dark gallery starts with VR subtitles; tabs expose the other actual
   interface renders. An audio-routing diagram explains the setup.
 - No stock imagery, fake usage metrics, decorative waveforms or scroll effects.
-  The screenshots are explicitly labeled as preview renders with sample data.
+  The screenshots are explicitly labeled as app renders with sample data.
 - Describe features directly instead of forcing rhyme or paired slogan fragments.
   Preserve localized wording supplied by the user or their native-language reviewer.
 

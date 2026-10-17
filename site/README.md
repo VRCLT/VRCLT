@@ -27,7 +27,7 @@ After adding new translated text, refresh those subsets with
 `scripts/make_site_fonts.py` (build-time dependency: fonttools and brotli).
 
 Content comes from `content.json`; `config.json` holds the canonical URL.
-v1.0 is explicitly marked as a preview. Downloads link to the existing public
+v1.0 is marked as released. Downloads link to the latest public
 release at `https://github.com/shgeum/VRCLT/releases/latest`.
 
 From the application repository root:
