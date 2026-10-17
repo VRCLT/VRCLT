@@ -13,7 +13,7 @@
 
 Windows용 **VRChat** · **Discord** 실시간 음성 번역과 실시간 자막.
 
-[![Latest release](https://img.shields.io/github/v/release/shgeum/VRCLT?style=flat-square&label=release&color=2ea44f)](https://github.com/shgeum/VRCLT/releases/latest) [![Downloads](https://img.shields.io/github/downloads/shgeum/VRCLT/total?style=flat-square&color=1f6feb)](https://github.com/shgeum/VRCLT/releases) [![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](#요구사항) [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/VRCLT/VRCLT?style=flat-square&label=release&color=2ea44f)](https://github.com/VRCLT/VRCLT/releases/latest) [![Downloads](https://img.shields.io/github/downloads/VRCLT/VRCLT/total?style=flat-square&color=1f6feb)](https://github.com/VRCLT/VRCLT/releases) [![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](#요구사항) [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
 [English](README.md) · **한국어** · [日本語](README.ja.md) · [中文](README.zh.md)
 
@@ -23,7 +23,7 @@ Windows용 **VRChat** · **Discord** 실시간 음성 번역과 실시간 자막
 
 <br><br>
 
-[**⬇ VRCLT 내려받기**](https://github.com/shgeum/VRCLT/releases/latest) &nbsp;·&nbsp; [빠른 시작](#빠른-시작) &nbsp;·&nbsp; [자세한 문서](#설치-방법)
+[**⬇ VRCLT 내려받기**](https://github.com/VRCLT/VRCLT/releases/latest) &nbsp;·&nbsp; [빠른 시작](#빠른-시작) &nbsp;·&nbsp; [자세한 문서](#설치-방법)
 
 </div>
 
@@ -82,7 +82,7 @@ Google Gemini Live, Qwen3.8 LiveTranslate, OpenAI gpt-realtime-translate, Soniox
 
 ## 빠른 시작
 
-1. [Releases](https://github.com/shgeum/VRCLT/releases/latest)에서 `vrclt-v<version>-windows-x64.exe`를 **내려받아 실행**합니다. 설치 과정은 없습니다.
+1. [Releases](https://github.com/VRCLT/VRCLT/releases/latest)에서 `vrclt-v<version>-windows-x64.exe`를 **내려받아 실행**합니다. 설치 과정은 없습니다.
 2. **API 키를 입력합니다.** 기본 엔진은 Gemini입니다. [Google AI Studio](https://aistudio.google.com/apikey)에서 키를 만들어 **설정 → Gemini API 키**에 붙여 넣으세요. 다른 엔진은 [번역 엔진](#번역-엔진)을 참고하세요.
 3. **나머지는 설정 점검에 맡깁니다.** VB-Cable이 없으면 **VB-Cable 자동 설치**를 누르고, VRChat을 끈 뒤 **자동 설정**을 누르세요.
 4. **VRChat을 켜고 말하면 됩니다.** 번역·자막은 대시보드나 손목 메뉴에서 켜고 끕니다.
@@ -114,7 +114,7 @@ Google Gemini Live, Qwen3.8 LiveTranslate, OpenAI gpt-realtime-translate, Soniox
 - 지금 소리를 내고 있는 프로세스 목록에서 골라 아무 앱이나 캡처하는 커스텀 모드
 - 원음 송출은 48 kHz 원본 마이크 스트림을 바로 사용하고, Gemini 번역용 스트림은 별도로 리샘플링
 - GitHub Releases 업데이트 알림과 API 키, 저장 언어 목록, UI 언어, 창 닫기 동작, 선택한 오디오 장치를 보존하는 안전한 설정 리셋
-- [VRCLT Releases](https://github.com/shgeum/VRCLT/releases)에서 받을 수 있는 Windows exe
+- [VRCLT Releases](https://github.com/VRCLT/VRCLT/releases)에서 받을 수 있는 Windows exe
 - 사용자 설정 저장 위치: `%LOCALAPPDATA%\vrclt\config.yaml`
 
 </details>
@@ -131,7 +131,7 @@ Google Gemini Live, Qwen3.8 LiveTranslate, OpenAI gpt-realtime-translate, Soniox
 
 ### 1. vrclt 다운로드
 
-최신 Windows 실행 파일은 [VRCLT Releases](https://github.com/shgeum/VRCLT/releases)에서 받을 수 있습니다.
+최신 Windows 실행 파일은 [VRCLT Releases](https://github.com/VRCLT/VRCLT/releases)에서 받을 수 있습니다.
 
 아래와 같은 이름의 파일을 다운로드합니다.
 
@@ -485,11 +485,11 @@ VRChat 모드에서는 다음 기능을 사용할 수 있습니다.
 | 로그 | `%LOCALAPPDATA%\vrclt\logs\vrclt.log` |
 
 다른 설정 파일을 쓰려면 `VRCLT_CONFIG` 환경 변수로 경로를 지정합니다.
-`config.yaml`의 모든 키는 위키의 [설정 레퍼런스](https://github.com/shgeum/VRCLT/wiki/%EC%84%A4%EC%A0%95-%EB%A0%88%ED%8D%BC%EB%9F%B0%EC%8A%A4)에 정리되어 있습니다.
+`config.yaml`의 모든 키는 위키의 [설정 레퍼런스](https://github.com/VRCLT/VRCLT/wiki/%EC%84%A4%EC%A0%95-%EB%A0%88%ED%8D%BC%EB%9F%B0%EC%8A%A4)에 정리되어 있습니다.
 
 ## 개발
 
-소스에서 실행, 테스트, exe 빌드, 릴리스 절차는 [위키](https://github.com/shgeum/VRCLT/wiki/%EA%B0%9C%EB%B0%9C-%EA%B0%80%EC%9D%B4%EB%93%9C)에 있습니다.
+소스에서 실행, 테스트, exe 빌드, 릴리스 절차는 [위키](https://github.com/VRCLT/VRCLT/wiki/%EA%B0%9C%EB%B0%9C-%EA%B0%80%EC%9D%B4%EB%93%9C)에 있습니다.
 변경 사항은 풀 리퀘스트로 `main`에 들어가며, 새 버전이 머지되면 릴리스가 자동으로 게시됩니다.
 
 ## 감사

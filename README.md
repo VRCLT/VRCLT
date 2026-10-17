@@ -13,7 +13,7 @@
 
 Real-time voice translation and live subtitles for **VRChat** and **Discord** on Windows.
 
-[![Latest release](https://img.shields.io/github/v/release/shgeum/VRCLT?style=flat-square&label=release&color=2ea44f)](https://github.com/shgeum/VRCLT/releases/latest) [![Downloads](https://img.shields.io/github/downloads/shgeum/VRCLT/total?style=flat-square&color=1f6feb)](https://github.com/shgeum/VRCLT/releases) [![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](#requirements) [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/VRCLT/VRCLT?style=flat-square&label=release&color=2ea44f)](https://github.com/VRCLT/VRCLT/releases/latest) [![Downloads](https://img.shields.io/github/downloads/VRCLT/VRCLT/total?style=flat-square&color=1f6feb)](https://github.com/VRCLT/VRCLT/releases) [![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](#requirements) [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
 **English** · [한국어](README.ko.md) · [日本語](README.ja.md) · [中文](README.zh.md)
 
@@ -23,7 +23,7 @@ Real-time voice translation and live subtitles for **VRChat** and **Discord** on
 
 <br><br>
 
-[**⬇ Download VRCLT**](https://github.com/shgeum/VRCLT/releases/latest) &nbsp;·&nbsp; [Quick start](#quick-start) &nbsp;·&nbsp; [Documentation](#installation)
+[**⬇ Download VRCLT**](https://github.com/VRCLT/VRCLT/releases/latest) &nbsp;·&nbsp; [Quick start](#quick-start) &nbsp;·&nbsp; [Documentation](#installation)
 
 </div>
 
@@ -82,7 +82,7 @@ Google Gemini Live, Qwen3.8 LiveTranslate, OpenAI gpt-realtime-translate, and So
 
 ## Quick start
 
-1. **Download** `vrclt-v<version>-windows-x64.exe` from [Releases](https://github.com/shgeum/VRCLT/releases/latest) and run it. There is nothing to install.
+1. **Download** `vrclt-v<version>-windows-x64.exe` from [Releases](https://github.com/VRCLT/VRCLT/releases/latest) and run it. There is nothing to install.
 2. **Add an API key.** Gemini is the default: create a key at [Google AI Studio](https://aistudio.google.com/apikey) and paste it into **Settings → Gemini API key**. Other engines are described under [Translation Engines](#translation-engines).
 3. **Let the Setup check do the rest.** Click **Install VB-Cable** if it is missing, close VRChat, then click **Auto setup**.
 4. **Start VRChat and talk.** Toggle **Translate** and **Subtitles** on the Dashboard or from the wrist menu.
@@ -114,7 +114,7 @@ Subtitles float in front of you, the wrist menu switches translation, subtitles,
 - Custom mode for capturing any other app, picked from the processes that are playing audio right now
 - Low-latency raw mic passthrough with separate Gemini resampling for translation
 - GitHub Releases update notification and safe config reset that keeps your API key, saved language lists, UI language, close action, and selected audio devices
-- Downloadable Windows exe from [VRCLT Releases](https://github.com/shgeum/VRCLT/releases)
+- Downloadable Windows exe from [VRCLT Releases](https://github.com/VRCLT/VRCLT/releases)
 - User settings stored in `%LOCALAPPDATA%\vrclt\config.yaml`
 
 </details>
@@ -131,7 +131,7 @@ Subtitles float in front of you, the wrist menu switches translation, subtitles,
 
 ### 1. Download vrclt
 
-Download the latest Windows executable from [VRCLT Releases](https://github.com/shgeum/VRCLT/releases).
+Download the latest Windows executable from [VRCLT Releases](https://github.com/VRCLT/VRCLT/releases).
 
 Use the file named like:
 
@@ -519,12 +519,12 @@ With `ui.mode: auto`, SteamVR features activate when SteamVR is running. Use
 
 Set the `VRCLT_CONFIG` environment variable to use a different config file.
 Every `config.yaml` key is described in the wiki's
-[Configuration reference](https://github.com/shgeum/VRCLT/wiki/Configuration).
+[Configuration reference](https://github.com/VRCLT/VRCLT/wiki/Configuration).
 
 ## Development
 
 Running from source, tests, building the exe, and the release flow are
-documented in the [wiki](https://github.com/shgeum/VRCLT/wiki/Development). Changes reach `main` through pull requests,
+documented in the [wiki](https://github.com/VRCLT/VRCLT/wiki/Development). Changes reach `main` through pull requests,
 and merging a new version publishes its release automatically.
 
 ## Thanks To
