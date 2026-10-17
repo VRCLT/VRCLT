@@ -3,14 +3,15 @@ from __future__ import annotations
 
 import copy
 import logging
-import math
 import threading
+import time
 from pathlib import Path
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from . import __version__
 from . import config as config_mod
+from . import platform_support, setup_check
 from . import i18n
 from .app_controller import resolve_ui_mode
 from .config import get_path as _get_path, set_path as _set_path
@@ -21,11 +22,13 @@ from .resources import bundled_font, icon_path, resolve_font_path
 from .ui import theme
 from .ui.log_view import LogPanel
 from .ui.settings_form import SettingsForm, SettingsValidationError
-from .ui.setup_banner import SetupBanner
+from .ui.setup_panel import SetupPanel
 from .ui.tray import TrayIcon
 from .ui.update_banner import UpdateBanner
 from .ui.widgets import (
+    MicLevelMeter,
     NoWheelComboBox,
+    WrapLabel,
     build_language_picker,
     code_from_language_combo,
     set_language_combo_value,
@@ -90,54 +93,6 @@ def _apply_app_font(app: QtWidgets.QApplication | None, lang: str = "") -> None:
     app.setFont(font)
 
 
-class _MicLevelMeter(QtWidgets.QWidget):
-    """Log-scaled mic RMS bar with the effective gate-threshold marker
-    (marker jumps right while the echo guard boosts the gate)."""
-
-    _LOG_MAX = math.log10(1 + 3000.0)  # RMS display ceiling
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setFixedHeight(18)
-        self.setMinimumWidth(120)
-        self._rms: float | None = None
-        self._threshold: float | None = None
-
-    def set_level(self, rms: float | None, threshold: float | None) -> None:
-        if (rms, threshold) != (self._rms, self._threshold):
-            self._rms = rms
-            self._threshold = threshold
-            self.update()
-
-    @classmethod
-    def _frac(cls, value: float) -> float:
-        return max(0.0, min(1.0, math.log10(1 + max(0.0, value)) / cls._LOG_MAX))
-
-    def paintEvent(self, event) -> None:
-        p = QtGui.QPainter(self)
-        p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
-        r = self.rect().adjusted(0, 2, -1, -2)
-        p.setPen(QtGui.QColor(theme.hex_rgb(theme.QT_BORDER)))
-        p.setBrush(QtGui.QColor(theme.hex_rgb(theme.QT_SURFACE)))
-        p.drawRoundedRect(r, 4, 4)
-        if self._rms is not None and self._threshold is not None:
-            frac = self._frac(self._rms)
-            gate_open = self._rms >= self._threshold
-            if frac > 0:
-                bar = QtCore.QRectF(r.x() + 1, r.y() + 1,
-                                    max(2.0, (r.width() - 2) * frac),
-                                    r.height() - 2)
-                p.setPen(QtCore.Qt.PenStyle.NoPen)
-                p.setBrush(QtGui.QColor(theme.hex_rgb(
-                    theme.ON_GREEN if gate_open else theme.QT_TEXT_IDLE)))
-                p.drawRoundedRect(bar, 3, 3)
-            tx = r.x() + 1 + (r.width() - 2) * self._frac(self._threshold)
-            p.setPen(QtGui.QPen(QtGui.QColor(theme.hex_rgb(theme.QT_WARN)), 2))
-            p.drawLine(QtCore.QPointF(tx, r.y() + 1),
-                       QtCore.QPointF(tx, r.bottom() - 1))
-        p.end()
-
-
 class _UiSignals(QtCore.QObject):
     refresh = QtCore.Signal()
     toast = QtCore.Signal(str)
@@ -148,6 +103,8 @@ class _UiSignals(QtCore.QObject):
     reset_done = QtCore.Signal(bool)
     devices_reloaded = QtCore.Signal(bool)
     test_done = QtCore.Signal(bool, str)
+    cable_progress = QtCore.Signal(str)
+    cable_done = QtCore.Signal(str, str)   # (error kind or "", detail)
     translation_hotkey = QtCore.Signal()
     subtitles_hotkey = QtCore.Signal()
     translation_hold = QtCore.Signal(bool)
@@ -181,6 +138,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self._device_applying = False
         self._speaker_context_applying = False
         self._devices_reloading = False
+        self._setup_checked_at = 0.0
+        self._setup_env = None
+        self._autofix_note = ""
+        self._cable_thread = None
+        self._cable_followup = False
+        self._cable_progress_dialog = None
+        self._cable_box = None
+        self._autofix_undo = None   # {"cfg": {path: old}, "vrchat": {name: old}}
         self._app_mode_buttons = {}
         self._inputs, self._outputs = _device_names()
         self._refresh_pending = QtCore.QTimer(self)
@@ -197,16 +162,22 @@ class MainWindow(QtWidgets.QMainWindow):
         self._signals.reset_done.connect(self._reset_done)
         self._signals.devices_reloaded.connect(self._devices_reloaded)
         self._signals.test_done.connect(self._test_done)
+        self._signals.cable_progress.connect(self._cable_progress)
+        self._signals.cable_done.connect(self._cable_done)
         self._signals.translation_hotkey.connect(self._toggle_translation)
         self._signals.subtitles_hotkey.connect(self._toggle_subtitles)
         self._signals.translation_hold.connect(self._controller.set_hold_mute)
 
         self.setWindowTitle(f"VRCLT v{__version__}")
-        self.resize(1040, 820)
-        self.setMinimumSize(780, 620)
+        self._fit_to_screen()
         self._tabs = QtWidgets.QTabWidget()
         self._tabs.setDocumentMode(True)
         self.setCentralWidget(self._tabs)
+        # global view switch at the tab bar's right end, clear of the
+        # crowded dashboard header
+        view_toggle = self._build_view_mode_toggle()
+        view_toggle.setContentsMargins(0, 4, 12, 4)
+        self._tabs.setCornerWidget(view_toggle, QtCore.Qt.Corner.TopRightCorner)
 
         self._build_dashboard()
         self._build_settings()
@@ -314,14 +285,17 @@ class MainWindow(QtWidgets.QMainWindow):
         root.addWidget(self._build_dash_mode_group(c))
         root.addLayout(self._build_dash_pipe_groups(c))
         root.addWidget(self._build_dash_audio_group(c))
-        self._build_dash_subtitles(root)
+        root.addWidget(self._dashboard_note)
         options = QtWidgets.QWidget()
         options_layout = QtWidgets.QVBoxLayout(options)
         options_layout.setContentsMargins(0, 0, 0, 0)
         options_layout.addWidget(self._build_dash_display_group())
         options_layout.addWidget(self._build_dash_app_group())
+        # above the live preview: below it, the expanding preview pushed these
+        # options out of sight on short windows
         self._dashboard_options = self._disclosure("dash_more_options", options)
         root.addWidget(self._dashboard_options)
+        self._build_dash_subtitles(root)
         # Small screens and expanded options stay reachable without forcing
         # the entire window taller than the available desktop.
         scroll = QtWidgets.QScrollArea()
@@ -336,6 +310,16 @@ class MainWindow(QtWidgets.QMainWindow):
     def _build_dash_header(self, root: QtWidgets.QVBoxLayout) -> None:
         """Status row + restart, error label, update/setup banners, toast."""
         top = QtWidgets.QHBoxLayout()
+        mark = QtGui.QPixmap(str(icon_path("icon.png")))
+        if not mark.isNull():
+            brand_icon = QtWidgets.QLabel()
+            brand_icon.setFixedSize(32, 32)
+            mark = mark.scaled(
+                64, 64, QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                QtCore.Qt.TransformationMode.SmoothTransformation)
+            mark.setDevicePixelRatio(2)
+            brand_icon.setPixmap(mark)
+            top.addWidget(brand_icon)
         brand = QtWidgets.QLabel("VRCLT")
         brand.setObjectName("appWordmark")
         top.addWidget(brand)
@@ -350,8 +334,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self._error_text.setObjectName("errorText")
         self._error_text.setWordWrap(True)
         top.addWidget(self._status_dot)
-        top.addWidget(self._status_text)
-        top.addStretch(1)
+        # the status takes the spare width: as a wrapped label beside a
+        # stretch it got squeezed onto two lines ("Running |" / "Connected")
+        top.addWidget(self._status_text, 1)
         self._engine_button = QtWidgets.QPushButton()
         self._engine_button.setObjectName("engineButton")
         self._engine_button.clicked.connect(self._show_engine_settings)
@@ -369,13 +354,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self._on_retranslate(self._update_banner.retranslate)
         root.addWidget(self._update_banner)
 
-        self._setup_banner = SetupBanner(
+        self._setup_panel = SetupPanel(
             self._tr,
-            on_open_settings=lambda: self._tabs.setCurrentIndex(
-                self._tab_settings_idx),
-            on_open_url=QtGui.QDesktopServices.openUrl)
-        self._on_retranslate(self._setup_banner.retranslate)
-        root.addWidget(self._setup_banner)
+            on_open_settings=self._show_settings_field,
+            on_open_url=QtGui.QDesktopServices.openUrl,
+            on_auto_fix=self._on_auto_setup_clicked,
+            on_undo=self._undo_auto_setup,
+            on_find_mic=self._find_mic,
+            on_recheck=lambda: self._sync_setup_panel(force=True),
+            on_install_cable=self._install_cable)
+        self._on_retranslate(self._setup_panel.retranslate)
+        root.addWidget(self._setup_panel)
 
         self._toast = QtWidgets.QLabel("")
         self._toast.setObjectName("errorText")
@@ -387,12 +376,89 @@ class MainWindow(QtWidgets.QMainWindow):
         self._toast_timer.timeout.connect(self._toast.hide)
 
     def _show_engine_settings(self) -> None:
+        self._show_settings_field("provider")
+
+    def _show_settings_field(self, path: str) -> None:
         self._tabs.setCurrentIndex(self._tab_settings_idx)
         self._settings_search.clear()
-        self._settings_form.focus_field("provider")
-        field = self._settings_form._fields.get("provider")
+        self._settings_form.focus_field(path)
+        field = self._settings_form._fields.get(path)
         if field:
             self._settings_scroll.ensureWidgetVisible(field[0])
+
+    def _build_view_mode_toggle(self) -> QtWidgets.QWidget:
+        """Easy view keeps the essentials; full view shows every control."""
+        wrap = QtWidgets.QWidget()
+        layout = QtWidgets.QHBoxLayout(wrap)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(4)
+        group = QtWidgets.QButtonGroup(self)
+        group.setExclusive(True)
+        self._view_buttons = {}
+        for easy, key in ((True, "btn_view_easy"), (False, "btn_view_full")):
+            button = QtWidgets.QPushButton(self._tr(key))
+            button.setCheckable(True)
+            button.setProperty("modeButton", True)
+            button.clicked.connect(lambda _checked=False, e=easy: self._set_easy_mode(e))
+            self._on_retranslate(lambda b=button, k=key: b.setText(self._tr(k)))
+            group.addButton(button)
+            layout.addWidget(button)
+            self._view_buttons[easy] = button
+        self._tip(wrap, "tip_view_mode")
+        return wrap
+
+    def _easy_mode(self) -> bool:
+        return bool(self._controller.cfg.get("ui", {}).get("easy_mode", True))
+
+    def _set_easy_mode(self, easy: bool) -> None:
+        if easy != self._easy_mode():
+            setter = getattr(self._controller, "set_easy_mode", None)
+            if setter is not None:
+                setter(easy)
+            else:
+                self._controller.cfg.setdefault("ui", {})["easy_mode"] = easy
+        self._apply_view_mode()
+
+    def _apply_view_mode(self) -> None:
+        """The simple view keeps the setup check, the app choice, runtime
+        restart, on/off, languages, a mic level and the live subtitles;
+        devices, the engine and rarely used options live in the full view."""
+        easy = self._easy_mode()
+        for value, button in self._view_buttons.items():
+            if button.isChecked() != (value == easy):
+                button.setChecked(value == easy)
+        for widget in (self._text_only, self._out_language_options,
+                       self._in_language_options, self._audio_output_column,
+                       self._dashboard_options, self._audio_group,
+                       self._engine_button):
+            if widget.isHidden() != easy:
+                widget.setVisible(not easy)
+        for widget in (self._easy_mic_device_label, self._easy_mic_wrap,
+                       self._easy_mic_label, self._easy_mic_meter):
+            if widget.isHidden() == easy:
+                widget.setVisible(easy)
+        self._sync_source_pickers()
+        self._sync_speaker_context()
+        self._layout_dashboard_rows()
+
+    def _fit_to_screen(self) -> None:
+        """Never open taller or wider than the screen's work area: a window
+        taller than the screen hides the bottom of every tab (including the
+        Settings save button) under the taskbar, where scrolling cannot help."""
+        screen = self.screen() or QtWidgets.QApplication.primaryScreen()
+        width, height = 1040, 820
+        if screen is None:
+            self.setMinimumSize(780, 560)
+            self.resize(width, height)
+            return
+        area = screen.availableGeometry()
+        frame = 40   # title bar and borders sit outside resize()
+        self.setMinimumSize(min(780, area.width()), min(520, area.height() - frame))
+        width = max(self.minimumWidth(), min(width, area.width() - 24))
+        height = max(self.minimumHeight(), min(height, area.height() - frame - 16))
+        self.resize(width, height)
+        self.move(area.left() + max(0, (area.width() - width) // 2),
+                  area.top() + max(0, (area.height() - height - frame) // 2))
 
     def _disclosure(self, key: str, content: QtWidgets.QWidget) -> QtWidgets.QWidget:
         """Keep occasional controls available without crowding the live view."""
@@ -440,7 +506,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._sub_lang.currentTextChanged.connect(self._pick_sub_lang)
         self._ui_lang.currentTextChanged.connect(self._pick_ui_lang)
         self._mic_device = self._build_dashboard_device_combo(
-            "outbound.mic_device", self._inputs,
+            "outbound.mic_device", self._mic_choices(),
             self._controller.cfg.get("outbound", {}).get("mic_device", ""))
         self._voice_out_device = self._build_dashboard_device_combo(
             "outbound.tts_device", self._outputs,
@@ -501,8 +567,33 @@ class MainWindow(QtWidgets.QMainWindow):
         out_device_layout.setSpacing(6)
         out_device_layout.addWidget(self._voice_out_device, 1)
         out_device_layout.addWidget(self._btn_test_out)
+        self._btn_find_mic = QtWidgets.QPushButton(self._tr("btn_find_mic"))
+        self._btn_find_mic.clicked.connect(self._find_mic)
+        self._on_retranslate(
+            lambda: self._btn_find_mic.setText(self._tr("btn_find_mic")))
+        # the simple view's own copy, inside "my speech" (one widget cannot
+        # sit in both views); both edit outbound.mic_device
+        self._easy_mic_device = self._build_dashboard_device_combo(
+            "outbound.mic_device", self._mic_choices(),
+            self._controller.cfg.get("outbound", {}).get("mic_device", ""))
+        self._btn_easy_find_mic = QtWidgets.QPushButton(self._tr("btn_find_mic"))
+        self._btn_easy_find_mic.clicked.connect(self._find_mic)
+        self._on_retranslate(
+            lambda: self._btn_easy_find_mic.setText(self._tr("btn_find_mic")))
+        self._easy_mic_wrap = QtWidgets.QWidget()
+        easy_mic_layout = QtWidgets.QHBoxLayout(self._easy_mic_wrap)
+        easy_mic_layout.setContentsMargins(0, 0, 0, 0)
+        easy_mic_layout.setSpacing(6)
+        easy_mic_layout.addWidget(self._easy_mic_device, 1)
+        easy_mic_layout.addWidget(self._btn_easy_find_mic)
+        mic_device_wrap = QtWidgets.QWidget()
+        mic_device_layout = QtWidgets.QHBoxLayout(mic_device_wrap)
+        mic_device_layout.setContentsMargins(0, 0, 0, 0)
+        mic_device_layout.setSpacing(6)
+        mic_device_layout.addWidget(self._mic_device, 1)
+        mic_device_layout.addWidget(self._btn_find_mic)
         tts_gain_widget = self._build_tts_gain_control()
-        self._mic_meter = _MicLevelMeter()
+        self._mic_meter = MicLevelMeter()
         # source languages (Qwen only - Gemini auto-detects, combos disabled)
         self._src_lang = build_language_picker(self._tr("ph_src_auto"))
         self._src_lang.activated.connect(lambda _i: self._pick_src_lang())
@@ -529,6 +620,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self._tip(self._mic_device, "tip_mic_device")
         self._tip(self._voice_out_device, "tip_voice_out_device")
         self._tip(self._btn_test_out, "tip_test_output")
+        self._tip(self._btn_find_mic, "tip_find_mic")
+        self._tip(self._btn_easy_find_mic, "tip_find_mic")
+        self._tip(self._easy_mic_device, "tip_mic_device")
         self._tip(tts_gain_widget, "tip_tts_gain")
         self._tip(mic_label, "tip_mic_level")
         self._tip(self._mic_meter, "tip_mic_level")
@@ -542,7 +636,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         for combo in (self._out_lang, self._sub_lang, self._src_lang,
                       self._in_src_lang, self._out_lang_add, self._sub_lang_add,
-                      self._mic_device, self._voice_out_device):
+                      self._mic_device, self._voice_out_device, self._easy_mic_device):
             combo.setMinimumContentsLength(12)
             combo.setSizeAdjustPolicy(
                 QtWidgets.QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
@@ -552,6 +646,7 @@ class MainWindow(QtWidgets.QMainWindow):
             "out_add": out_lang_add_widget,
             "sub_add": sub_lang_add_widget,
             "out_device": out_device_wrap,
+            "mic_device": mic_device_wrap,
             "tts_gain": tts_gain_widget,
             "src_label": src_label,
             "in_src_label": in_src_label,
@@ -564,6 +659,7 @@ class MainWindow(QtWidgets.QMainWindow):
         mode_lay.addWidget(self._label("label_app_mode"))
         mode_lay.addWidget(c["app_mode"], 1)
         mode_lay.addWidget(self._text_only)
+        self._mode_group = grp_mode
         return grp_mode
 
     def _build_dash_pipe_groups(self, c: dict) -> QtWidgets.QHBoxLayout:
@@ -581,6 +677,15 @@ class MainWindow(QtWidgets.QMainWindow):
         out_lay.addWidget(self._src_lang, 2, 1)
         self._out_language_options = self._disclosure("dash_language_options", c["out_add"])
         out_lay.addWidget(self._out_language_options, 3, 0, 1, 2)
+        self._easy_mic_device_label = self._label("label_mic_device")
+        out_lay.addWidget(self._easy_mic_device_label, 4, 0)
+        out_lay.addWidget(self._easy_mic_wrap, 4, 1)
+        self._easy_mic_label = self._label("label_mic_level")
+        self._easy_mic_meter = MicLevelMeter()
+        self._tip(self._easy_mic_meter, "tip_mic_level")
+        out_lay.addWidget(self._easy_mic_label, 5, 0)
+        out_lay.addWidget(self._easy_mic_meter, 5, 1)
+        out_lay.setRowStretch(6, 1)   # spare height below, so both cards align
         out_lay.setColumnStretch(1, 1)
 
         grp_in = self._group("dash_grp_in")
@@ -598,6 +703,7 @@ class MainWindow(QtWidgets.QMainWindow):
         in_lay.addWidget(self._in_language_options, 3, 0, 1, 2)
         self._source_language_labels = (c["src_label"], c["in_src_label"])
         in_lay.setColumnStretch(1, 1)
+        in_lay.setRowStretch(6, 1)
 
         pipes = QtWidgets.QHBoxLayout()
         pipes.setSpacing(16)
@@ -608,15 +714,27 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _build_dash_audio_group(self, c: dict) -> QtWidgets.QGroupBox:
         grp_audio = self._group("dash_grp_audio")
-        audio_lay = QtWidgets.QHBoxLayout(grp_audio)
+        self._audio_group = grp_audio
+        outer = QtWidgets.QVBoxLayout(grp_audio)
+        outer.setSpacing(10)
+        columns = QtWidgets.QWidget()
+        audio_lay = QtWidgets.QHBoxLayout(columns)
+        audio_lay.setContentsMargins(0, 0, 0, 0)
         audio_lay.setSpacing(24)
         audio_lay.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetMinimumSize)
-        for rows in (
-            ((self._label("label_mic_device"), self._mic_device),
+        outer.addWidget(columns)
+        # VB-Cable's names point the "wrong" way round from the app's view:
+        # spell out where the translated voice goes and what the game must use
+        self._route_hint = WrapLabel()
+        self._route_hint.setObjectName("routeHint")
+        self._route_hint.hide()
+        outer.addWidget(self._route_hint)
+        for index, rows in enumerate((
+            ((self._label("label_mic_device"), c["mic_device"]),
              (c["mic_label"], self._mic_meter)),
             ((self._label("label_voice_out_device"), c["out_device"]),
              (self._label("label_tts_gain"), c["tts_gain"])),
-        ):
+        )):
             column = QtWidgets.QWidget()
             grid = QtWidgets.QGridLayout(column)
             grid.setContentsMargins(0, 0, 0, 0)
@@ -628,6 +746,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 grid.addWidget(control, row, 1)
             grid.setColumnStretch(1, 1)
             audio_lay.addWidget(column, 1)
+            if index == 1:
+                self._audio_output_column = column
         self._audio_layout = audio_lay
         return grp_audio
 
@@ -655,7 +775,6 @@ class MainWindow(QtWidgets.QMainWindow):
         return grp_app
 
     def _build_dash_subtitles(self, root: QtWidgets.QVBoxLayout) -> None:
-        root.addWidget(self._dashboard_note)
         title = self._label("dash_live_preview")
         title.setObjectName("sectionTitle")
         heading = QtWidgets.QHBoxLayout()
@@ -720,11 +839,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self._tts_gain_timer.start()
 
     def _tick_mic_meter(self) -> None:
-        level = self._controller.mic_level()
-        if level is None:
-            self._mic_meter.set_level(None, None)
-        else:
-            self._mic_meter.set_level(*level)
+        level = self._controller.mic_level() or (None, None)
+        self._mic_meter.set_level(*level)
+        self._easy_mic_meter.set_level(*level)
 
     def _build_dashboard_device_combo(self, path: str, names: list[str], current: str) -> NoWheelComboBox:
         combo = NoWheelComboBox()
@@ -828,7 +945,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._settings_form = SettingsForm(
             self._controller, self._tr, self._settings_layout,
-            get_devices=lambda: (self._inputs, self._outputs),
+            get_devices=lambda: (self._mic_choices(), self._outputs),
             on_hotkey_capture_start=self._hotkeys.stop,
             on_hotkey_capture_end=lambda: self._sync_hotkeys(force=True))
         self._settings_search.textChanged.connect(self._settings_form.apply_filter)
@@ -1130,9 +1247,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self._btn_test_out.setEnabled(True)
         self._sync_dashboard_devices(force=True)
         self._populate_settings()
+        self._sync_setup_panel(force=True)
         self._settings_note.setText(
             self._tr("msg_devices_refreshed") if ok
             else self._tr("msg_saved_start_failed"))
+        if self._cable_followup:
+            self._cable_followup = False
+            loopback = platform_support.default_loopback_device()
+            self._close_cable_progress()
+            if setup_check.find_device(self._outputs, loopback):
+                self._run_auto_setup()
+            else:
+                self._dashboard_note.setText(self._tr("msg_cable_not_found"))
+                self._cable_notice(self._tr("msg_cable_not_found"))
+                self._set_auto_setup_pending(True)
 
     def _test_output_device(self) -> None:
         """Play a short test tone on the (unsaved) output-combo selection."""
@@ -1193,10 +1321,391 @@ class MainWindow(QtWidgets.QMainWindow):
     def _device_done(self, ok: bool) -> None:
         self._device_applying = False
         self._set_dashboard_apply_enabled(True)
+        note, self._autofix_note = self._autofix_note, ""
         self._dashboard_note.setText(
-            self._tr("msg_applied") if ok else self._tr("msg_saved_start_failed"))
+            (note or self._tr("msg_applied")) if ok
+            else " ".join(filter(None, (note, self._tr("msg_saved_start_failed")))))
         self._sync_dashboard_devices(force=True)
         self._populate_settings()
+        self._sync_setup_panel(force=True)
+
+    def _sync_source_pickers(self) -> None:
+        """Spoken-language pickers: only where the engine uses them, and in
+        the easy view only where it requires them (Qwen 3.5)."""
+        cfg = self._controller.cfg
+        st = self._controller.state
+        shown = config_mod.uses_source_language(cfg) and (
+            not self._easy_mode() or config_mod.provider(cfg) == "qwen")
+        for label in self._source_language_labels:
+            label.setVisible(shown)
+        for combo, code in ((self._src_lang, st.source_language),
+                            (self._in_src_lang, st.inbound_source_language)):
+            combo.setVisible(shown)
+            if combo.isEnabled() != shown:
+                combo.setEnabled(shown)
+            if not combo.hasFocus() and \
+                    code_from_language_combo(combo, []) != code:
+                blocked = combo.blockSignals(True)
+                try:
+                    set_language_combo_value(combo, code)
+                finally:
+                    combo.blockSignals(blocked)
+
+    # ---------------- setup checklist ----------------
+    def _collect_setup(self):
+        cfg = self._controller.cfg
+        osc_status = getattr(self._controller, "osc_status", None)
+        return setup_check.collect(
+            cfg, inputs=self._inputs, outputs=self._outputs,
+            osc_status=osc_status() if osc_status else (None, 0.0))
+
+    def _sync_setup_panel(self, force: bool = False) -> None:
+        """Re-run the checklist every few seconds (registry and device
+        defaults change outside the app) or right after a change."""
+        now = time.monotonic()
+        if self._devices_reloading or (
+                not force and now - self._setup_checked_at < 2.0):
+            return
+        self._setup_checked_at = now
+        cfg = self._controller.cfg
+        try:
+            env = self._collect_setup()
+            items = setup_check.run_checks(cfg, env)
+        except Exception:
+            log.exception("setup checklist failed")
+            return
+        self._setup_env = env
+        self._resume_auto_setup(items)
+        app = env.app_name or self._tr("setup_app_generic")
+        self._setup_panel.sync(
+            items, provider=config_mod.provider(cfg),
+            endpoint=str(cfg.get("qwen", {}).get("endpoint", "intl") or "intl").strip(),
+            app=app)
+        self._set_default_placeholder(self._mic_device, env.default_input)
+        self._set_default_placeholder(self._easy_mic_device, env.default_input)
+        self._set_default_placeholder(self._voice_out_device, env.default_output)
+        loopback = platform_support.default_loopback_device()
+        self._route_hint.setVisible(bool(loopback))
+        if loopback:
+            cable_in = setup_check.find_device(env.outputs, loopback) or loopback
+            self._route_hint.setText(self._tr("audio_route_hint").format(
+                cable_in=cable_in.split("(", 1)[0].strip(),
+                cable_out=setup_check.app_mic_name(cable_in), app=app))
+
+    def _mic_choices(self) -> list[str]:
+        """Mic pickers never offer the cable's recording side (a loop)."""
+        return setup_check.mic_choices(self._inputs, self._controller.cfg)
+
+    def _set_auto_setup_pending(self, pending: bool) -> None:
+        setter = getattr(self._controller, "set_auto_setup_pending", None)
+        if setter is not None:
+            setter(pending)
+        else:
+            self._controller.cfg.setdefault("meta", {})["auto_setup_pending"] = pending
+
+    def _resume_auto_setup(self, items) -> None:
+        """VB-Cable installed but needed a restart: once its devices are
+        there (the next start, usually), finish what Auto setup began."""
+        if not self._controller.cfg.get("meta", {}).get("auto_setup_pending") \
+                or self._device_applying or self._devices_reloading:
+            return
+        if any(item.key == "cable" and item.status == setup_check.OK for item in items):
+            self._set_auto_setup_pending(False)
+            QtCore.QTimer.singleShot(0, self._run_auto_setup)
+
+    def _set_default_placeholder(self, combo: QtWidgets.QComboBox, name: str) -> None:
+        """An empty device field means the system default: say which one."""
+        edit = combo.lineEdit()
+        text = self._tr("device_system_default").format(name=name or "-")
+        if edit is not None and edit.placeholderText() != text:
+            edit.setPlaceholderText(text)
+
+    def _auto_setup_plan(self):
+        env = self._collect_setup()
+        new_cfg, changed = setup_check.auto_fix(self._controller.raw_cfg, env)
+        return new_cfg, changed, setup_check.vrchat_changes(self._controller.cfg, env)
+
+    def _plan_lines(self, plan) -> list[str]:
+        new_cfg, changed, vrchat = plan
+        out = new_cfg.get("outbound", {})
+        lines = []
+        if "outbound.tts_device" in changed:
+            lines.append(self._tr("setup_changed_tts").format(name=out.get("tts_device", "")))
+        if "outbound.mic_device" in changed:
+            lines.append(self._tr("setup_changed_mic").format(name=out.get("mic_device", "")))
+        if "mic" in vrchat:
+            lines.append(self._tr("setup_changed_vrchat_mic").format(name=vrchat["mic"]))
+        if "osc" in vrchat:
+            lines.append(self._tr("setup_changed_vrchat_osc"))
+        return lines
+
+    def _on_auto_setup_clicked(self) -> None:
+        """The button asks first: a stray click must not quietly replace the
+        microphone, the voice output or VRChat's settings."""
+        if self._device_applying or self._devices_reloading:
+            return
+        try:
+            plan = self._auto_setup_plan()
+        except Exception as e:
+            log.exception("auto setup failed")
+            self._dashboard_note.setText(f"{self._tr('msg_device_failed')}: {e}")
+            return
+        lines = self._plan_lines(plan)
+        if not lines:
+            self._dashboard_note.setText(self._tr("setup_autofix_nothing"))
+            self._sync_setup_panel(force=True)
+            return
+        if self._confirm_auto_setup(lines, plan[2]):
+            self._run_auto_setup(plan)
+
+    def _confirm_auto_setup(self, lines: list[str], vrchat: dict) -> bool:
+        from . import vrchat_settings
+        text = "\n".join([self._tr("setup_autofix_confirm"), ""]
+                         + [f"• {line}" for line in lines])
+        if vrchat and vrchat_settings.running():
+            text += "\n\n" + self._tr("setup_vrchat_running")
+        text += "\n\n" + self._tr("setup_autofix_undo_hint")
+        box = QtWidgets.QMessageBox(self)
+        box.setIcon(QtWidgets.QMessageBox.Icon.Question)
+        box.setWindowTitle(self._tr("setup_btn_auto_fix"))
+        box.setText(text)
+        apply = box.addButton(self._tr("setup_autofix_apply"),
+                              QtWidgets.QMessageBox.ButtonRole.AcceptRole)
+        box.addButton(QtWidgets.QMessageBox.StandardButton.Cancel)
+        box.exec()
+        return box.clickedButton() is apply
+
+    def _run_auto_setup(self, plan=None) -> None:
+        if self._device_applying or self._devices_reloading:
+            return
+        if plan is None:
+            try:
+                plan = self._auto_setup_plan()
+            except Exception as e:
+                log.exception("auto setup failed")
+                self._dashboard_note.setText(f"{self._tr('msg_device_failed')}: {e}")
+                return
+        new_cfg, changed, vrchat = plan
+        out = new_cfg.get("outbound", {})
+        parts = []
+        if "outbound.tts_device" in changed:
+            parts.append(self._tr("setup_changed_tts").format(name=out.get("tts_device", "")))
+        if "outbound.mic_device" in changed:
+            parts.append(self._tr("setup_changed_mic").format(name=out.get("mic_device", "")))
+        vrchat_note, vrchat_previous = (self._apply_vrchat_settings(vrchat, parts)
+                                        if vrchat else ("", {}))
+        undo_cfg = {path: config_mod.get_path(self._controller.raw_cfg, path, "")
+                    for path in changed}
+        if undo_cfg or vrchat_previous:
+            self._autofix_undo = {"cfg": undo_cfg, "vrchat": vrchat_previous}
+            self._setup_panel.set_undo_available(True)
+        if not parts:
+            self._dashboard_note.setText(vrchat_note or self._tr("setup_autofix_nothing"))
+            self._sync_setup_panel(force=True)
+            return
+        summary = " ".join(filter(None, (
+            self._tr("setup_autofix_done").format(changes=", ".join(parts)), vrchat_note)))
+        if not changed:
+            self._dashboard_note.setText(summary)
+            self._sync_setup_panel(force=True)
+            return
+
+        def build():
+            cfg = config_mod.apply_app_profile(copy.deepcopy(new_cfg))
+            config_mod.save(cfg)
+            return cfg
+
+        def busy():
+            self._device_applying = True
+            self._set_dashboard_apply_enabled(False)
+
+        thread = self._apply_config_async(
+            build, fail_key="msg_device_failed", busy_key="msg_autofix_applying",
+            note=self._dashboard_note, done_signal=self._signals.device_done,
+            thread_name="vrclt-auto-setup", on_busy=busy,
+            on_build_error=self._sync_dashboard_devices)
+        if thread is not None:
+            self._device_thread = thread
+            self._autofix_note = summary
+
+    def _apply_vrchat_settings(self, changes: dict, parts: list) -> tuple[str, dict]:
+        """Write VRChat's mic/OSC settings. Returns (note when it could not,
+        the replaced values for undo). A running VRChat would overwrite them
+        on exit, so only while it is closed."""
+        from . import vrchat_settings
+        if vrchat_settings.running():
+            return self._tr("setup_vrchat_running"), {}
+        try:
+            previous = vrchat_settings.write(**changes)
+        except OSError as e:
+            log.warning("VRChat settings not written: %s", e)
+            return self._tr("setup_vrchat_write_failed").format(error=e), {}
+        if "mic" in changes:
+            parts.append(self._tr("setup_changed_vrchat_mic").format(name=changes["mic"]))
+        if "osc" in changes:
+            parts.append(self._tr("setup_changed_vrchat_osc"))
+        return "", dict(previous or {})
+
+    def _undo_auto_setup(self) -> None:
+        """Put back what the last auto setup changed, VRChat included."""
+        undo = self._autofix_undo
+        if not undo or self._device_applying or self._devices_reloading:
+            return
+        from . import vrchat_settings
+        if undo["vrchat"]:
+            if vrchat_settings.running():
+                self._dashboard_note.setText(self._tr("setup_undo_vrchat_running"))
+                return
+            try:
+                vrchat_settings.restore(undo["vrchat"])
+            except OSError as e:
+                log.warning("VRChat settings not restored: %s", e)
+        self._autofix_undo = None
+        self._setup_panel.set_undo_available(False)
+        if not undo["cfg"]:
+            self._dashboard_note.setText(self._tr("setup_undo_done"))
+            self._sync_setup_panel(force=True)
+            return
+
+        def build():
+            cfg = copy.deepcopy(self._controller.raw_cfg)
+            for path, value in undo["cfg"].items():
+                config_mod.set_path(cfg, path, value)
+            cfg = config_mod.apply_app_profile(cfg)
+            config_mod.save(cfg)
+            return cfg
+
+        def busy():
+            self._device_applying = True
+            self._set_dashboard_apply_enabled(False)
+
+        thread = self._apply_config_async(
+            build, fail_key="msg_device_failed", busy_key="msg_autofix_applying",
+            note=self._dashboard_note, done_signal=self._signals.device_done,
+            thread_name="vrclt-auto-setup-undo", on_busy=busy,
+            on_build_error=self._sync_dashboard_devices)
+        if thread is not None:
+            self._device_thread = thread
+            self._autofix_note = self._tr("setup_undo_done")
+
+    # ---------------- VB-Cable install ----------------
+    def _install_cable(self) -> None:
+        if (self._cable_thread is not None and self._cable_thread.is_alive()) \
+                or self._device_applying or self._devices_reloading:
+            return
+        box = QtWidgets.QMessageBox(self)
+        box.setIcon(QtWidgets.QMessageBox.Icon.Information)
+        box.setWindowTitle(self._tr("cable_install_title"))
+        box.setText(self._tr("cable_install_confirm"))
+        start = box.addButton(self._tr("cable_install_start"),
+                              QtWidgets.QMessageBox.ButtonRole.AcceptRole)
+        box.addButton(QtWidgets.QMessageBox.StandardButton.Cancel)
+        box.exec()
+        if box.clickedButton() is not start:
+            return
+        self._dashboard_note.setText(self._tr("msg_cable_downloading"))
+        self._show_cable_progress(self._tr("msg_cable_downloading"))
+        stages = {"download": "msg_cable_downloading", "verify": "msg_cable_verifying",
+                  "install": "msg_cable_installing", "devices": "msg_cable_waiting"}
+
+        def run():
+            from . import cable_installer
+            try:
+                cable_installer.install(
+                    lambda stage: self._signals.cable_progress.emit(stages[stage]))
+            except cable_installer.InstallError as e:
+                self._signals.cable_done.emit(e.kind, str(e))
+                return
+            except Exception as e:
+                log.exception("VB-CABLE install failed")
+                self._signals.cable_done.emit("failed", str(e))
+                return
+            self._signals.cable_done.emit("", "")
+
+        self._cable_thread = threading.Thread(
+            target=run, daemon=True, name="vrclt-cable-install")
+        self._cable_thread.start()
+
+    def _show_cable_progress(self, text: str) -> None:
+        """A window-modal busy dialog for the whole install: the dashboard
+        note alone was easy to miss. VB-Audio's own setup window is another
+        process and stays usable on top of it."""
+        dialog = self._cable_progress_dialog
+        if dialog is None:
+            dialog = QtWidgets.QProgressDialog(self)
+            dialog.setWindowTitle(self._tr("cable_install_title"))
+            label = QtWidgets.QLabel()
+            label.setWordWrap(True)
+            dialog.setLabel(label)
+            dialog.setRange(0, 0)            # busy indicator
+            dialog.setCancelButton(None)
+            dialog.setMinimumDuration(0)
+            dialog.setAutoClose(False)
+            dialog.setAutoReset(False)
+            dialog.setMinimumWidth(480)
+            dialog.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
+            self._cable_progress_dialog = dialog
+        dialog.setLabelText(text)
+        dialog.show()
+
+    def _close_cable_progress(self) -> None:
+        dialog, self._cable_progress_dialog = self._cable_progress_dialog, None
+        if dialog is not None:
+            dialog.close()
+            dialog.deleteLater()
+
+    def _cable_notice(self, text: str, warning: bool = False) -> None:
+        """Result of the install in its own window (non-blocking)."""
+        box = QtWidgets.QMessageBox(self)
+        box.setIcon(QtWidgets.QMessageBox.Icon.Warning if warning
+                    else QtWidgets.QMessageBox.Icon.Information)
+        box.setWindowTitle(self._tr("cable_install_title"))
+        box.setText(text)
+        box.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
+        box.open()
+        self._cable_box = box
+
+    def _cable_progress(self, key: str) -> None:
+        self._dashboard_note.setText(self._tr(key))
+        if self._cable_progress_dialog is not None:
+            self._show_cable_progress(self._tr(key))
+
+    def _cable_done(self, kind: str, detail: str) -> None:
+        if kind == "cancelled":
+            self._close_cable_progress()
+            self._dashboard_note.setText(self._tr("msg_cable_cancelled"))
+            return
+        if kind:
+            self._close_cable_progress()
+            text = self._tr("msg_cable_failed").format(error=detail[:160])
+            self._dashboard_note.setText(text)
+            self._cable_notice(text, warning=True)
+            return
+        # PortAudio only sees a new device after a reinit; auto setup follows
+        self._dashboard_note.setText(self._tr("msg_cable_done"))
+        self._show_cable_progress(self._tr("msg_cable_done"))
+        self._cable_followup = True
+        self._reload_devices()
+
+    def _find_mic(self) -> None:
+        if self._device_applying or self._devices_reloading:
+            return
+        from .ui.mic_finder import MicFinderDialog
+        env = self._setup_env
+        wanted = str(self._controller.cfg.get("outbound", {}).get("mic_device", "") or "")
+        current = setup_check.find_device(self._inputs, wanted) if wanted \
+            else (env.default_input if env is not None else "")
+        dialog = MicFinderDialog(
+            self._tr, setup_check.real_inputs(self._inputs), current=current,
+            threshold=float(self._controller.cfg.get("audio", {}).get(
+                "voice_rms_threshold", 90.0)),
+            parent=self)
+        if dialog.exec() != QtWidgets.QDialog.DialogCode.Accepted or not dialog.selected:
+            return
+        if dialog.selected == current and wanted:
+            return
+        self._mic_device.setCurrentText(dialog.selected)
+        self._apply_dashboard_device("outbound.mic_device", self._mic_device)
 
     def _apply_app_mode(self, mode: str) -> None:
         mode = (mode or "").strip()
@@ -1261,6 +1770,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self._voice_out_device.setEnabled(enabled)
         if hasattr(self, "_btn_test_out"):
             self._btn_test_out.setEnabled(enabled)
+        if hasattr(self, "_btn_find_mic"):
+            self._btn_find_mic.setEnabled(enabled)
+        if hasattr(self, "_easy_mic_device"):
+            self._easy_mic_device.setEnabled(enabled)
+            self._btn_easy_find_mic.setEnabled(enabled)
 
     def _set_app_mode_checked(self, mode: str) -> None:
         for key, btn in self._app_mode_buttons.items():
@@ -1329,10 +1843,10 @@ class MainWindow(QtWidgets.QMainWindow):
             paths = ("soniox.keep_speaker_context", "soniox.speaker_context_idle_sec")
             self._settings_form.sync_from_config(tuple(
                 path for path, old, new in zip(paths, previous, signature) if old != new))
-        self._keep_speaker_context.setVisible(
-            config_mod.provider(self._controller.cfg) == "soniox")
-        self._soniox_idle_hint.setVisible(
-            config_mod.provider(self._controller.cfg) == "soniox")
+        soniox_full = (config_mod.provider(self._controller.cfg) == "soniox"
+                       and not self._easy_mode())
+        self._keep_speaker_context.setVisible(soniox_full)
+        self._soniox_idle_hint.setVisible(soniox_full)
         seconds = config_mod.soniox_idle_disconnect_sec(self._controller.cfg)
         self._soniox_idle_hint.setToolTip(self._tr(
             "f.soniox.speaker_context_idle_sec.tip" if _get_path(
@@ -1533,6 +2047,10 @@ class MainWindow(QtWidgets.QMainWindow):
             _apply_app_font(QtWidgets.QApplication.instance(), st.ui_lang)
             self._apply_i18n()
             self._populate_settings()
+            self._setup_checked_at = 0.0
+        if self._view_buttons[True].isChecked() != self._easy_mode() \
+                or not any(b.isChecked() for b in self._view_buttons.values()):
+            self._apply_view_mode()
         revision = getattr(self._controller, "config_revision", 0)
         if revision != self._last_config_revision:
             self._last_config_revision = revision
@@ -1566,9 +2084,7 @@ class MainWindow(QtWidgets.QMainWindow):
             "gemini": "Gemini Live", "qwen": "Qwen Live",
             "openai": "OpenAI", "soniox": "Soniox",
         }.get(prov, prov))
-        self._setup_banner.sync(
-            prov, bool(config_mod.api_key_for(cfg, prov)),
-            str(cfg.get("qwen", {}).get("endpoint", "intl") or "intl").strip())
+        self._sync_setup_panel()
 
         self._btn_trans.setText(i18n.tr(st.ui_lang, "btn_trans_on" if st.translation_on else "btn_trans_off"))
         self._set_state_prop(self._btn_trans, "on",
@@ -1614,21 +2130,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._sync_combo(self._sub_lang, [
             language_label(c) for c in self._controller.cfg.get("inbound", {}).get("languages", ["ko"])
         ], language_label(st.inbound_language))
-        has_source_hint = config_mod.uses_source_language(cfg)
-        for label in self._source_language_labels:
-            label.setVisible(has_source_hint)
-        for combo, code in ((self._src_lang, st.source_language),
-                            (self._in_src_lang, st.inbound_source_language)):
-            combo.setVisible(has_source_hint)
-            if combo.isEnabled() != has_source_hint:
-                combo.setEnabled(has_source_hint)
-            if not combo.hasFocus() and \
-                    code_from_language_combo(combo, []) != code:
-                blocked = combo.blockSignals(True)
-                try:
-                    set_language_combo_value(combo, code)
-                finally:
-                    combo.blockSignals(blocked)
+        self._sync_source_pickers()
         self._sync_combo(self._ui_lang, [i18n.UI_LANG_LABELS[c] for c in i18n.LANGS],
                          i18n.UI_LANG_LABELS.get(st.ui_lang, st.ui_lang))
         self._sync_dashboard_devices()
@@ -1677,15 +2179,16 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._device_applying and not force:
             return
         focus = QtWidgets.QApplication.focusWidget()
-        mic_active = focus is not None and (
-            focus is self._mic_device or self._mic_device.isAncestorOf(focus))
+        mic_active = focus is not None and any(
+            focus is combo or combo.isAncestorOf(focus)
+            for combo in (self._mic_device, self._easy_mic_device))
         out_active = focus is not None and (
             focus is self._voice_out_device or self._voice_out_device.isAncestorOf(focus))
         if force or not mic_active:
-            self._sync_device_combo(
-                self._mic_device,
-                self._inputs,
-                self._controller.cfg.get("outbound", {}).get("mic_device", ""))
+            for combo in (self._mic_device, self._easy_mic_device):
+                self._sync_device_combo(
+                    combo, self._mic_choices(),
+                    self._controller.cfg.get("outbound", {}).get("mic_device", ""))
         if force or not out_active:
             self._sync_device_combo(
                 self._voice_out_device,
@@ -1719,7 +2222,7 @@ class MainWindow(QtWidgets.QMainWindow):
         margins = page.layout().contentsMargins()
         available = (self._dashboard_scroll.viewport().width()
                      - margins.left() - margins.right())
-        changed = False
+        changed = self._setup_panel.fit_header(available)
         for layout in (self._pipe_layout, self._audio_layout, self._context_layout,
                        self._display_layout, self._app_layout):
             widths = []

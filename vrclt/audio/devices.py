@@ -66,6 +66,25 @@ def find_input(name_substr: str) -> int | None:
     return _find(name_substr, "max_input_channels", "default_input_device")
 
 
+def _name(idx: int | None) -> str:
+    if idx is None:
+        return ""
+    try:
+        return str(sd.query_devices(idx)["name"])
+    except Exception:
+        return ""
+
+
+def default_input_name() -> str:
+    """Name of the system default recording device ('' if unknown)."""
+    return _name(find_input(""))
+
+
+def default_output_name() -> str:
+    """Name of the system default playback device ('' if unknown)."""
+    return _name(find_output(""))
+
+
 def find_input_candidates(name_substr: str) -> list[tuple[int, str]]:
     """Return [(device_index, host_api_name), ...] for the mic across host APIs,
     best first. '' = each API's default input device."""

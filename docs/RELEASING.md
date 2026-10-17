@@ -45,11 +45,12 @@ Expected release-related source files include:
 - `README.zh.md`
 - `CHANGELOG.md`
 - `docs/RELEASING.md`
-- `docs/releases/v0.20.0.md`
+- `docs/releases/v1.0.0.md`
 - `config.example.yaml`
 - `requirements.txt`
 - `vrclt.spec`
 - `scripts/package_release.ps1`
+- `scripts/make_screenshots.py` and `docs/images/` (README screenshots)
 
 ## 2. Validation
 
@@ -61,13 +62,14 @@ Run the lightweight checks first:
 .\.venv\Scripts\python.exe -m vrclt --help
 ```
 
-For v0.20.0, also run the regression scripts for Qwen, Soniox, speech activity,
+For v1.0.0, also run the regression scripts for the setup check, Qwen, Soniox, speech activity,
 speaker displays/context controls, VR pages and interaction, settings navigation,
 logs, reconnect waits, audio passthrough, and startup:
 
 ```powershell
 $releaseChecks = @(
-  'smoke_qwen_session.py', 'smoke_soniox_session.py', 'smoke_speech_activity.py',
+  'smoke_setup_check.py', 'smoke_qwen_session.py', 'smoke_soniox_session.py',
+  'smoke_speech_activity.py',
   'smoke_subtitle_speakers.py', 'smoke_speaker_context.py',
   'smoke_speaker_ui.py', 'smoke_vr_speakers.py',
   'smoke_vr_render.py', 'test_vr_button_table.py',
@@ -85,6 +87,14 @@ foreach ($releaseCheck in $releaseChecks) {
 Record local test results separately from live-provider and physical-device
 checks. Mock Qwen/Soniox sessions and rendered VR images do not establish live
 speaker-recognition accuracy or behavior on a headset.
+
+When the UI changed, regenerate the README screenshots (desktop Dashboard,
+setup check, and VR panels for every README language). The script renders off
+screen with sample data and touches no devices or settings:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\make_screenshots.py
+```
 
 Confirm that the public CLI only exposes `run` plus the optional app override:
 
@@ -134,25 +144,25 @@ executable before copying it. Windows file and product versions also use the
 application version from the spec.
 
 ```powershell
-.\scripts\package_release.ps1 -Version 0.20.0
+.\scripts\package_release.ps1 -Version 1.0.0
 ```
 
 If `dist\vrclt.exe` has already been built and only the release copy needs to be
 refreshed:
 
 ```powershell
-.\scripts\package_release.ps1 -Version 0.20.0 -SkipBuild
+.\scripts\package_release.ps1 -Version 1.0.0 -SkipBuild
 ```
 
 Use `-SkipBuild` only when that executable was built from the exact source being
 released. Confirm `vrclt/__init__.py`, the changelog, and the artifact name all
-use `0.20.0`.
+use `1.0.0`.
 
 Expected output:
 
 ```text
-release\vrclt-v0.20.0-windows-x64.exe
-release\vrclt-v0.20.0-windows-x64.exe.sha256
+release\vrclt-v1.0.0-windows-x64.exe
+release\vrclt-v1.0.0-windows-x64.exe.sha256
 ```
 
 ## 5. Smoke Test The Executable
@@ -167,9 +177,9 @@ Repeat the launch check with the packaged release executable, which is the file
 users download:
 
 ```powershell
-.\release\vrclt-v0.20.0-windows-x64.exe
-Get-FileHash .\release\vrclt-v0.20.0-windows-x64.exe -Algorithm SHA256
-Get-Content .\release\vrclt-v0.20.0-windows-x64.exe.sha256
+.\release\vrclt-v1.0.0-windows-x64.exe
+Get-FileHash .\release\vrclt-v1.0.0-windows-x64.exe -Algorithm SHA256
+Get-Content .\release\vrclt-v1.0.0-windows-x64.exe.sha256
 ```
 
 The computed hash must match the checksum file. An existing process or a
@@ -223,6 +233,23 @@ Minimum manual checks:
 - Inbound subtitles appear for the selected process.
 - Language changes from Dashboard apply immediately.
 - Settings that require a rebuild restart the runtime without duplicate pipelines.
+
+Setup check release checks (use a PC or Windows account without VB-Cable, and
+close VRChat before Auto setup):
+
+- On first launch the Dashboard opens in the Simple view with the Setup check
+  expanded. Switching to Full and back persists across restarts.
+- **Install VB-Cable** downloads the pack, shows VB-Audio's setup after the UAC
+  prompt, and after **Install Driver** and closing the setup rereads devices
+  and runs Auto setup. Cancelling the UAC prompt only shows a note.
+- If Windows switched its default playback device to `CABLE Input`, the
+  Setup check warns and **Open sound settings** opens the Windows sound page.
+- With VRChat closed, Auto setup sets VRChat's VR and desktop microphone to
+  `CABLE Output` and turns on OSC; start VRChat and confirm both. With VRChat
+  running, Auto setup leaves its settings alone and says so.
+- **Find my mic** selects the microphone you speak into and ignores the others.
+- On a 1366×768 screen, or 1920×1080 at 150% scaling, the window fits the work
+  area and the Settings save button is reachable.
 
 Qwen release checks:
 
@@ -282,17 +309,17 @@ After validation, commit only source changes:
 
 ```powershell
 git status
-git add README.md README.ko.md README.en.md README.ja.md README.zh.md CHANGELOG.md docs/RELEASING.md docs/releases/v0.20.0.md config.example.yaml requirements.txt vrclt.spec scripts/package_release.ps1 vrclt tests
+git add README.md README.ko.md README.en.md README.ja.md README.zh.md CHANGELOG.md docs/RELEASING.md docs/releases/v1.0.0.md docs/images config.example.yaml requirements.txt vrclt.spec scripts/package_release.ps1 scripts/make_screenshots.py vrclt tests
 git status
-git commit -m "chore: prepare v0.20.0 release"
+git commit -m "chore: prepare v1.0.0 release"
 ```
 
 Create and push the tag:
 
 ```powershell
-git tag v0.20.0
+git tag v1.0.0
 git push origin main
-git push origin v0.20.0
+git push origin v1.0.0
 ```
 
 Use a new version number if the tag already exists.
@@ -302,18 +329,18 @@ Use a new version number if the tag already exists.
 Upload these files to a GitHub Release:
 
 ```text
-release\vrclt-v0.20.0-windows-x64.exe
-release\vrclt-v0.20.0-windows-x64.exe.sha256
+release\vrclt-v1.0.0-windows-x64.exe
+release\vrclt-v1.0.0-windows-x64.exe.sha256
 ```
 
 With GitHub CLI:
 
 ```powershell
-gh release create v0.20.0 `
-  .\release\vrclt-v0.20.0-windows-x64.exe `
-  .\release\vrclt-v0.20.0-windows-x64.exe.sha256 `
-  --title "vrclt v0.20.0" `
-  --notes-file .\docs\releases\v0.20.0.md
+gh release create v1.0.0 `
+  .\release\vrclt-v1.0.0-windows-x64.exe `
+  .\release\vrclt-v1.0.0-windows-x64.exe.sha256 `
+  --title "vrclt v1.0.0" `
+  --notes-file .\docs\releases\v1.0.0.md
 ```
 
 ## 9. Release Notes Checklist
@@ -326,6 +353,10 @@ Include these points in the release body:
 - Qwen 3.8 is the default Qwen model for new configurations; it detects the
   spoken language and labels speakers. Saved configurations keep their model,
   and Qwen 3.5 still requires the spoken-language settings.
+- The Setup check and Auto setup handle VB-Cable, the microphone, and VRChat's
+  microphone/OSC; VRChat settings change only while VRChat is closed.
+- Install VB-Cable runs VB-Audio's own setup; the notes name the origin
+  (`www.vb-cable.com`) and that VB-CABLE is a donationware.
 - Soniox now authenticates through the WebSocket `Authorization` header. Soniox
   refuses keys in the start message after 2027-01-15, so Soniox users must
   update before then.
@@ -336,8 +367,9 @@ Include these points in the release body:
   adjustable from 5 to 600 seconds. The context switch and effective timeout
   appear in both VR panels. The full connected recognition stream remains
   billable, including silence; existing saved switch choices are preserved.
-- State whether live Qwen and Soniox calls, packaged-window launch, and physical
-  VR/audio checks were completed; do not equate local mock tests with those checks.
+- State whether live Qwen and Soniox calls, a clean-PC VB-Cable install, Auto
+  setup against VRChat, packaged-window launch, and physical VR/audio checks
+  were completed; do not equate local mock tests with those checks.
 - User settings are stored in `%LOCALAPPDATA%\vrclt\config.yaml`.
 - The app uses a native PySide6 UI and tray menu.
 - There is no web UI or local web server.

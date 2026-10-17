@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="none">
+  <title>VRCLT</title>
+  <desc>Two offset speech bubbles, an ivory voice and a blue reply.</desc>
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="#192C3D"/>
+  <path d="M64 56H132C143.046 56 152 64.954 152 76V116C152 127.046 143.046 136 132 136H96L68 158V136H64C52.954 136 44 127.046 44 116V76C44 64.954 52.954 56 64 56Z" fill="#F5F3ED"/>
+  <path d="M124 108H192C203.046 108 212 116.954 212 128V168C212 179.046 203.046 188 192 188H188V210L160 188H124C112.954 188 104 179.046 104 168V128C104 116.954 112.954 108 124 108Z" fill="#8CC8F2" stroke="#192C3D" stroke-width="12" stroke-linejoin="round"/>
+</svg>

@@ -1,13 +1,106 @@
-# vrclt
+<div align="center">
 
-Languages: [English](README.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [中文](README.zh.md)
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/logo-dark.svg">
+    <img src="docs/brand/logo-light.svg" width="340" height="100" alt="VRCLT">
+  </picture>
+</h1>
 
-`vrclt` is a Windows live translator for VRChat and Discord. It translates your
-microphone with your selected translation engine, plays the translated voice into the target
-app through VB-Audio Virtual Cable, and shows translated subtitles for other
-people's speech.
+<p><a href="https://vrclt.github.io/">Official site</a></p>
 
-## Highlights
+### Speak your language. Be heard in theirs.
+
+Real-time voice translation and live subtitles for **VRChat** and **Discord** on Windows.
+
+[![Latest release](https://img.shields.io/github/v/release/shgeum/VRCLT?style=flat-square&label=release&color=2ea44f)](https://github.com/shgeum/VRCLT/releases/latest) [![Downloads](https://img.shields.io/github/downloads/shgeum/VRCLT/total?style=flat-square&color=1f6feb)](https://github.com/shgeum/VRCLT/releases) [![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](#requirements) [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+
+**English** · [한국어](README.ko.md) · [日本語](README.ja.md) · [中文](README.zh.md)
+
+<br>
+
+<img src="docs/images/dashboard-en.png" width="780" alt="VRCLT Dashboard in the Simple view">
+
+<br><br>
+
+[**⬇ Download VRCLT**](https://github.com/shgeum/VRCLT/releases/latest) &nbsp;·&nbsp; [Quick start](#quick-start) &nbsp;·&nbsp; [Documentation](#installation)
+
+</div>
+
+## Why VRCLT
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🎙️ Your voice, translated
+
+Speak normally. VRCLT translates in real time and plays a natural translated voice into VRChat or Discord as your microphone, so others simply hear you in their language.
+
+</td>
+<td width="50%" valign="top">
+
+### 💬 Live subtitles
+
+Everyone else's speech appears as subtitles in SteamVR, in a desktop overlay, and in the app, with speaker labels when the engine separates speakers.
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### ⚡ One-click setup
+
+The Setup check shows what is missing. **Auto setup** routes the audio, picks your microphone, and sets VRChat's microphone and OSC; **Install VB-Cable** runs the official installer for you.
+
+</td>
+<td width="50%" valign="top">
+
+### 🥽 Built for VR
+
+A wrist menu and a SteamVR Dashboard page keep the controls in reach, subtitles float in front of you, and VRCLT can start together with SteamVR.
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 💭 VRChat chatbox
+
+Your original line and its translation go to the chatbox over OSC. Text-only mode keeps your own voice and just adds the translated text.
+
+</td>
+<td width="50%" valign="top">
+
+### 🌐 Four engines, 70+ languages
+
+Google Gemini Live, Qwen3.8 LiveTranslate, OpenAI gpt-realtime-translate, and Soniox: choose by price, region, voice, and speaker separation.
+
+</td>
+</tr>
+</table>
+
+## Quick start
+
+1. **Download** `vrclt-v<version>-windows-x64.exe` from [Releases](https://github.com/shgeum/VRCLT/releases/latest) and run it. There is nothing to install.
+2. **Add an API key.** Gemini is the default: create a key at [Google AI Studio](https://aistudio.google.com/apikey) and paste it into **Settings → Gemini API key**. Other engines are described under [Translation Engines](#translation-engines).
+3. **Let the Setup check do the rest.** Click **Install VB-Cable** if it is missing, close VRChat, then click **Auto setup**.
+4. **Start VRChat and talk.** Toggle **Translate** and **Subtitles** on the Dashboard or from the wrist menu.
+
+<p align="center"><img src="docs/images/setup-check-en.png" width="760" alt="Setup check with Auto setup"></p>
+
+## In VR
+
+<p align="center">
+<img src="docs/images/vr-subtitles-en.png" width="620" alt="Subtitles in SteamVR"><br><br>
+<img src="docs/images/vr-wrist-en.png" width="300" alt="Wrist menu">&nbsp;&nbsp;
+<img src="docs/images/vr-dashboard-en.png" width="300" alt="SteamVR Dashboard page">
+</p>
+
+Subtitles float in front of you, the wrist menu switches translation, subtitles, and languages, and the SteamVR Dashboard page holds languages, audio devices, and panel layout.
+
+<details>
+<summary><b>All features</b></summary>
 
 - Native Windows UI with Dashboard, Settings, and Logs/About tabs
 - Tray menu for opening the app, opening settings, toggling translation/subtitles, and quitting
@@ -23,6 +116,8 @@ people's speech.
 - GitHub Releases update notification and safe config reset that keeps your API key, saved language lists, UI language, close action, and selected audio devices
 - Downloadable Windows exe from [VRCLT Releases](https://github.com/shgeum/VRCLT/releases)
 - User settings stored in `%LOCALAPPDATA%\vrclt\config.yaml`
+
+</details>
 
 ## Installation
 
@@ -56,6 +151,10 @@ The API key is stored as plain text in that file.
 ### 2. Install VB-Audio Virtual Cable
 
 VB-Audio Virtual Cable is required when you want VRChat or Discord to hear the translated voice as a microphone.
+
+**Easiest:** on the Dashboard's **Setup check** panel, click **Install VB-Cable**. vrclt downloads the official package from www.vb-cable.com, checks VB-Audio's digital signature, and opens VB-Audio's own setup: approve the Windows prompt, click **Install Driver**, then close the completion dialog. vrclt rereads the devices and continues with **Auto setup**. VB-CABLE is a donationware by VB-Audio, all participations are welcome.
+
+To install it manually:
 
 1. Download **VB-CABLE** from [VB-Audio Virtual Cable](https://vb-audio.com/Cable/).
 2. Extract the downloaded ZIP file.
@@ -122,7 +221,7 @@ China), vrclt can use **Alibaba Qwen3.8 LiveTranslate** instead of Gemini:
 1. Open the [Soniox Console](https://console.soniox.com), create an account, and sign in.
 2. Open **My First Project** or your chosen project, then create a key under
    **API Keys**. See the [official setup guide](https://soniox.com/docs/stt/get-started).
-   v0.20.0 uses US endpoints, so choose a **US project** if region selection is
+   v1.0.0 uses US endpoints, so choose a **US project** if region selection is
    available; switching to other regional endpoints is not yet configurable.
    See [Soniox regions](https://soniox.com/docs/data-residency).
 3. Check your API balance in [Billing overview](https://console.soniox.com/org/billing/overview/)
@@ -236,8 +335,12 @@ live preview; take turns with multiple speakers to check separation. Enable
 6. In VRChat or Discord, set the microphone input to **CABLE Output (VB-Audio Virtual Cable)**.
 7. Save settings. The runtime restarts automatically.
 
+**Auto setup (recommended):** the Dashboard opens in the **Simple** view with a **Setup check** panel that lists what is ready: API key, VB-Cable, translated voice output, your microphone, and VRChat's microphone and OSC. Close VRChat, then press **Auto setup**: it sends the translated voice to `CABLE Input`, picks your real microphone (the one VRChat used before, otherwise the system default), sets VRChat's microphone to `CABLE Output` for VR and desktop, and turns on VRChat's OSC. **Find my mic** picks the microphone that reacts most while you speak. Steps 3–6 above are what Auto setup does; anything it cannot change shows instructions in the panel. Switch to **Full** (top right) for every dashboard control.
+
 ## Troubleshooting
 
+- PC sound stopped after installing VB-Cable: Windows made `CABLE Input` the default playback device. Set your speakers or headphones as the default again (**Setup check → Open sound settings**).
+- Auto setup did not change VRChat's microphone or OSC: close VRChat first. VRChat overwrites its settings when it exits, so vrclt only writes them while VRChat is closed.
 - No translated voice in the target app: confirm `outbound.tts_device` is `CABLE Input` and the target app microphone is `CABLE Output`.
 - No inbound subtitles: confirm the target process name matches the running app, for example `VRChat.exe` or `Discord.exe`.
 - Runtime says API key is required: enter the selected engine's key in Settings or set `GEMINI_API_KEY`, `DASHSCOPE_API_KEY`, `OPENAI_API_KEY`, or `SONIOX_API_KEY`.
@@ -319,6 +422,8 @@ captured at this moment.
 
 Dashboard:
 
+- **Simple / Full** view switch (top right). New installs start in Simple: the setup check (one line once everything is ready), the app choice (VRChat/Discord/custom), translation/subtitle toggles, their languages, your microphone with **Find my mic**, a mic level bar, and live subtitles. Full adds the text-only switch, devices, the engine button, language-list editing, spoken languages, volume, and display/app options. Microphone lists never offer `CABLE Output`, which would only feed the translated voice back. Configurations saved before v1.0.0 keep the full view.
+- **Setup check** panel with **Auto setup**, **Find my mic**, and **Install VB-Cable**; it folds to one line when everything is ready
 - A compact status header shows the selected engine with a shortcut to its settings.
 - Main translation, subtitle, language, and audio controls stay together. Language-list editing and less-used display/app controls open in expandable sections.
 - Runtime status and connection state
@@ -561,6 +666,7 @@ Audio, control, UI, and wrist menu:
 | `ui.mode` | `auto` | `auto`, `vr`, or `desktop`. |
 | `ui.lang` | `""` | UI display language. Empty means auto; valid values are `en`, `ko`, `ja`, `zh`. |
 | `ui.close_action` | `tray` | Window close button behavior: `tray` or `exit`. |
+| `ui.easy_mode` | `true` | Simple dashboard view. Configurations saved before v1.0.0 start in the full view (`false`). |
 | `wrist_ui.enabled` | `true` | Enables the SteamVR wrist menu. |
 | `wrist_ui.hand` | `left` | Wrist that wears the menu: `left` or `right`. |
 | `wrist_ui.width_m` | `0.14` | Wrist menu width in meters. |
@@ -606,14 +712,14 @@ dist\vrclt.exe
 Create release artifacts:
 
 ```powershell
-.\scripts\package_release.ps1 -Version 0.20.0
+.\scripts\package_release.ps1 -Version 1.0.0
 ```
 
 The release script creates:
 
 ```text
-release\vrclt-v0.20.0-windows-x64.exe
-release\vrclt-v0.20.0-windows-x64.exe.sha256
+release\vrclt-v1.0.0-windows-x64.exe
+release\vrclt-v1.0.0-windows-x64.exe.sha256
 ```
 
 ## Smoke Tests
@@ -622,7 +728,7 @@ release\vrclt-v0.20.0-windows-x64.exe.sha256
 .\.venv\Scripts\python.exe -m compileall vrclt
 .\.venv\Scripts\python.exe -m vrclt --help
 .\.venv\Scripts\pyinstaller.exe vrclt.spec --noconfirm
-.\scripts\package_release.ps1 -Version 0.20.0 -SkipBuild
+.\scripts\package_release.ps1 -Version 1.0.0 -SkipBuild
 ```
 
 For a real runtime test, run the exe, save settings in the native UI, confirm

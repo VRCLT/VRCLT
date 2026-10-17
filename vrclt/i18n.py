@@ -46,10 +46,10 @@ STRINGS = {
                           "ja": "PC字幕サイズ", "zh": "PC 字幕大小"},
     "label_close_action": {"ko": "창 닫기 동작", "en": "Window close action",
                            "ja": "ウィンドウを閉じる動作", "zh": "关闭窗口动作"},
-    "label_mic_device": {"ko": "마이크 입력", "en": "Mic input",
-                         "ja": "マイク入力", "zh": "麦克风输入"},
-    "label_voice_out_device": {"ko": "음성 출력", "en": "Voice output",
-                               "ja": "音声出力", "zh": "语音输出"},
+    "label_mic_device": {"ko": "내 마이크", "en": "My mic",
+                         "ja": "自分のマイク", "zh": "我的麦克风"},
+    "label_voice_out_device": {"ko": "번역 음성 출력", "en": "Translated voice to",
+                               "ja": "翻訳音声の出力", "zh": "翻译语音输出"},
     "label_tts_gain": {"ko": "번역 음성 볼륨", "en": "Translated voice volume",
                        "ja": "翻訳音声の音量", "zh": "翻译语音音量"},
     "label_mic_level": {"ko": "마이크 레벨", "en": "Mic level",
@@ -715,32 +715,386 @@ STRINGS = {
     "dash_grp_display": {"ko": "자막 표시", "en": "Subtitle display",
                          "ja": "字幕表示", "zh": "字幕显示"},
     "dash_grp_app": {"ko": "앱", "en": "Application", "ja": "アプリ", "zh": "应用"},
-    # ---- first-run setup banner ----
-    "setup_title": {"ko": "처음 설정", "en": "First-time setup",
-                    "ja": "初回セットアップ", "zh": "首次设置"},
-    "setup_intro": {"ko": "번역 엔진을 고르고 API 키를 입력한 뒤 오디오 장치를 확인하세요.",
-                    "en": "Pick an engine, add its API key, then check your audio devices.",
-                    "ja": "翻訳エンジンを選び、APIキーを入力して、オーディオデバイスを確認してください。",
-                    "zh": "选择翻译引擎，填写 API 密钥，然后检查音频设备。"},
-    "setup_step_engine": {"ko": "① 번역 엔진: {provider} — 바꾸려면 설정에서 변경",
-                          "en": "① Engine: {provider} — change it in Settings if needed",
-                          "ja": "① 翻訳エンジン: {provider} — 変更は設定から",
-                          "zh": "① 翻译引擎：{provider}——如需更换请在设置中修改"},
-    "setup_step_key": {"ko": "② API 키 입력 — [API 키 받기]에서 발급 후 설정에 붙여넣기",
-                       "en": "② Add the API key — get one with [Get API key], then paste it in Settings",
-                       "ja": "② APIキー入力 — [APIキーを取得]で発行し、設定に貼り付け",
-                       "zh": "② 填写 API 密钥——点击[获取 API 密钥]申请后粘贴到设置中"},
-    "setup_step_devices": {
-        "ko": "③ 오디오 장치 확인 — 말할 때 아래 '마이크 레벨'이 움직이는지, '음성 출력'이 VB-Cable/헤드셋인지 확인",
-        "en": "③ Check audio devices — the mic level below should move when you speak; "
-              "voice output should be your VB-Cable / headset",
-        "ja": "③ オーディオデバイス確認 — 話すと下の「マイクレベル」が動くか、"
-              "「音声出力」がVB-Cable/ヘッドセットかを確認",
-        "zh": "③ 检查音频设备——说话时下方“麦克风电平”应有反应；“语音输出”应为 VB-Cable/耳机"},
+    # ---- setup checklist panel ----
+    "setup_panel_title": {"ko": "설정 점검", "en": "Setup check",
+                          "ja": "設定チェック", "zh": "设置检查"},
+    "setup_summary_ok": {"ko": "모두 준비됐습니다", "en": "Everything is ready",
+                         "ja": "すべて準備できています", "zh": "一切就绪"},
+    "setup_summary_issues": {"ko": "확인이 필요한 항목 {n}개", "en": "{n} item(s) need attention",
+                             "ja": "確認が必要な項目: {n}件", "zh": "有 {n} 项需要处理"},
+    "setup_btn_auto_fix": {"ko": "자동 설정", "en": "Auto setup",
+                           "ja": "自動設定", "zh": "自动设置"},
+    "setup_btn_recheck": {"ko": "다시 확인", "en": "Check again",
+                          "ja": "再確認", "zh": "重新检查"},
+    "setup_btn_show": {"ko": "자세히", "en": "Details", "ja": "詳細", "zh": "详情"},
+    "setup_btn_hide": {"ko": "접기", "en": "Hide", "ja": "閉じる", "zh": "收起"},
     "setup_btn_get_key": {"ko": "API 키 받기", "en": "Get API key",
                           "ja": "APIキーを取得", "zh": "获取 API 密钥"},
     "setup_btn_open_settings": {"ko": "설정 열기", "en": "Open Settings",
                                 "ja": "設定を開く", "zh": "打开设置"},
+    "setup_btn_get_cable": {"ko": "VB-Cable 받기", "en": "Get VB-Cable",
+                            "ja": "VB-Cableを入手", "zh": "获取 VB-Cable"},
+    "setup_btn_find_mic": {"ko": "마이크 자동 찾기", "en": "Find my mic",
+                           "ja": "マイクを自動検出", "zh": "自动查找麦克风"},
+    "setup_app_generic": {"ko": "대상 앱", "en": "the target app",
+                          "ja": "対象アプリ", "zh": "目标应用"},
+    "setup_api_key": {"ko": "API 키", "en": "API key", "ja": "APIキー", "zh": "API 密钥"},
+    "setup_api_key_ok": {"ko": "{provider} 키가 입력되어 있습니다.", "en": "{provider} key is set.",
+                         "ja": "{provider}のキーが入力されています。",
+                         "zh": "已填写 {provider} 密钥。"},
+    "setup_api_key_missing": {
+        "ko": "{provider} API 키가 없습니다. [API 키 받기]에서 발급한 뒤 [설정 열기]에서 붙여 넣으세요.",
+        "en": "No {provider} API key yet. Get one with [Get API key], then paste it via "
+              "[Open Settings].",
+        "ja": "{provider}のAPIキーがありません。[APIキーを取得]で発行し、[設定を開く]から"
+              "貼り付けてください。",
+        "zh": "尚未填写 {provider} API 密钥。点击[获取 API 密钥]申请后，通过[打开设置]粘贴。"},
+    "setup_cable": {"ko": "VB-Cable", "en": "VB-Cable", "ja": "VB-Cable", "zh": "VB-Cable"},
+    "setup_cable_ok": {"ko": "설치됨 — {name}", "en": "Installed — {name}",
+                       "ja": "インストール済み — {name}", "zh": "已安装 — {name}"},
+    "setup_cable_missing": {
+        "ko": "VB-Audio Virtual Cable이 없습니다. 번역 음성을 {app} 마이크로 보내려면 필요합니다. "
+              "[VB-Cable 자동 설치]를 누르면 공식 설치 프로그램을 바로 실행합니다.",
+        "en": "VB-Audio Virtual Cable is not installed. It carries the translated voice into "
+              "{app}'s microphone. [Install VB-Cable] runs the official setup for you.",
+        "ja": "VB-Audio Virtual Cableがありません。翻訳音声を{app}のマイクに送るために必要です。"
+              "[VB-Cableを自動インストール]で公式インストーラーをすぐ実行できます。",
+        "zh": "未安装 VB-Audio Virtual Cable。需要它把翻译语音送入 {app} 的麦克风。"
+              "点击[自动安装 VB-Cable]可直接运行官方安装程序。"},
+    "setup_voice_out": {"ko": "번역 음성 출력", "en": "Translated voice output",
+                        "ja": "翻訳音声の出力", "zh": "翻译语音输出"},
+    "setup_voice_out_ok": {"ko": "보내는 곳: {name}", "en": "Sending to {name}",
+                           "ja": "送信先: {name}", "zh": "输出到：{name}"},
+    "setup_voice_out_needs_cable": {
+        "ko": "VB-Cable을 설치하면 [자동 설정]으로 맞출 수 있습니다.",
+        "en": "Install VB-Cable first; [Auto setup] can then select it.",
+        "ja": "VB-Cableをインストールすると[自動設定]で設定できます。",
+        "zh": "请先安装 VB-Cable，之后可用[自动设置]选择它。"},
+    "setup_voice_out_missing": {
+        "ko": "{name} 장치를 찾을 수 없습니다. [자동 설정]을 누르면 {cable} 장치로 바꿉니다.",
+        "en": "Device {name} was not found. [Auto setup] switches to {cable}.",
+        "ja": "デバイス「{name}」が見つかりません。[自動設定]で{cable}に切り替えます。",
+        "zh": "找不到设备“{name}”。点击[自动设置]切换到 {cable}。"},
+    "setup_voice_out_not_cable": {
+        "ko": "번역 음성이 {name} 장치로 나가고 있어 {app}에서 들리지 않습니다. "
+              "[자동 설정]을 누르면 {cable} 장치로 바꿉니다.",
+        "en": "The translated voice plays on {name}, so {app} cannot hear it. "
+              "[Auto setup] switches to {cable}.",
+        "ja": "翻訳音声が{name}で再生されているため、{app}には聞こえません。"
+              "[自動設定]で{cable}に切り替えます。",
+        "zh": "翻译语音正从 {name} 播放，{app} 听不到。点击[自动设置]切换到 {cable}。"},
+    "setup_voice_out_other_virtual": {
+        "ko": "{name} 장치로 보내는 중입니다. 의도한 설정이 아니라면 [자동 설정]으로 "
+              "{cable} 장치로 바꾸세요.",
+        "en": "Sending to {name}. If that is not intended, [Auto setup] switches to {cable}.",
+        "ja": "{name}に送信中です。意図した設定でなければ[自動設定]で{cable}に切り替えてください。",
+        "zh": "正在输出到 {name}。如非有意设置，点击[自动设置]切换到 {cable}。"},
+    "setup_mic": {"ko": "내 마이크", "en": "My microphone", "ja": "自分のマイク", "zh": "我的麦克风"},
+    "setup_mic_ok": {"ko": "{name}", "en": "{name}", "ja": "{name}", "zh": "{name}"},
+    "setup_mic_default": {"ko": "{name} (시스템 기본 장치를 따라감)",
+                          "en": "{name} (follows the system default)",
+                          "ja": "{name}（システム既定に従う）",
+                          "zh": "{name}（跟随系统默认设备）"},
+    "setup_mic_missing": {
+        "ko": "{name} 마이크를 찾을 수 없습니다. [마이크 자동 찾기]나 [자동 설정]으로 다시 고르세요.",
+        "en": "Microphone {name} was not found. Pick one with [Find my mic] or [Auto setup].",
+        "ja": "マイク「{name}」が見つかりません。[マイクを自動検出]か[自動設定]で選び直してください。",
+        "zh": "找不到麦克风“{name}”。请用[自动查找麦克风]或[自动设置]重新选择。"},
+    "setup_mic_virtual": {
+        "ko": "{name}은(는) 가상 케이블이라 목소리가 들어오지 않고, 번역 음성이 다시 마이크로 "
+              "들어와 반복됩니다. 실제 마이크를 고르세요.",
+        "en": "{name} is a virtual cable, not your voice: the translated voice would loop back "
+              "into it. Choose your real microphone.",
+        "ja": "{name}は仮想ケーブルです。声は入らず、翻訳音声がマイクに戻ってループします。"
+              "実際のマイクを選んでください。",
+        "zh": "{name} 是虚拟线缆，并非你的声音，翻译语音会回流形成循环。请选择实体麦克风。"},
+    "setup_mic_none": {
+        "ko": "마이크를 찾지 못했습니다. 마이크를 연결한 뒤 설정 탭의 [장치 목록 새로고침]을 누르세요.",
+        "en": "No microphone found. Connect one, then press [Refresh devices] on the Settings tab.",
+        "ja": "マイクが見つかりません。接続してから設定タブの[デバイス一覧を更新]を押してください。",
+        "zh": "未找到麦克风。请连接后在设置标签页点击[刷新设备列表]。"},
+    "setup_vrchat_mic": {"ko": "VRChat 마이크", "en": "VRChat microphone",
+                         "ja": "VRChatのマイク", "zh": "VRChat 麦克风"},
+    "setup_vrchat_mic_ok": {"ko": "VRChat이 {expected} 장치를 마이크로 쓰고 있습니다.",
+                            "en": "VRChat uses {expected} as its microphone.",
+                            "ja": "VRChatは{expected}をマイクとして使用しています。",
+                            "zh": "VRChat 正在使用 {expected} 作为麦克风。"},
+    "setup_vrchat_mic_wrong": {
+        "ko": "VRChat 마이크가 지금 {current}입니다. VRChat의 Settings → Audio & Voice → "
+              "Microphone에서 {expected} 장치를 고르세요. VB-Cable은 'Input'에 넣은 소리가 "
+              "'Output'으로 나옵니다. VRChat을 끈 상태에서 [자동 설정]을 누르면 대신 바꿔 드립니다.",
+        "en": "VRChat's microphone is {current}. In VRChat open Settings → Audio & Voice → "
+              "Microphone and choose {expected}. VB-Cable plays whatever goes into 'Input' "
+              "out of 'Output'. With VRChat closed, [Auto setup] changes it for you.",
+        "ja": "VRChatのマイクが現在 {current} です。VRChatの Settings → Audio & Voice → "
+              "Microphone で {expected} を選んでください。VB-Cableは「Input」に入れた音が"
+              "「Output」から出ます。VRChatを終了した状態で[自動設定]を押すと代わりに変更します。",
+        "zh": "VRChat 当前麦克风为 {current}。请在 VRChat 的 Settings → Audio & Voice → "
+              "Microphone 中选择 {expected}。VB-Cable 会把送入“Input”的声音从“Output”输出。"
+              "关闭 VRChat 后点击[自动设置]即可代为更改。"},
+    "setup_vrchat_mic_unknown": {
+        "ko": "VRChat 설정을 찾지 못했습니다. VRChat의 Settings → Audio & Voice → Microphone에서 "
+              "{expected} 장치를 고르세요.",
+        "en": "VRChat's settings were not found. In VRChat choose {expected} under "
+              "Settings → Audio & Voice → Microphone.",
+        "ja": "VRChatの設定が見つかりません。VRChatの Settings → Audio & Voice → Microphone で "
+              "{expected} を選んでください。",
+        "zh": "未找到 VRChat 设置。请在 VRChat 的 Settings → Audio & Voice → Microphone 中"
+              "选择 {expected}。"},
+    "setup_mode_vr": {"ko": "VR", "en": "VR", "ja": "VR", "zh": "VR"},
+    "setup_mode_desktop": {"ko": "데스크톱", "en": "Desktop", "ja": "デスクトップ", "zh": "桌面"},
+    "setup_vrchat_default": {"ko": "기본 장치({name})", "en": "Default ({name})",
+                             "ja": "既定（{name}）", "zh": "默认（{name}）"},
+    "setup_vrchat_osc": {"ko": "VRChat OSC", "en": "VRChat OSC",
+                         "ja": "VRChat OSC", "zh": "VRChat OSC"},
+    "setup_vrchat_osc_off": {
+        "ko": "VRChat에서 OSC가 꺼져 있어 챗박스 번역이 표시되지 않습니다. VRChat 액션 메뉴"
+              "(Action Menu) → Options → OSC → Enabled를 켜세요. VRChat을 끈 상태에서 [자동 설정]을 "
+              "누르면 대신 켜 드립니다.",
+        "en": "OSC is off in VRChat, so chatbox translations will not appear. In VRChat open "
+              "the Action Menu → Options → OSC and switch it to Enabled. With VRChat closed, "
+              "[Auto setup] turns it on for you.",
+        "ja": "VRChatでOSCがオフのため、チャットボックスに翻訳が表示されません。VRChatの"
+              "アクションメニュー → Options → OSC → Enabled をオンにしてください。VRChatを終了した"
+              "状態で[自動設定]を押すと代わりにオンにします。",
+        "zh": "VRChat 中 OSC 已关闭，聊天框不会显示翻译。请在 VRChat 动作菜单（Action Menu）"
+              "→ Options → OSC 中开启 Enabled。关闭 VRChat 后点击[自动设置]即可代为开启。"},
+    "setup_vrchat_osc_port_busy": {
+        "ko": "다른 OSC 앱이 포트 {port}을(를) 쓰고 있어 아바타 메뉴 제어가 꺼졌습니다. "
+              "챗박스는 그대로 동작합니다.",
+        "en": "Another OSC app is using port {port}, so avatar-menu control is off. "
+              "The chatbox still works.",
+        "ja": "別のOSCアプリがポート{port}を使用しているため、アバターメニュー操作は無効です。"
+              "チャットボックスは動作します。",
+        "zh": "另一个 OSC 应用占用了端口 {port}，头像菜单控制已关闭。聊天框仍可正常使用。"},
+    "setup_vrchat_osc_receiving": {"ko": "켜짐 — VRChat 신호 수신 확인됨",
+                                   "en": "On — receiving from VRChat",
+                                   "ja": "オン — VRChatからの受信を確認",
+                                   "zh": "已开启 — 已收到 VRChat 信号"},
+    "setup_vrchat_osc_enabled": {"ko": "켜짐", "en": "On", "ja": "オン", "zh": "已开启"},
+    "setup_vrchat_osc_unknown": {
+        "ko": "VRChat에서 OSC를 켜야 챗박스 번역이 표시됩니다 (액션 메뉴 → Options → OSC → Enabled).",
+        "en": "Turn on OSC in VRChat for chatbox translations (Action Menu → Options → OSC → "
+              "Enabled).",
+        "ja": "チャットボックスに翻訳を表示するにはVRChatでOSCをオンにしてください"
+              "（アクションメニュー → Options → OSC → Enabled）。",
+        "zh": "需在 VRChat 中开启 OSC 才能在聊天框显示翻译（动作菜单 → Options → OSC → Enabled）。"},
+    "msg_autofix_applying": {"ko": "자동 설정을 적용하는 중…", "en": "Applying auto setup…",
+                             "ja": "自動設定を適用中…", "zh": "正在应用自动设置…"},
+    "setup_autofix_done": {"ko": "자동 설정 완료: {changes}", "en": "Auto setup applied: {changes}",
+                           "ja": "自動設定を適用しました: {changes}",
+                           "zh": "已完成自动设置：{changes}"},
+    "setup_autofix_nothing": {
+        "ko": "자동으로 바꿀 항목이 없습니다. 남은 항목은 안내에 따라 직접 바꿔 주세요.",
+        "en": "Nothing to change automatically. Follow the remaining hints to finish.",
+        "ja": "自動で変更できる項目はありません。残りは案内に従って設定してください。",
+        "zh": "没有可自动更改的项目。请按提示完成其余设置。"},
+    "setup_changed_tts": {"ko": "번역 음성 → {name}", "en": "translated voice → {name}",
+                          "ja": "翻訳音声 → {name}", "zh": "翻译语音 → {name}"},
+    "setup_changed_mic": {"ko": "마이크 → {name}", "en": "microphone → {name}",
+                          "ja": "マイク → {name}", "zh": "麦克风 → {name}"},
+    # ---- mic finder dialog ----
+    "mic_finder_title": {"ko": "마이크 자동 찾기", "en": "Find my microphone",
+                         "ja": "マイクを自動検出", "zh": "自动查找麦克风"},
+    "mic_finder_intro": {
+        "ko": "평소처럼 몇 초 동안 말해 보세요. 목소리에 가장 크게 반응하는 마이크를 골라 드립니다. "
+              "다른 마이크를 직접 고를 수도 있습니다.",
+        "en": "Speak normally for a few seconds. The microphone that reacts most to your voice "
+              "is selected; you can also pick another one.",
+        "ja": "いつも通り数秒話してください。声に最も強く反応したマイクを選びます。"
+              "別のマイクを選ぶこともできます。",
+        "zh": "请像平时一样说几秒钟。将自动选中对你的声音反应最强的麦克风，你也可以手动选择。"},
+    "mic_finder_listening": {"ko": "듣는 중…", "en": "Listening…",
+                             "ja": "聞き取り中…", "zh": "正在聆听…"},
+    "mic_finder_found": {"ko": "감지됨: {name}", "en": "Detected: {name}",
+                         "ja": "検出: {name}", "zh": "已检测到：{name}"},
+    "mic_finder_use": {"ko": "이 마이크 사용", "en": "Use this mic",
+                       "ja": "このマイクを使う", "zh": "使用此麦克风"},
+    "mic_finder_unavailable": {"ko": "사용 불가", "en": "unavailable",
+                               "ja": "使用不可", "zh": "不可用"},
+    "mic_finder_no_devices": {
+        "ko": "실제 마이크를 찾지 못했습니다. 마이크를 연결한 뒤 설정 탭의 [장치 목록 새로고침]을 누르세요.",
+        "en": "No real microphone found. Connect one, then press [Refresh devices] on the "
+              "Settings tab.",
+        "ja": "実際のマイクが見つかりません。接続してから設定タブの[デバイス一覧を更新]を押してください。",
+        "zh": "未找到实体麦克风。请连接后在设置标签页点击[刷新设备列表]。"},
+    # ---- view mode / audio routing ----
+    "btn_view_easy": {"ko": "간단히", "en": "Simple", "ja": "シンプル", "zh": "简洁"},
+    "btn_view_full": {"ko": "자세히", "en": "Full", "ja": "詳細", "zh": "完整"},
+    "tip_view_mode": {
+        "ko": "간단히: 꼭 필요한 항목만 표시 / 자세히: 대시보드의 모든 설정 표시",
+        "en": "Simple shows only the essentials; Full shows every dashboard control.",
+        "ja": "シンプル: 必要な項目だけ表示 / 詳細: ダッシュボードのすべての設定を表示",
+        "zh": "简洁：仅显示必要项目 / 完整：显示仪表板所有设置"},
+    "btn_find_mic": {"ko": "자동 찾기", "en": "Find", "ja": "自動検出", "zh": "自动查找"},
+    "tip_find_mic": {"ko": "말해 보면서 실제로 쓰는 마이크를 찾습니다.",
+                     "en": "Speak to find the microphone you are actually using.",
+                     "ja": "話しながら実際に使っているマイクを探します。",
+                     "zh": "说话以找到你实际使用的麦克风。"},
+    "device_system_default": {"ko": "시스템 기본 — {name}", "en": "System default — {name}",
+                              "ja": "システム既定 — {name}", "zh": "系统默认 — {name}"},
+    "audio_route_hint": {
+        "ko": "소리 흐름: 내 마이크 → VRCLT → {cable_in} ⇒ {cable_out} → {app}. "
+              "{app}의 마이크 설정에서는 {cable_out} 장치를 고르세요.",
+        "en": "Audio path: your mic → VRCLT → {cable_in} ⇒ {cable_out} → {app}. "
+              "In {app}, select {cable_out} as the microphone.",
+        "ja": "音の流れ: 自分のマイク → VRCLT → {cable_in} ⇒ {cable_out} → {app}。"
+              "{app}のマイク設定では {cable_out} を選んでください。",
+        "zh": "声音流向：我的麦克风 → VRCLT → {cable_in} ⇒ {cable_out} → {app}。"
+              "在 {app} 的麦克风设置中选择 {cable_out}。"},
+    # ---- one-shot setup: VB-Cable install, VRChat settings, system sound ----
+    "setup_btn_install_cable": {"ko": "VB-Cable 자동 설치", "en": "Install VB-Cable",
+                                "ja": "VB-Cableを自動インストール", "zh": "自动安装 VB-Cable"},
+    "setup_btn_sound_settings": {"ko": "소리 설정 열기", "en": "Open sound settings",
+                                 "ja": "サウンド設定を開く", "zh": "打开声音设置"},
+    "setup_system_sound": {"ko": "Windows 기본 출력", "en": "Windows default output",
+                           "ja": "Windowsの既定の出力", "zh": "Windows 默认输出"},
+    "setup_system_sound_output": {
+        "ko": "Windows 기본 출력 장치가 {name}(으)로 바뀌어 PC 소리가 스피커·헤드폰으로 나오지 "
+              "않습니다. [소리 설정 열기]에서 원래 출력 장치를 기본으로 되돌리세요.",
+        "en": "Windows plays everything on {name}, so the PC is silent on your speakers or "
+              "headphones. Set your usual output device as the default via [Open sound settings].",
+        "ja": "Windowsの既定の出力が{name}になっているため、PCの音がスピーカーやヘッドホンから"
+              "出ません。[サウンド設定を開く]で元の出力デバイスを既定に戻してください。",
+        "zh": "Windows 默认输出设备变成了 {name}，电脑声音不会从扬声器或耳机播放。"
+              "请在[打开声音设置]中把原来的输出设备设回默认。"},
+    "setup_changed_vrchat_mic": {"ko": "VRChat 마이크 → {name}", "en": "VRChat microphone → {name}",
+                                 "ja": "VRChatのマイク → {name}", "zh": "VRChat 麦克风 → {name}"},
+    "setup_changed_vrchat_osc": {"ko": "VRChat OSC 켬", "en": "VRChat OSC on",
+                                 "ja": "VRChat OSC オン", "zh": "已开启 VRChat OSC"},
+    "setup_vrchat_running": {
+        "ko": "VRChat이 실행 중이라 VRChat 설정은 바꾸지 않았습니다. VRChat을 종료한 뒤 "
+              "[자동 설정]을 다시 누르거나 VRChat 메뉴에서 직접 바꾸세요.",
+        "en": "VRChat is running, so its settings were left alone. Close VRChat and press "
+              "[Auto setup] again, or change them in VRChat's menu.",
+        "ja": "VRChatが起動中のため、VRChatの設定は変更していません。VRChatを終了してから"
+              "[自動設定]をもう一度押すか、VRChatのメニューで変更してください。",
+        "zh": "VRChat 正在运行，未更改其设置。请关闭 VRChat 后再次点击[自动设置]，"
+              "或在 VRChat 菜单中手动更改。"},
+    "setup_vrchat_write_failed": {
+        "ko": "VRChat 설정을 바꾸지 못했습니다({error}). VRChat을 한 번 실행한 뒤 다시 시도하세요.",
+        "en": "Could not change VRChat's settings ({error}). Start VRChat once, then try again.",
+        "ja": "VRChatの設定を変更できませんでした（{error}）。VRChatを一度起動してから再試行してください。",
+        "zh": "无法更改 VRChat 设置（{error}）。请先运行一次 VRChat 再重试。"},
+    "cable_install_title": {"ko": "VB-Cable 설치", "en": "Install VB-Cable",
+                            "ja": "VB-Cableのインストール", "zh": "安装 VB-Cable"},
+    "cable_install_start": {"ko": "내려받고 설치", "en": "Download and install",
+                            "ja": "ダウンロードしてインストール", "zh": "下载并安装"},
+    "cable_install_confirm": {
+        "ko": "VB-Audio Virtual Cable(VB-CABLE)을 공식 사이트(www.vb-cable.com)에서 내려받아 "
+              "VB-Audio의 설치 프로그램을 실행합니다.\n\n"
+              "1. Windows 권한 확인 창에서 [예]\n"
+              "2. VB-CABLE 설치 창에서 [Install Driver]\n"
+              "3. 드라이버 설치를 묻는 창에서 [설치]\n"
+              "4. 완료 창을 닫으면 VRCLT가 장치를 다시 읽고 자동 설정을 이어서 합니다.\n\n"
+              "VB-CABLE은 VB-Audio의 기부형(donationware) 소프트웨어입니다. 유용하다면 후원을 "
+              "고려해 주세요. (VB-CABLE is a donationware, all participations are welcome.)\n"
+              "설치 후 Windows 기본 소리 장치가 바뀔 수 있으며, VB-Audio는 설치 후 PC 재시작을 "
+              "권장합니다.",
+        "en": "VRCLT downloads VB-Audio Virtual Cable (VB-CABLE) from its official site "
+              "(www.vb-cable.com) and runs VB-Audio's own setup.\n\n"
+              "1. Allow the Windows permission prompt ([Yes])\n"
+              "2. In the VB-CABLE setup, click [Install Driver]\n"
+              "3. Confirm the driver installation ([Install])\n"
+              "4. Close the completion dialog; VRCLT then rereads devices and continues the "
+              "auto setup.\n\n"
+              "VB-CABLE is a donationware, all participations are welcome.\n"
+              "Windows may change its default sound devices during the install, and VB-Audio "
+              "recommends restarting the PC afterwards.",
+        "ja": "VB-Audio Virtual Cable（VB-CABLE）を公式サイト（www.vb-cable.com）からダウンロードし、"
+              "VB-Audioのインストーラーを実行します。\n\n"
+              "1. Windowsの確認画面で[はい]\n"
+              "2. VB-CABLEのセットアップで[Install Driver]\n"
+              "3. ドライバーのインストール確認で[インストール]\n"
+              "4. 完了画面を閉じると、VRCLTがデバイスを再読み込みして自動設定を続けます。\n\n"
+              "VB-CABLEはVB-Audioの寄付制（donationware）ソフトウェアです。役立った場合は寄付を"
+              "ご検討ください。（VB-CABLE is a donationware, all participations are welcome.）\n"
+              "インストール後にWindowsの既定のサウンドデバイスが変わることがあり、"
+              "VB-AudioはPCの再起動を推奨しています。",
+        "zh": "将从官方网站（www.vb-cable.com）下载 VB-Audio Virtual Cable（VB-CABLE）并运行 "
+              "VB-Audio 的安装程序。\n\n"
+              "1. 在 Windows 权限提示中点击[是]\n"
+              "2. 在 VB-CABLE 安装窗口点击[Install Driver]\n"
+              "3. 在驱动安装确认中点击[安装]\n"
+              "4. 关闭完成窗口后，VRCLT 会重新读取设备并继续自动设置。\n\n"
+              "VB-CABLE 是 VB-Audio 的捐赠软件（donationware），如觉得有用请考虑捐赠。"
+              "（VB-CABLE is a donationware, all participations are welcome.）\n"
+              "安装后 Windows 默认声音设备可能会改变，VB-Audio 建议安装后重启电脑。"},
+    "msg_cable_downloading": {"ko": "VB-Cable 내려받는 중…", "en": "Downloading VB-Cable…",
+                              "ja": "VB-Cableをダウンロード中…", "zh": "正在下载 VB-Cable…"},
+    "msg_cable_verifying": {"ko": "설치 파일의 디지털 서명 확인 중…",
+                            "en": "Checking the installer's digital signature…",
+                            "ja": "インストーラーのデジタル署名を確認中…",
+                            "zh": "正在验证安装程序的数字签名…"},
+    "msg_cable_installing": {
+        "ko": "VB-Cable 설치 창이 열렸습니다. 안내에 따라 설치를 마친 뒤 완료 창을 닫아 주세요…",
+        "en": "The VB-Cable setup is open. Finish the install, then close its completion dialog…",
+        "ja": "VB-Cableのセットアップが開きました。インストールを完了して完了画面を閉じてください…",
+        "zh": "VB-Cable 安装窗口已打开。请完成安装并关闭完成窗口…"},
+    "msg_cable_done": {"ko": "VB-Cable 설치가 끝났습니다. 장치를 다시 읽는 중…",
+                       "en": "VB-Cable installed. Rereading devices…",
+                       "ja": "VB-Cableのインストールが完了しました。デバイスを再読み込み中…",
+                       "zh": "VB-Cable 安装完成，正在重新读取设备…"},
+    "msg_cable_not_found": {
+        "ko": "VB-Cable 설치는 끝났지만 Windows가 아직 장치를 만들지 않았습니다. PC를 다시 시작한 뒤 "
+              "VRCLT를 실행하면 자동 설정을 이어서 합니다.",
+        "en": "VB-Cable is installed, but Windows has not created its devices yet. Restart the PC "
+              "and start VRCLT again; Auto setup then finishes on its own.",
+        "ja": "VB-Cableのインストールは完了しましたが、Windowsがまだデバイスを作成していません。"
+              "PCを再起動してVRCLTを起動すると、自動設定が続きを行います。",
+        "zh": "VB-Cable 已安装，但 Windows 尚未创建其设备。请重启电脑后再次启动 VRCLT，"
+              "自动设置会接着完成。"},
+    "vr_find_mic_speak": {"ko": "평소처럼 말해 보세요", "en": "Speak normally",
+                          "ja": "いつも通り話してください", "zh": "请像平时一样说话"},
+    "vr_find_mic_cancel": {"ko": "취소", "en": "Cancel", "ja": "キャンセル", "zh": "取消"},
+    "vr_find_mic_applied": {"ko": "내 마이크 → {name}", "en": "My mic → {name}",
+                            "ja": "自分のマイク → {name}", "zh": "我的麦克风 → {name}"},
+    "vr_find_mic_none": {
+        "ko": "말소리를 감지하지 못했습니다. 마이크 가까이에서 다시 해 보세요.",
+        "en": "No speech detected. Try again closer to your microphone.",
+        "ja": "声を検出できませんでした。マイクに近づいてもう一度お試しください。",
+        "zh": "未检测到说话声。请靠近麦克风再试一次。"},
+    "setup_btn_undo": {"ko": "되돌리기", "en": "Undo", "ja": "元に戻す", "zh": "撤销"},
+    "setup_autofix_confirm": {"ko": "자동 설정이 다음을 바꿉니다:",
+                              "en": "Auto setup will change:",
+                              "ja": "自動設定は次の項目を変更します:",
+                              "zh": "自动设置将更改以下内容："},
+    "setup_autofix_apply": {"ko": "적용", "en": "Apply", "ja": "適用", "zh": "应用"},
+    "setup_autofix_undo_hint": {
+        "ko": "적용한 뒤에도 설정 점검의 [되돌리기]로 원래대로 돌릴 수 있습니다.",
+        "en": "You can revert it afterwards with [Undo] in the setup check.",
+        "ja": "適用後も設定チェックの[元に戻す]で元に戻せます。",
+        "zh": "应用后也可以在设置检查中点击[撤销]恢复。"},
+    "setup_undo_done": {"ko": "자동 설정 전으로 되돌렸습니다.",
+                        "en": "Reverted to the settings before Auto setup.",
+                        "ja": "自動設定前の状態に戻しました。",
+                        "zh": "已恢复到自动设置之前的状态。"},
+    "setup_undo_vrchat_running": {
+        "ko": "VRChat이 실행 중이라 되돌리지 않았습니다. VRChat을 종료한 뒤 [되돌리기]를 다시 눌러 주세요.",
+        "en": "VRChat is running, so nothing was reverted. Close VRChat and press [Undo] again.",
+        "ja": "VRChatが起動中のため元に戻していません。VRChatを終了してから[元に戻す]をもう一度押してください。",
+        "zh": "VRChat 正在运行，未执行撤销。请关闭 VRChat 后再次点击[撤销]。"},
+    "msg_cable_waiting": {"ko": "Windows가 VB-Cable 장치를 준비하는 중…",
+                          "en": "Waiting for Windows to bring up the VB-Cable devices…",
+                          "ja": "WindowsがVB-Cableデバイスを準備中…",
+                          "zh": "正在等待 Windows 准备 VB-Cable 设备…"},
+    "setup_cable_restart": {
+        "ko": "VB-Cable 드라이버는 설치됐지만 아직 장치가 보이지 않습니다. PC를 다시 시작한 뒤 "
+              "VRCLT를 실행하면 자동 설정을 이어서 합니다.",
+        "en": "The VB-Cable driver is installed, but its devices are not visible yet. Restart the "
+              "PC and start VRCLT again; Auto setup then finishes on its own.",
+        "ja": "VB-Cableのドライバーはインストール済みですが、デバイスがまだ見えません。PCを再起動して"
+              "VRCLTを起動すると、自動設定が続きを行います。",
+        "zh": "VB-Cable 驱动已安装，但设备尚不可见。请重启电脑后再次启动 VRCLT，自动设置会接着完成。"},
+    "msg_cable_cancelled": {"ko": "VB-Cable 설치를 취소했습니다.", "en": "VB-Cable install cancelled.",
+                            "ja": "VB-Cableのインストールをキャンセルしました。",
+                            "zh": "已取消安装 VB-Cable。"},
+    "msg_cable_failed": {
+        "ko": "VB-Cable 자동 설치 실패: {error} — [VB-Cable 받기]로 직접 설치할 수 있습니다.",
+        "en": "VB-Cable install failed: {error} — use [Get VB-Cable] to install it manually.",
+        "ja": "VB-Cableの自動インストールに失敗しました: {error} — [VB-Cableを入手]から手動で"
+              "インストールできます。",
+        "zh": "VB-Cable 自动安装失败：{error} — 可通过[获取 VB-Cable]手动安装。"},
     # ---- dashboard control tooltips ----
     "tip_app_mode": {
         "ko": "번역할 대상 앱 프로필 — VRChat(마이크→게임, OSC 챗박스) 또는 Discord(캡처 프로세스 변경).",

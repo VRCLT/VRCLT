@@ -1,4 +1,6 @@
 """Small reusable Qt widgets and language-picker helpers."""
+import math
+
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from ..languages import (
@@ -7,6 +9,40 @@ from ..languages import (
     supported_language_options,
 )
 from . import theme
+
+
+class WrapLabel(QtWidgets.QLabel):
+    """Word-wrapped label that reserves its wrapped height. Layouts on the
+    minimum-size dashboard page otherwise size it from a one-line hint and
+    clip every line after the first."""
+
+    def __init__(self, text: str = "", parent=None):
+        super().__init__(text, parent)
+        self.setWordWrap(True)
+        self.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignTop)
+
+    def heightForWidth(self, width: int) -> int:
+        # measured the way QLabel paints plain text; QLabel's own estimate
+        # can run a line long, which leaves gaps under top-aligned text
+        frame_w = self.width() - self.contentsRect().width()
+        frame_h = self.height() - self.contentsRect().height()
+        flags = int(self.alignment().value) | int(QtCore.Qt.TextFlag.TextWordWrap.value)
+        rect = self.fontMetrics().boundingRect(
+            QtCore.QRect(0, 0, max(1, width - frame_w), 1_000_000), flags, self.text())
+        return rect.height() + frame_h
+
+    def _fit(self) -> None:
+        height = self.heightForWidth(max(1, self.width()))
+        if height > 0 and height != self.minimumHeight():
+            self.setMinimumHeight(height)
+
+    def setText(self, text: str) -> None:
+        super().setText(text)
+        self._fit()
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        self._fit()
 
 
 class NoWheelComboBox(QtWidgets.QComboBox):
@@ -212,3 +248,51 @@ def code_from_language_combo(combo: QtWidgets.QComboBox,
     if data and (not text or text == language_label(str(data))):
         return str(data)
     return language_code_from_text(text, fallback_codes)
+
+
+class MicLevelMeter(QtWidgets.QWidget):
+    """Log-scaled mic RMS bar with the effective gate-threshold marker
+    (marker jumps right while the echo guard boosts the gate)."""
+
+    _LOG_MAX = math.log10(1 + 3000.0)  # RMS display ceiling
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedHeight(18)
+        self.setMinimumWidth(120)
+        self._rms: float | None = None
+        self._threshold: float | None = None
+
+    def set_level(self, rms: float | None, threshold: float | None) -> None:
+        if (rms, threshold) != (self._rms, self._threshold):
+            self._rms = rms
+            self._threshold = threshold
+            self.update()
+
+    @classmethod
+    def _frac(cls, value: float) -> float:
+        return max(0.0, min(1.0, math.log10(1 + max(0.0, value)) / cls._LOG_MAX))
+
+    def paintEvent(self, event) -> None:
+        p = QtGui.QPainter(self)
+        p.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+        r = self.rect().adjusted(0, 2, -1, -2)
+        p.setPen(QtGui.QColor(theme.hex_rgb(theme.QT_BORDER)))
+        p.setBrush(QtGui.QColor(theme.hex_rgb(theme.QT_SURFACE)))
+        p.drawRoundedRect(r, 4, 4)
+        if self._rms is not None and self._threshold is not None:
+            frac = self._frac(self._rms)
+            gate_open = self._rms >= self._threshold
+            if frac > 0:
+                bar = QtCore.QRectF(r.x() + 1, r.y() + 1,
+                                    max(2.0, (r.width() - 2) * frac),
+                                    r.height() - 2)
+                p.setPen(QtCore.Qt.PenStyle.NoPen)
+                p.setBrush(QtGui.QColor(theme.hex_rgb(
+                    theme.ON_GREEN if gate_open else theme.QT_TEXT_IDLE)))
+                p.drawRoundedRect(bar, 3, 3)
+            tx = r.x() + 1 + (r.width() - 2) * self._frac(self._threshold)
+            p.setPen(QtGui.QPen(QtGui.QColor(theme.hex_rgb(theme.QT_WARN)), 2))
+            p.drawLine(QtCore.QPointF(tx, r.y() + 1),
+                       QtCore.QPointF(tx, r.bottom() - 1))
+        p.end()

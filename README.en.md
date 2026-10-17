@@ -1,4 +1,15 @@
-# vrclt
+<div align="center">
+
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/logo-dark.svg">
+    <img src="docs/brand/logo-light.svg" width="340" height="100" alt="VRCLT">
+  </picture>
+</h1>
+
+<p><a href="https://vrclt.github.io/">Official site</a></p>
+
+</div>
 
 Languages: [English](README.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [中文](README.zh.md)
 
@@ -17,6 +28,14 @@ Adjust `soniox.speaker_context_idle_sec` in Settings (5–600 seconds). The Soni
 Dashboard shows the synchronized checkbox and effective timeout. Connections
 remain billable during silence; speaker diarization stays enabled with either
 choice. See the setup section for details.
+
+In v1.0.0, the Dashboard opens with a **Setup check** panel. **Auto setup**
+routes the translated voice to `CABLE Input`, picks your real microphone, and,
+while VRChat is closed, sets VRChat's microphone to `CABLE Output` and turns
+on its OSC. **Install VB-Cable** runs VB-Audio's official setup for you, and
+**Find my mic** selects the microphone you are speaking into. New installs
+start in the **Simple** view; switch to **Full** at the top right. See
+[First Launch Setup](README.md#4-first-launch-setup).
 
 In v0.20.0, Qwen's default model is `qwen3.8-livetranslate-flash-realtime`. It
 detects the spoken language automatically and labels speakers like Soniox.

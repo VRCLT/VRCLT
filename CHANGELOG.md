@@ -7,6 +7,64 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 Release artifacts are attached to [GitHub Releases](https://github.com/shgeum/VRCLT/releases)
 as `vrclt-v<version>-windows-x64.exe` plus a `.sha256` checksum.
 
+## [1.0.0] - 2026-10-17
+
+### Added
+
+- A **Setup check** panel at the top of the Dashboard. It checks the API key,
+  VB-Cable, the translated voice output, the microphone, the Windows default
+  playback device, and VRChat's microphone and OSC settings, and explains how
+  to fix each item. It folds to one line when everything is ready.
+- **Auto setup**: routes the translated voice to `CABLE Input`, replaces a
+  missing or virtual microphone with a real one (preferring the microphone
+  VRChat used), and, while VRChat is closed, sets VRChat's VR and desktop
+  microphone to `CABLE Output` and turns on VRChat's OSC. Previous VRChat
+  values are written to the log.
+- **Install VB-Cable**: downloads the official, unmodified VB-CABLE driver pack
+  from VB-Audio, requires VB-Audio's code signature, and opens VB-Audio's own
+  setup; devices are reread and Auto setup follows. The dialog names the
+  origin (`www.vb-cable.com`) and VB-CABLE's donationware model. When Windows
+  only brings up the CABLE devices after a restart, the setup check says so
+  instead of offering a reinstall, and Auto setup finishes on the next start.
+- Auto setup lists what it will change and asks first when started from its
+  button, and an **Undo** button restores the previous VRCLT and VRChat values.
+- Installing VB-Cable shows a progress window for every step; the result, and
+  a needed restart, appear in their own window.
+- **Find my mic**: listens to every real microphone at once and selects the one
+  that reacts most while the user speaks. Stream-open clicks and single spikes
+  are ignored.
+- The SteamVR Dashboard's Audio page has **Find my mic** too: speak, and the
+  microphone that reacts most is applied.
+- A **Simple / Full** view switch. New installs start in Simple: the setup
+  check (one line once everything is ready), the app choice
+  (VRChat/Discord/custom), runtime restart, translation and subtitle toggles,
+  their languages, your microphone with Find my mic, a mic level bar, and
+  the live subtitles. Voice output, the engine, and other options are in
+  Full. Configurations saved before this version keep the full view
+  (`ui.easy_mode`).
+- The audio section shows the signal path (your mic → VRCLT → `CABLE Input` ⇒
+  `CABLE Output` → the game's mic), and empty device fields name the system
+  default device they follow.
+- Qwen sessions log responses the server ends early, failed source
+  transcriptions, and overlapping translated audio, with `cut=` and
+  `overlap=` counts in the 15-second statistics.
+
+### Changed
+
+- The window opens no larger than the screen's work area. Previously it always
+  opened at 1040×820, which put the bottom of the Dashboard and the Settings
+  save button under the taskbar on smaller or scaled screens.
+- The subtitle and app options moved above the live subtitle preview, group
+  titles are no longer clipped, and long setup text wraps without being cut.
+- Dashboard labels say "My mic" and "Translated voice to" instead of
+  "Mic input" and "Voice output".
+- The READMEs in all four languages open with an overview, screenshots of the
+  Dashboard, setup check and VR panels, and a four-step quick start.
+  `scripts/make_screenshots.py` regenerates the screenshots.
+- Microphone pickers (Dashboard, Settings, SteamVR Dashboard) no longer offer
+  the cable's recording side (`CABLE Output`), which would only feed the
+  translated voice back. A microphone already set to it is still shown.
+
 ## [0.20.0] - 2026-10-12
 
 ### Added
