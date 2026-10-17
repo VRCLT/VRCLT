@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "ClaudeInChromeDomain(github.com)",
+      "mcp__claude-in-chrome__select_browser"
+    ]
+  }
+}

@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="{{lang}}" data-site-version="{{siteVersion}}"{{autoLanguage}}>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google" content="notranslate">
+  <meta name="theme-color" content="#192c3d">
+  <title>{{title}}</title>
+  <meta name="description" content="{{description}}">
+  <link rel="canonical" href="{{canonical}}">
+  <link rel="alternate" hreflang="en" href="{{siteUrl}}en/">
+  <link rel="alternate" hreflang="ko" href="{{siteUrl}}ko/">
+  <link rel="alternate" hreflang="ja" href="{{siteUrl}}ja/">
+  <link rel="alternate" hreflang="zh-Hans" href="{{siteUrl}}zh/">
+  <link rel="alternate" hreflang="zh-Hant" href="{{siteUrl}}zh-hant/">
+  <link rel="alternate" hreflang="x-default" href="{{siteUrl}}">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{title}}">
+  <meta property="og:description" content="{{description}}">
+  <meta property="og:url" content="{{canonical}}">
+  <meta property="og:image" content="{{siteUrl}}assets/social.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="{{base}}assets/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="{{base}}assets/icon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="{{base}}assets/apple-touch-icon.png">
+  <script src="{{base}}locale.js?v={{localeVersion}}"></script>
+  <link rel="preload" href="{{base}}assets/vrclt-sans-bold.woff2?v={{fontVersion}}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{{base}}styles.css?v={{cssVersion}}">
+  <script src="{{base}}app.js?v={{jsVersion}}" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">{{skip}}</a>
+  <header class="site-header wrap">
+    <a class="brand" href="{{home}}" aria-label="VRCLT {{homeLabel}}"><img src="{{base}}assets/logo-light.svg" width="153" height="45" alt="VRCLT"></a>
+    <nav aria-label="{{navLabel}}">
+      <a href="#inside">{{navInside}}</a>
+      <a href="#start">{{navStart}}</a>
+      <a href="https://github.com/shgeum/VRCLT">GitHub <span aria-hidden="true">↗</span></a>
+    </nav>
+    <details class="language-menu" translate="no">
+      <summary aria-label="{{languageLabel}}"><svg class="language-globe" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a18 18 0 0 0 0 18 18 18 0 0 0 0-18Z"/></svg>{{languageName}}<svg class="language-chevron" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></summary>
+      <div class="language-links">{{languageLinks}}</div>
+    </details>
+  </header>
+
+  <main id="main">
+    <section class="hero wrap" aria-labelledby="hero-title">
+      <div class="hero-index"><p class="eyebrow" translate="no">VOICE TRANSLATION / LIVE SUBTITLES</p><p class="edition"><span class="status-dot" aria-hidden="true"></span>v1.0 <span>{{previewShort}}</span></p></div>
+      <div class="hero-heading">
+        <h1 id="hero-title">{{hero1}}<br><span>{{hero2}}</span></h1>
+        <div class="hero-copy">
+        <p class="hero-description">{{description}}</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="https://github.com/shgeum/VRCLT/releases/latest">{{download}}<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg></a>
+          <a class="text-link" href="#start">{{howTo}} <span aria-hidden="true">↓</span></a>
+        </div>
+        <p class="requirements">{{requirements}}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="cover wrap" aria-label="{{waysLabel}}">
+      <figure class="cover-figure">
+        <div class="cover-label"><span translate="no">VRCLT / DESKTOP</span><span>v1.0 — {{previewShort}}</span></div>
+        <div class="cover-stage"><img src="{{base}}assets/dashboard-{{imageLocale}}.png" alt="{{desktopAlt}}" width="1000" height="780" fetchpriority="high"></div>
+        <figcaption><span class="figure-label" translate="no">WINDOWS</span>{{desktopCaption}}</figcaption>
+      </figure>
+      <div class="ways">
+        <article><span class="direction">{{outbound}}</span><h2>{{voiceTitle}}</h2><p>{{voiceBody}}</p></article>
+        <article><span class="direction">{{inbound}}</span><h2>{{subtitleTitle}}</h2><p>{{subtitleBody}}</p></article>
+        <article><span class="direction" translate="no">VRChat / SteamVR</span><h2>{{vrTitle}}</h2><p>{{vrBody}}</p></article>
+      </div>
+    </section>
+
+    <div class="release-note wrap" role="note"><span class="version-label">v1.0</span><p><strong>{{previewTitle}}</strong> {{previewNote}}</p><a href="https://github.com/shgeum/VRCLT/releases">{{releases}} <span aria-hidden="true">↗</span></a></div>
+
+    <section class="inside" id="inside" aria-labelledby="inside-title">
+      <div class="wrap">
+        <div class="section-heading"><div><p class="eyebrow">{{insideEyebrow}}</p><h2 id="inside-title">{{insideTitle}}</h2></div><p>{{insideDescription}}</p></div>
+        <div class="gallery-tabs" role="tablist" aria-label="{{galleryLabel}}">
+          <button type="button" role="tab" id="tab-desktop" aria-selected="false" aria-controls="panel-desktop" tabindex="-1">{{tabDesktop}}</button>
+          <button type="button" role="tab" id="tab-subtitles" aria-selected="true" aria-controls="panel-subtitles" tabindex="0">{{tabSubtitles}}</button>
+          <button type="button" role="tab" id="tab-wrist" aria-selected="false" aria-controls="panel-wrist" tabindex="-1">{{tabWrist}}</button>
+          <button type="button" role="tab" id="tab-steamvr" aria-selected="false" aria-controls="panel-steamvr" tabindex="-1">SteamVR</button>
+        </div>
+        <div class="gallery">
+          <figure role="tabpanel" id="panel-desktop" aria-labelledby="tab-desktop" tabindex="0" hidden><div class="gallery-stage"><img src="{{base}}assets/dashboard-{{imageLocale}}.png" alt="{{desktopAlt}}" width="1000" height="780" loading="lazy"></div><figcaption>{{desktopCaption}}</figcaption></figure>
+          <figure role="tabpanel" id="panel-subtitles" aria-labelledby="tab-subtitles" tabindex="0"><div class="gallery-stage gallery-stage-subtitles"><img src="{{base}}assets/vr-subtitles-{{imageLocale}}.png" alt="{{subtitlesAlt}}" loading="lazy"></div><figcaption>{{subtitlesCaption}}</figcaption></figure>
+          <figure role="tabpanel" id="panel-wrist" aria-labelledby="tab-wrist" tabindex="0" hidden><div class="gallery-stage gallery-stage-wrist"><img src="{{base}}assets/vr-wrist-{{imageLocale}}.png" alt="{{wristAlt}}" width="640" height="432" loading="lazy"></div><figcaption>{{wristCaption}}</figcaption></figure>
+          <figure role="tabpanel" id="panel-steamvr" aria-labelledby="tab-steamvr" tabindex="0" hidden><div class="gallery-stage"><img src="{{base}}assets/vr-dashboard-{{imageLocale}}.png" alt="{{steamvrAlt}}" width="1024" height="950" loading="lazy"></div><figcaption>{{steamvrCaption}}</figcaption></figure>
+        </div>
+        <p class="gallery-note">{{galleryNote}}</p>
+        <noscript><p>{{noScript}}</p><style>.gallery-tabs{display:none}.gallery [hidden]{display:block!important}</style></noscript>
+      </div>
+    </section>
+
+    <section class="start wrap" id="start" aria-labelledby="start-title">
+      <div class="section-heading"><div><p class="eyebrow">{{startEyebrow}}</p><h2 id="start-title">{{startTitle}}</h2></div><a class="text-link" href="{{docsUrl}}">{{guide}} <span aria-hidden="true">↗</span></a></div>
+      <ol class="steps">
+        <li><h3>{{step1Title}}</h3><p>{{step1Body}}</p><a class="text-link" href="https://github.com/shgeum/VRCLT/releases/latest">{{downloadShort}} <span aria-hidden="true">↗</span></a></li>
+        <li><h3>{{step2Title}}</h3><p>{{step2Body}}</p><a class="text-link" href="#engines">{{enginesLink}} <span aria-hidden="true">↓</span></a></li>
+        <li><h3>{{step3Title}}</h3><p>{{step3Body}}</p><a class="text-link" href="https://vb-audio.com/Cable/">VB-Cable <span aria-hidden="true">↗</span></a></li>
+      </ol>
+      <figure class="audio-route">
+        <figcaption>{{audioRouteTitle}}<span translate="no">VOICE → VOICE</span></figcaption>
+        <ol>
+          <li><span>{{routeInput}}</span><strong>{{routeMicrophone}}</strong></li>
+          <li><span>{{routeTranslate}}</span><strong translate="no">VRCLT</strong></li>
+          <li><span>{{routeCable}}</span><strong translate="no">CABLE Input <small>→</small> Output</strong></li>
+          <li><span>{{routeDestination}}</span><strong translate="no">VRChat / Discord</strong></li>
+        </ol>
+      </figure>
+      <aside class="setup-note"><img src="{{base}}assets/icon.svg" width="36" height="36" alt=""><p><strong>{{setupTitle}}</strong> {{setupBody}}</p></aside>
+    </section>
+
+    <section class="engine-section wrap" id="engines" aria-labelledby="engines-title">
+      <div class="engine-intro"><p class="eyebrow">{{engineEyebrow}}</p><h2 id="engines-title">{{engineTitle}}</h2><p>{{engineBody}}</p><a class="text-link" href="{{docsUrl}}">{{engineGuide}} <span aria-hidden="true">↗</span></a></div>
+      <div class="engine-list">
+        <a href="https://aistudio.google.com/apikey"><span><strong>Gemini Live</strong><small>Google</small></span><span>{{getKey}} ↗</span></a>
+        <a href="https://www.alibabacloud.com/product/modelstudio"><span><strong>Qwen LiveTranslate</strong><small>Alibaba Cloud</small></span><span>{{console}} ↗</span></a>
+        <a href="https://platform.openai.com/api-keys"><span><strong>OpenAI Realtime</strong><small>OpenAI</small></span><span>{{getKey}} ↗</span></a>
+        <a href="https://console.soniox.com/"><span><strong>Soniox</strong><small>Soniox</small></span><span>{{console}} ↗</span></a>
+      </div>
+    </section>
+
+    <section class="faq wrap" aria-labelledby="faq-title"><h2 id="faq-title">{{faqTitle}}</h2><div class="faq-items">
+      <details><summary>{{faq1Q}}<span aria-hidden="true">+</span></summary><p>{{faq1A}}</p></details>
+      <details><summary>{{faq2Q}}<span aria-hidden="true">+</span></summary><p>{{faq2A}}</p></details>
+      <details><summary>{{faq3Q}}<span aria-hidden="true">+</span></summary><p>{{faq3A}}</p></details>
+      <details><summary>{{faq4Q}}<span aria-hidden="true">+</span></summary><p>{{faq4A}}</p></details>
+    </div></section>
+
+    <section class="closing"><div class="wrap"><div><h2>{{closingTitle}}</h2><p>{{closingBody}}</p></div><a class="button button-light" href="https://github.com/shgeum/VRCLT/releases/latest">{{download}} <span aria-hidden="true">↗</span></a></div></section>
+  </main>
+
+  <footer class="site-footer wrap"><a class="brand" href="{{home}}"><img src="{{base}}assets/logo-light.svg" width="119" height="35" alt="VRCLT"></a><p>{{footerNote}}</p><div><a href="{{docsUrl}}">{{documentation}}</a><a href="https://github.com/shgeum/VRCLT/issues">{{issues}}</a><a href="https://github.com/shgeum/VRCLT/blob/main/LICENSE">MIT</a></div></footer>
+</body>
+</html>
