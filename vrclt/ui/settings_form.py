@@ -159,6 +159,8 @@ class SettingsForm(QtCore.QObject):
         self._layout.addStretch(1)
         self._fields["provider"][0].currentTextChanged.connect(
             lambda _value: self.apply_filter(self._filter_text))
+        self._fields["inbound.provider"][0].currentIndexChanged.connect(
+            lambda _index: self.apply_filter(self._filter_text))
         self.apply_filter(self._filter_text)
 
     def _add_group(self, title_key: str, specs, cfg: dict):
@@ -336,6 +338,14 @@ class SettingsForm(QtCore.QObject):
             w.addItems(list(config_mod.PROVIDERS))
             w.setCurrentText(str(value or "gemini"))
             return w
+        if kind == "inbound_provider":
+            # "" = follow the translation engine
+            w = NoWheelComboBox()
+            w.addItem(self._tr("engine_same_as_translation"), "")
+            for prov in config_mod.PROVIDERS:
+                w.addItem(prov, prov)
+            w.setCurrentIndex(max(0, w.findData(str(value or "").strip().lower())))
+            return w
         if kind == "qwen_endpoint":
             w = NoWheelComboBox()
             w.addItems(list(config_mod.QWEN_ENDPOINTS))
@@ -434,6 +444,8 @@ class SettingsForm(QtCore.QObject):
                 widget.setPlainText("" if value is None else str(value))
             elif kind == "hotkey":
                 widget.setKeySequence(QtGui.QKeySequence("" if value is None else str(value)))
+            elif kind == "inbound_provider":
+                widget.setCurrentIndex(max(0, widget.findData(str(value or "").strip().lower())))
             elif isinstance(widget, QtWidgets.QComboBox):
                 widget.setCurrentText("" if value is None else str(value))
             elif kind == "csv":
@@ -442,7 +454,7 @@ class SettingsForm(QtCore.QObject):
                 widget.setText("" if value is None else str(value))
         finally:
             widget.blockSignals(blocked)
-        if kind == "provider":
+        if kind in ("provider", "inbound_provider"):
             self.apply_filter(self._filter_text)
 
     def _field_value(self, widget, spec: FieldSpec):
@@ -471,6 +483,8 @@ class SettingsForm(QtCore.QObject):
                 QtGui.QKeySequence.SequenceFormat.PortableText)
         if kind == "language":
             return code_from_language_combo(widget, [])
+        if kind == "inbound_provider":
+            return widget.currentData() or ""
         if isinstance(widget, QtWidgets.QComboBox):
             return widget.currentText().strip()
         return widget.text()
@@ -520,15 +534,19 @@ class SettingsForm(QtCore.QObject):
         self._filter_text = text
         needle = text.strip().casefold()
         provider = self._fields["provider"][0].currentText()
+        # the subtitle engine's own fields show too when it differs
+        engines = tuple(dict.fromkeys(
+            (provider, self._fields["inbound.provider"][0].currentData() or provider)))
         active_groups = settings_schema.CATEGORIES[self._category_index][1]
         self._category_tabs.setEnabled(not bool(needle))
         hint_key = "settings_search_hint" if needle else "settings_category_hint"
-        self._section_hint.setText(self._tr(hint_key).format(provider=provider.title()))
+        self._section_hint.setText(self._tr(hint_key).format(
+            provider=" + ".join(engine.title() for engine in engines)))
         visible_paths = set()
         for path, (spec, form, _label, widget) in self._rows.items():
             title_key = self._group_keys[path]
             engine = settings_schema.field_provider(path)
-            relevant = engine is None or engine == provider
+            relevant = engine is None or engine in engines
             matches = (needle in path.casefold()
                        or needle in self._tr(spec.label_key).casefold()
                        or needle in self._tr(title_key).casefold())
@@ -553,7 +571,7 @@ class SettingsForm(QtCore.QObject):
                 visible = visible or autolaunch_visible
             group.setVisible(visible)
         if self._provider_note is not None:
-            self._provider_note.setVisible(provider == "soniox" and any(
+            self._provider_note.setVisible("soniox" in engines and any(
                 self._group_keys[path] == "grp_api" for path in visible_paths))
         self._empty_label.setVisible(not visible_paths and not autolaunch_visible)
 

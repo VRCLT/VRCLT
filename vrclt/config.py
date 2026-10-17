@@ -39,6 +39,7 @@ OVERLAY_FONT_MAX = 72
 RESET_PRESERVE_PATHS = (
     ("api_key",),
     ("provider",),
+    ("inbound", "provider"),
     ("qwen", "api_key"),
     ("qwen", "endpoint"),
     ("qwen", "workspace_id"),
@@ -196,6 +197,7 @@ DEFAULTS = {
     },
     "inbound": {                        # pipeline B: others' voices -> me (subtitles)
         "enabled": True,
+        "provider": "",                 # subtitle engine; "" = same as provider
         "target_language": "ko",
         "source_language": "",          # source setting for Qwen 3.5 / optional Soniox hint
         "languages": ["ko", "en", "ja", "zh-Hans", "zh-Hant"],  # wrist menu cycles subtitles through these
@@ -533,6 +535,27 @@ def provider(cfg: dict) -> str:
     return value if value in PROVIDERS else "gemini"
 
 
+def inbound_provider(cfg: dict) -> str:
+    """Engine for the inbound subtitles: inbound.provider, or the
+    translation engine while that is empty ("same as translation")."""
+    value = str((cfg.get("inbound") or {}).get("provider") or "").strip().lower()
+    return value if value in PROVIDERS else provider(cfg)
+
+
+def provider_for(cfg: dict, direction: str) -> str:
+    """The engine of one pipeline: "inbound" (subtitles) or "outbound"."""
+    return inbound_provider(cfg) if direction == "inbound" else provider(cfg)
+
+
+def providers_in_use(cfg: dict) -> tuple:
+    """Engines a runtime start needs keys for: the translation engine, plus
+    the subtitle engine while inbound subtitles are enabled."""
+    engines = [provider(cfg)]
+    if (cfg.get("inbound") or {}).get("enabled", True):
+        engines.append(inbound_provider(cfg))
+    return tuple(dict.fromkeys(engines))
+
+
 def qwen_api_key(cfg: dict) -> str:
     qw = cfg.get("qwen") or {}
     return (qw.get("api_key") or os.environ.get("DASHSCOPE_API_KEY", "")).strip()
@@ -550,16 +573,17 @@ def is_qwen38_model(model: str) -> bool:
     return bool(match) and (int(match.group(1)), int(match.group(2))) >= (3, 8)
 
 
-def has_speaker_ids(cfg: dict) -> bool:
-    """Whether the selected engine labels transcripts with speaker IDs."""
-    prov = provider(cfg)
+def has_speaker_ids(cfg: dict, direction: str = "outbound") -> bool:
+    """Whether a pipeline's engine labels transcripts with speaker IDs."""
+    prov = provider_for(cfg, direction)
     return prov == "soniox" or (prov == "qwen" and is_qwen38_model(qwen_model(cfg)))
 
 
-def uses_source_language(cfg: dict) -> bool:
-    """Whether the spoken-language pickers reach the engine: required by
-    Qwen 3.5, an optional hint for Soniox; the others auto-detect."""
-    prov = provider(cfg)
+def uses_source_language(cfg: dict, direction: str = "outbound") -> bool:
+    """Whether a pipeline's spoken-language picker reaches its engine:
+    required by Qwen 3.5, an optional hint for Soniox; the others
+    auto-detect."""
+    prov = provider_for(cfg, direction)
     return prov == "soniox" or (prov == "qwen" and not is_qwen38_model(qwen_model(cfg)))
 
 

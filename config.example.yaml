@@ -109,6 +109,7 @@ outbound:                 # my voice -> others (VRChat hears the translation)
 
 inbound:                  # others' voices -> me (subtitles)
   enabled: true
+  provider: ""            # subtitle engine: "" = same as provider | gemini | qwen | openai | soniox
   target_language: ko
   source_language: ""     # Qwen 3.5 source language / optional Soniox recognition hint
   languages: [ko, en, ja] # wrist menu cycles subtitle language through these

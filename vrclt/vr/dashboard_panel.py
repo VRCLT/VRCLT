@@ -99,7 +99,8 @@ PICKER_COLS, PICKER_ROWS = 4, 5
 
 
 def _build_widgets() -> tuple:
-    source_hints = lambda p: p._uses_source_language()
+    out_hints = lambda p: p._uses_source_language("outbound")
+    in_hints = lambda p: p._uses_source_language("inbound")
     free = lambda p: not (p._devices_applying or p._context_applying or p._restart_pending)
     settled = lambda p: free(p) and p._pending_mic is None and p._pending_out is None
     widgets = []
@@ -109,12 +110,12 @@ def _build_widgets() -> tuple:
     widgets.extend((
         Widget("toggle", BTN_TOGGLE), Widget("lang", BTN_LANG),
         Widget("sub_toggle", BTN_SUB_TOGGLE), Widget("sub_lang", BTN_SUB_LANG),
-        Widget("src_prev", BTN_SRC_PREV, enabled=source_hints),
-        Widget("src_next", BTN_SRC_NEXT, enabled=source_hints),
-        Widget("insrc_prev", BTN_INSRC_PREV, enabled=source_hints),
-        Widget("insrc_next", BTN_INSRC_NEXT, enabled=source_hints),
+        Widget("src_prev", BTN_SRC_PREV, enabled=out_hints),
+        Widget("src_next", BTN_SRC_NEXT, enabled=out_hints),
+        Widget("insrc_prev", BTN_INSRC_PREV, enabled=in_hints),
+        Widget("insrc_next", BTN_INSRC_NEXT, enabled=in_hints),
         Widget("speaker_context", BTN_SPEAKER_CONTEXT,
-               enabled=lambda p: p._get_provider() == "soniox" and settled(p)),
+               enabled=lambda p: p._uses_soniox() and settled(p)),
         Widget("mic_prev", BTN_MIC_PREV, page="audio", enabled=free),
         Widget("mic_next", BTN_MIC_NEXT, page="audio", enabled=free),
         Widget("mic_find", BTN_MIC_FIND, page="audio",
@@ -192,7 +193,8 @@ class DashboardPanel:
                  get_speaker_context=lambda: (True, 60.0),
                  set_speaker_context=lambda enabled, on_done: on_done(False),
                  uses_source_language=None,
-                 mic_probe_factory=None):
+                 mic_probe_factory=None,
+                 get_inbound_provider=None):
         self._state = state
         self._languages = languages or ["en"]
         self._inbound_languages = inbound_languages or ["ko", "en"]
@@ -210,9 +212,12 @@ class DashboardPanel:
         self._on_tts_gain = on_tts_gain
         self._get_tts_gain = get_tts_gain
         self._get_provider = get_provider
-        # spoken-language pickers reach the engine (Qwen 3.5 / Soniox hints)
+        # the subtitle engine; without one it follows the translation engine
+        self._get_inbound_provider = get_inbound_provider or get_provider
+        # a direction's spoken-language picker reaches its engine (Qwen 3.5 /
+        # Soniox hints); called with "outbound" or "inbound"
         self._uses_source_language = uses_source_language or (
-            lambda: self._get_provider() in ("qwen", "soniox"))
+            lambda direction="outbound": self._provider(direction) in ("qwen", "soniox"))
         self._get_speaker_context = get_speaker_context
         self._set_speaker_context = set_speaker_context
         self._context_applying = False
@@ -345,7 +350,7 @@ class DashboardPanel:
             if auto != self._last_auto:
                 self._last_auto = auto
                 self._dirty.set()
-            provider = self._get_provider()  # settings save can flip it live
+            provider = (self._get_provider(), self._get_inbound_provider())  # settings can flip them
             if provider != self._last_provider:
                 self._last_provider = provider
                 self._dirty.set()
@@ -446,7 +451,7 @@ class DashboardPanel:
     def _active_widgets(self) -> tuple:
         if self._page in NAV_RECTS:
             return tuple(w for w in self._widgets if w.page == self._page
-                         and (w.name != "speaker_context" or self._get_provider() == "soniox"))
+                         and (w.name != "speaker_context" or self._uses_soniox()))
         key = (self._page, self._picker_idx)
         cached = self._picker_cache.get(key)
         if cached is None:
@@ -551,14 +556,15 @@ class DashboardPanel:
             step = 0.1 if button == "vol_plus" else -0.1
             self._on_tts_gain(float(self._get_tts_gain()) + step)
         elif button in ("src_prev", "src_next"):
-            if self._uses_source_language():
+            if self._uses_source_language("outbound"):
                 st.source_language = cycle(
-                    self._source_languages(self._languages), st.source_language,
+                    self._source_languages(self._languages, "outbound"), st.source_language,
                     1 if button == "src_next" else -1)
         elif button in ("insrc_prev", "insrc_next"):
-            if self._uses_source_language():
+            if self._uses_source_language("inbound"):
                 st.inbound_source_language = cycle(
-                    self._source_languages(self._inbound_languages), st.inbound_source_language,
+                    self._source_languages(self._inbound_languages, "inbound"),
+                    st.inbound_source_language,
                     1 if button == "insrc_next" else -1)
         elif button == "speaker_context":
             self._context_applying = True
@@ -570,8 +576,14 @@ class DashboardPanel:
                 self._context_done(False)
         self._dirty.set()
 
-    def _source_languages(self, languages):
-        if self._get_provider() == "soniox":
+    def _provider(self, direction: str) -> str:
+        return self._get_inbound_provider() if direction == "inbound" else self._get_provider()
+
+    def _uses_soniox(self) -> bool:
+        return "soniox" in (self._get_provider(), self._get_inbound_provider())
+
+    def _source_languages(self, languages, direction: str = "outbound"):
+        if self._provider(direction) == "soniox":
             from ..languages import SONIOX_LANGUAGES, soniox_language_code
             # Soniox hints allow Auto, and only languages its model accepts.
             return [""] + list(dict.fromkeys(code for code in languages
@@ -803,10 +815,10 @@ class DashboardPanel:
         d.ellipse(STATUS_DOT, fill=dot)
         self._font_small.draw(d, (64, 44), f"VRCLT v{__version__}",
                               fill=COL_TEXT, anchor="lm")
+        names = {"gemini": "Gemini", "qwen": "Qwen", "openai": "OpenAI", "soniox": "Soniox"}
+        engines = dict.fromkeys((self._get_provider(), self._get_inbound_provider()))
         self._caption(d, (336, 20, 524, 76),
-                      {"gemini": "Gemini", "qwen": "Qwen", "openai": "OpenAI",
-                       "soniox": "Soniox"}.get(self._get_provider(), self._get_provider()),
-                      fill=COL_SUB_ON)
+                      " / ".join(names.get(e, e) for e in engines), fill=COL_SUB_ON)
         self._caption(d, STATUS_TEXT_BOX, tr(lang, status_key), fill=dot)
         for page, rect in NAV_RECTS.items():
             self._btn(d, rect, tr(lang, NAV_KEYS[page]),
@@ -838,21 +850,22 @@ class DashboardPanel:
                            tr(lang, "out_lang"), "lang", fill=COL_BTN)
         self._value_button(d, BTN_SUB_LANG, language_label(st.inbound_language),
                            tr(lang, "sub_lang"), "sub_lang", fill=COL_BTN)
-        for prev, label, next_, code, caption, prefix in (
+        for prev, label, next_, code, caption, prefix, direction in (
                 (BTN_SRC_PREV, LBL_SRC_LANG, BTN_SRC_NEXT, st.source_language,
-                 "dash_src_out", "src"),
+                 "dash_src_out", "src", "outbound"),
                 (BTN_INSRC_PREV, LBL_INSRC_LANG, BTN_INSRC_NEXT, st.inbound_source_language,
-                 "dash_src_in", "insrc")):
-            if self._uses_source_language():
+                 "dash_src_in", "insrc", "inbound")):
+            if self._uses_source_language(direction):
                 self._btn(d, prev, "◀", fonts=(self._font_mid,), name=prefix+"_prev")
                 self._btn(d, next_, "▶", fonts=(self._font_mid,), name=prefix+"_next")
-                value = (tr(lang, "vr_auto_language") if not code and self._get_provider() == "soniox"
+                value = (tr(lang, "vr_auto_language")
+                         if not code and self._provider(direction) == "soniox"
                          else language_label(code or "en"))
                 self._value_button(d, label, value, tr(lang, caption), None)
             else:
                 self._value_button(d, (prev[0], prev[1], next_[2], next_[3]),
                                    tr(lang, "vr_auto_language"), tr(lang, caption), None)
-        if self._get_provider() == "soniox":
+        if self._uses_soniox():
             keep, seconds = self._get_speaker_context()
             self._btn(d, BTN_SPEAKER_CONTEXT,
                       tr(lang, "dash_applying" if self._context_applying else

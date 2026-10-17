@@ -281,7 +281,8 @@ class WristPanel:
                  get_font_size=lambda: 27,
                  get_provider=lambda: "gemini",
                  get_speaker_context=lambda: (True, 60.0),
-                 set_speaker_context=lambda enabled, on_done: on_done(False)):
+                 set_speaker_context=lambda enabled, on_done: on_done(False),
+                 get_inbound_provider=None):
         self._state = state
         self._languages = languages or ["en"]
         self._inbound_languages = inbound_languages or ["ko", "en"]
@@ -300,6 +301,8 @@ class WristPanel:
         self._on_font_size = on_font_size
         self._get_font_size = get_font_size
         self._get_provider = get_provider
+        # the subtitle engine; without one it follows the translation engine
+        self._get_inbound_provider = get_inbound_provider or get_provider
         self._get_speaker_context = get_speaker_context
         self._set_speaker_context = set_speaker_context
         font_path = resolve_font_path(font_path, "NotoSansCJKkr-Bold.otf")
@@ -468,7 +471,8 @@ class WristPanel:
                 self._dirty.set()
             # These values can also change from the desktop UI without an
             # AppState event. Refresh the visible controls at the same 1 Hz.
-            controls = (self._get_provider(), self._get_speaker_context(),
+            controls = (self._get_provider(), self._get_inbound_provider(),
+                        self._get_speaker_context(),
                         int(self._get_font_size()))
             if controls != self._last_controls:
                 self._last_controls = controls
@@ -692,7 +696,7 @@ class WristPanel:
         if self._page == "main":
             return self._widgets
         if self._page == "settings":
-            return self._settings_widgets[self._get_provider() == "soniox"]
+            return self._settings_widgets[self._uses_soniox()]
         key = (self._page, self._picker_idx)
         cached = self._picker_cache.get(key)
         if cached is None:
@@ -777,8 +781,11 @@ class WristPanel:
             log.exception("wrist panel: mode update failed")
             done(False)
 
+    def _uses_soniox(self) -> bool:
+        return "soniox" in (self._get_provider(), self._get_inbound_provider())
+
     def _toggle_speaker_context(self) -> None:
-        if self._get_provider() != "soniox" or self._speaker_context_pending \
+        if not self._uses_soniox() or self._speaker_context_pending \
                 or self._restart_pending or self._mode_pending:
             return
         self._speaker_context_pending = True
@@ -860,12 +867,13 @@ class WristPanel:
         dot = status_dot_color(connected, status_key)
         if self._page in ("main", "settings"):
             self._font_small.draw(d, (24, 28), "VRCLT", fill=COL_TEXT, anchor="lm")
-            _left_text(self, d, (126, 14, 430, 42), self._get_provider().upper(),
+            engines = dict.fromkeys((self._get_provider(), self._get_inbound_provider()))
+            _left_text(self, d, (126, 14, 430, 42), " / ".join(engines).upper(),
                        fonts=(self._font_tiny,), fill=WATCH_DIM)
             d.ellipse((24, 51, 34, 61), fill=dot)
             _left_text(self, d, (44, 43, 430, 69), tr(lang, status_key),
                        fonts=(self._font_tiny,), fill=WATCH_DIM)
-            if self._page == "settings" and self._get_provider() != "soniox":
+            if self._page == "settings" and not self._uses_soniox():
                 draw_fit_text(d, BTN_SPEAKER_CONTEXT, tr(lang, "vr_hint_position"),
                               fonts=(self._font_tiny,), fill=WATCH_DIM, max_lines=2)
 

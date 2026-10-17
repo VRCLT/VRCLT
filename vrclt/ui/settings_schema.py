@@ -38,6 +38,7 @@ F = FieldSpec
 GROUPS: tuple = (
     ("grp_api", (
         F("provider", "provider"),
+        F("inbound.provider", "inbound_provider"),
         F("api_key", "password"),
         F("model", "text"),
         F("qwen.api_key", "password"),

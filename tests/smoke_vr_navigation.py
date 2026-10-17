@@ -265,7 +265,9 @@ def check_auto_detecting_qwen_hides_source_controls():
         lambda x: None, lambda: 27, lambda: None, lambda x: None, lambda: None,
         lambda: ([""], [""]), lambda: "", lambda: "", lambda m, t, d: d(True),
         lambda x: None, lambda: 1.0, lambda: config.provider(cfg),
-        uses_source_language=lambda: config.uses_source_language(cfg))
+        uses_source_language=lambda direction="outbound":
+            config.uses_source_language(cfg, direction),
+        get_inbound_provider=lambda: config.inbound_provider(cfg))
     try:
         assert not panel._enabled("src_next") and not panel._enabled("insrc_prev")
         panel._on_click("src_next")
@@ -278,9 +280,42 @@ def check_auto_detecting_qwen_hides_source_controls():
         panel.detach()
 
 
+def check_separate_subtitle_engine():
+    """A Soniox subtitle engine under Gemini translation: only the subtitle
+    side gets spoken-language hints, and the Soniox switch still shows."""
+    cfg = copy.deepcopy(config.DEFAULTS)
+    cfg["provider"] = "gemini"
+    cfg["inbound"]["provider"] = "soniox"
+    state = AppState()
+    panel = make_dashboard_panel(
+        cfg, state, lambda: (False, "status_stopped", ""), lambda x: None,
+        lambda x: None, lambda: 27, lambda: None, lambda x: None, lambda: None,
+        lambda: ([""], [""]), lambda: "", lambda: "", lambda m, t, d: d(True),
+        lambda x: None, lambda: 1.0, lambda: config.provider(cfg),
+        uses_source_language=lambda direction="outbound":
+            config.uses_source_language(cfg, direction),
+        get_inbound_provider=lambda: config.inbound_provider(cfg))
+    wrist = wrist_ui.WristPanel(state, ["en", "ko"], get_provider=lambda: config.provider(cfg),
+                                get_inbound_provider=lambda: config.inbound_provider(cfg))
+    try:
+        assert not panel._enabled("src_next")          # Gemini detects my language
+        assert panel._enabled("insrc_next")            # Soniox takes a subtitle hint
+        assert "speaker_context" in [w.name for w in panel._active_widgets()]
+        assert wrist._uses_soniox()
+        panel._render((True, "status_running", ""))   # header names both engines
+        wrist._render((True, "status_running", ""), False)
+        cfg["inbound"]["provider"] = ""                # back to "same as translation"
+        assert not panel._enabled("insrc_next") and not wrist._uses_soniox()
+        assert "speaker_context" not in [w.name for w in panel._active_widgets()]
+    finally:
+        panel.detach()
+        wrist.detach()
+
+
 if __name__ == "__main__":
     check_navigation()
     check_auto_detecting_qwen_hides_source_controls()
+    check_separate_subtitle_engine()
     check_controller_bridge()
     check_wrist_width()
     check_text_only_lifecycle()

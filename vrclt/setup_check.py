@@ -93,6 +93,7 @@ class Environment:
     osc_bound: bool | None = None    # None = OSC listener not running
     osc_last_rx: float = 0.0         # when VRChat last sent us OSC (0 = never)
     cable_driver: bool = False       # VB-CABLE driver installed (devices may need a restart)
+    missing_key_provider: str = ""   # the engine whose key is missing ("" = none)
 
 
 @dataclass(frozen=True)
@@ -303,9 +304,12 @@ def collect(cfg: dict, *, inputs, outputs, osc_status=(None, 0.0)) -> Environmen
     except Exception:
         log.debug("VRChat settings unreadable", exc_info=True)
         vrchat = None
-    prov = config_mod.provider(cfg)
+    # the translation engine's key, and the subtitle engine's when it differs
+    missing = next((prov for prov in config_mod.providers_in_use(cfg)
+                    if not config_mod.api_key_for(cfg, prov)), "")
     return Environment(
-        api_key_present=bool(config_mod.api_key_for(cfg, prov)),
+        api_key_present=not missing,
+        missing_key_provider=missing,
         app_mode=str(cfg.get("app", {}).get("mode", "vrchat") or "vrchat"),
         app_name=app_name(cfg),
         inputs=list(inputs), outputs=list(outputs),

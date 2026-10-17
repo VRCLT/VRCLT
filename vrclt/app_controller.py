@@ -96,7 +96,8 @@ def make_wrist_panel(cfg, state, get_status_info,
                      get_font_size=lambda: 27,
                      get_provider=lambda: "gemini",
                      get_speaker_context=lambda: (True, 60.0),
-                     set_speaker_context=lambda enabled, on_done: on_done(False)):
+                     set_speaker_context=lambda enabled, on_done: on_done(False),
+                     get_inbound_provider=None):
     from .vr.wrist_ui import WristPanel
     w = cfg.get("wrist_ui", {})
     default_width = config_mod.DEFAULTS["wrist_ui"]["width_m"]
@@ -126,6 +127,7 @@ def make_wrist_panel(cfg, state, get_status_info,
         on_font_size=on_font_size,
         get_font_size=get_font_size,
         get_provider=get_provider,
+        get_inbound_provider=get_inbound_provider,
         get_speaker_context=get_speaker_context,
         set_speaker_context=set_speaker_context,
     )
@@ -161,7 +163,7 @@ def make_dashboard_panel(cfg, state, get_status_info, on_text_only_toggle,
                          set_audio_devices, on_tts_gain, get_tts_gain,
                          get_provider, get_speaker_context=lambda: (True, 60.0),
                          set_speaker_context=lambda enabled, on_done: on_done(False),
-                         uses_source_language=None):
+                         uses_source_language=None, get_inbound_provider=None):
     from .vr.dashboard_panel import DashboardPanel
     w = cfg.get("wrist_ui", {})
     return DashboardPanel(
@@ -183,6 +185,7 @@ def make_dashboard_panel(cfg, state, get_status_info, on_text_only_toggle,
         on_tts_gain=on_tts_gain,
         get_tts_gain=get_tts_gain,
         get_provider=get_provider,
+        get_inbound_provider=get_inbound_provider,
         get_speaker_context=get_speaker_context,
         set_speaker_context=set_speaker_context,
         uses_source_language=uses_source_language,
@@ -486,6 +489,9 @@ class AppController:
 
     def get_provider(self) -> str:
         return config_mod.provider(self.cfg)
+
+    def get_inbound_provider(self) -> str:
+        return config_mod.inbound_provider(self.cfg)
 
     def add_output_language(self, value: str) -> None:
         code = language_code_from_text(str(value or "").strip())
@@ -914,36 +920,10 @@ class AppController:
             self._app_registrar.reapply(
                 bool(self.cfg.get("steamvr", {}).get("register", True)))
 
-            prov = config_mod.provider(self.cfg)
-            key = config_mod.api_key_for(self.cfg, prov)
-            if not key:
-                self._set_status("API key required", {
-                    "qwen": "Qwen (DashScope) API key is empty.",
-                    "openai": "OpenAI API key is empty.",
-                    "soniox": "Soniox API key is empty.",
-                }.get(prov, "API key is empty."))
+            keys = self._engine_keys()
+            if keys is None:
                 return False
-            key_error = config_mod.api_key_validation_error(
-                key, provider_label={"qwen": "DashScope",
-                                     "openai": "OpenAI",
-                                     "soniox": "Soniox"}.get(prov, "Gemini"))
-            if key_error:
-                self._set_status("API key invalid", key_error)
-                return False
-            if prov == "qwen":
-                qw = self.cfg.get("qwen", {})
-                # the intl (Singapore) endpoint is only served through the
-                # workspace-scoped domain; fail fast with a clear message
-                # instead of an opaque connect error
-                if str(qw.get("endpoint", "intl") or "intl").strip() != "beijing" \
-                        and not str(qw.get("workspace_id", "") or "").strip() \
-                        and not str(qw.get("base_url", "") or "").strip():
-                    self._set_status(
-                        "API key invalid",
-                        "Qwen intl endpoint requires a Model Studio workspace ID.")
-                    return False
-
-            return self._start_runtime(key)
+            return self._start_runtime(keys)
         except Exception as e:
             log.exception("runtime restart failed")
             self._set_status("Failed", str(e))
@@ -1103,7 +1083,40 @@ class AppController:
             if not self._restarting:
                 self._set_status("Stopped")
 
-    def _start_runtime(self, key: str) -> bool:
+    def _engine_keys(self) -> dict | None:
+        """{engine: key} for the translation engine and, when it differs, the
+        subtitle engine; None after reporting the first unusable key."""
+        keys = {}
+        for prov in config_mod.providers_in_use(self.cfg):
+            key = config_mod.api_key_for(self.cfg, prov)
+            if not key:
+                self._set_status("API key required", {
+                    "qwen": "Qwen (DashScope) API key is empty.",
+                    "openai": "OpenAI API key is empty.",
+                    "soniox": "Soniox API key is empty.",
+                }.get(prov, "API key is empty."))
+                return None
+            key_error = config_mod.api_key_validation_error(
+                key, provider_label={"qwen": "DashScope",
+                                     "openai": "OpenAI",
+                                     "soniox": "Soniox"}.get(prov, "Gemini"))
+            if key_error:
+                self._set_status("API key invalid", key_error)
+                return None
+            keys[prov] = key
+        if "qwen" in keys:
+            qw = self.cfg.get("qwen", {})
+            # the intl (Singapore) endpoint is only served through the
+            # workspace-scoped domain; fail fast with a clear message
+            # instead of an opaque connect error
+            if str(qw.get("endpoint", "intl") or "intl").strip() != "beijing"                     and not str(qw.get("workspace_id", "") or "").strip()                     and not str(qw.get("base_url", "") or "").strip():
+                self._set_status(
+                    "API key invalid",
+                    "Qwen intl endpoint requires a Model Studio workspace ID.")
+                return None
+        return keys
+
+    def _start_runtime(self, keys: dict) -> bool:
         state = self.state
         store = self.store
         cfg = self.cfg
@@ -1111,9 +1124,10 @@ class AppController:
         pipeline = inbound = control = created_renderer = None
         panels: list = []
         try:
-            pipeline = OutboundPipeline(cfg, key, state)
+            pipeline = OutboundPipeline(cfg, keys[config_mod.provider(cfg)], state)
             if cfg.get("inbound", {}).get("enabled", False):
-                inbound = InboundPipeline(cfg, key, store, state)
+                inbound = InboundPipeline(cfg, keys[config_mod.inbound_provider(cfg)],
+                                          store, state)
                 audio_cfg = cfg.get("audio", {})
                 mult = float(audio_cfg.get("echo_guard_multiplier", 4.0))
                 hold_sec = float(audio_cfg.get("echo_guard_hold_sec", 1.2))
@@ -1160,6 +1174,7 @@ class AppController:
                         get_font_size=lambda: int(
                             self.cfg.get("overlay", {}).get("font_size", 27)),
                         get_provider=self.get_provider,
+                        get_inbound_provider=self.get_inbound_provider,
                         get_speaker_context=self.get_speaker_context,
                         set_speaker_context=self.set_speaker_context))
                 if cfg.get("steamvr", {}).get("dashboard_panel", True):
@@ -1184,8 +1199,9 @@ class AppController:
                         get_provider=self.get_provider,
                         get_speaker_context=self.get_speaker_context,
                         set_speaker_context=self.set_speaker_context,
-                        uses_source_language=lambda: config_mod.uses_source_language(
-                            self.cfg)))
+                        get_inbound_provider=self.get_inbound_provider,
+                        uses_source_language=lambda direction="outbound":
+                            config_mod.uses_source_language(self.cfg, direction)))
                 if panels:
                     from .vr.render import VrRenderer
                     renderer = created_renderer = VrRenderer(

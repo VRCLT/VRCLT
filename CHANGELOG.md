@@ -7,6 +7,19 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 Release artifacts are attached to [GitHub Releases](https://github.com/VRCLT/VRCLT/releases)
 as `vrclt-v<version>-windows-x64.exe` plus a `.sha256` checksum.
 
+## [Unreleased]
+
+### Added
+
+- Separate engines for your voice and for subtitles. The Dashboard's Full view
+  has **Translation engine** and **Subtitle engine** pickers, and Settings has
+  **Subtitle engine** (`inbound.provider`; empty means the same engine as
+  translation). For example, Gemini can translate your voice while Soniox
+  writes speaker-labeled subtitles. Each engine needs its own API key and bills
+  separately. The setup check names the engine whose key is missing, and the
+  Dashboard refuses an engine that has no key yet. The Simple view keeps one
+  engine for both.
+
 ## [1.0.1] - 2026-10-17
 
 ### Added
