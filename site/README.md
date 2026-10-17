@@ -28,7 +28,7 @@ After adding new translated text, refresh those subsets with
 
 Content comes from `content.json`; `config.json` holds the canonical URL.
 v1.0 is marked as released. Downloads link to the latest public
-release at `https://github.com/shgeum/VRCLT/releases/latest`.
+release at `https://github.com/VRCLT/VRCLT/releases/latest`.
 
 From the application repository root:
 

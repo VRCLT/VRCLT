@@ -1,0 +1,74 @@
+# The website at https://vrclt.github.io/ is built from site/ by
+# scripts/build_site.py. Pull requests check that it builds; merges to main
+# push the output to VRCLT/vrclt.github.io, which GitHub Pages serves.
+# SITE_DEPLOY_KEY holds the private half of a write deploy key on that repo.
+name: Site
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - site/**
+      - scripts/build_site.py
+      - docs/brand/**
+      - docs/images/**
+      - vrclt/assets/**
+      - LICENSE
+      - .github/workflows/site.yml
+  push:
+    branches: [main]
+    paths:
+      - site/**
+      - scripts/build_site.py
+      - docs/brand/**
+      - docs/images/**
+      - vrclt/assets/**
+      - LICENSE
+      - .github/workflows/site.yml
+  workflow_dispatch:
+
+concurrency:
+  group: site-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Build
+        run: |
+          python -m pip install "pillow>=10.0"
+          python scripts/build_site.py
+
+      - uses: actions/checkout@v7
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        with:
+          repository: VRCLT/vrclt.github.io
+          ssh-key: ${{ secrets.SITE_DEPLOY_KEY }}
+          path: pages
+
+      - name: Publish
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        run: |
+          subject="$(git log -1 --format=%s)"
+          rsync -a --delete --exclude .git build/site/ pages/
+          cd pages
+          git add -A
+          if git diff --cached --quiet; then
+            echo "The site is already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -q -m "Deploy VRCLT/VRCLT@${GITHUB_SHA::7}" -m "$subject"
+          git push

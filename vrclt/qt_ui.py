@@ -287,17 +287,17 @@ class MainWindow(QtWidgets.QMainWindow):
         c = self._build_dash_controls()
         root.addWidget(self._build_dash_mode_group(c))
         root.addLayout(self._build_dash_pipe_groups(c))
+        # subtitle size/position and the UI language stay in sight in both
+        # views, right below the language cards (they used to sit folded
+        # away at the bottom)
+        options = QtWidgets.QHBoxLayout()
+        options.setSpacing(16)
+        options.addWidget(self._build_dash_display_group(), 3)
+        options.addWidget(self._build_dash_app_group(), 2)
+        self._options_layout = options
+        root.addLayout(options)
         root.addWidget(self._build_dash_audio_group(c))
         root.addWidget(self._dashboard_note)
-        options = QtWidgets.QWidget()
-        options_layout = QtWidgets.QVBoxLayout(options)
-        options_layout.setContentsMargins(0, 0, 0, 0)
-        options_layout.addWidget(self._build_dash_display_group())
-        options_layout.addWidget(self._build_dash_app_group())
-        # above the live preview: below it, the expanding preview pushed these
-        # options out of sight on short windows
-        self._dashboard_options = self._disclosure("dash_more_options", options)
-        root.addWidget(self._dashboard_options)
         self._build_dash_subtitles(root)
         # Small screens and expanded options stay reachable without forcing
         # the entire window taller than the available desktop.
@@ -424,16 +424,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _apply_view_mode(self) -> None:
         """The simple view keeps the setup check, the app choice, runtime
-        restart, on/off, languages, a mic level and the live subtitles;
-        devices, the engine and rarely used options live in the full view."""
+        restart, on/off, languages, a mic level, subtitle size and position,
+        the UI language and the live subtitles; devices, the engine and
+        rarely used options live in the full view."""
         easy = self._easy_mode()
         for value, button in self._view_buttons.items():
             if button.isChecked() != (value == easy):
                 button.setChecked(value == easy)
         for widget in (self._text_only, self._out_language_options,
                        self._in_language_options, self._audio_output_column,
-                       self._dashboard_options, self._audio_group,
-                       self._engine_button):
+                       self._close_action_label, self._close_action,
+                       self._audio_group, self._engine_button):
             if widget.isHidden() != easy:
                 widget.setVisible(not easy)
         for widget in (self._easy_mic_device_label, self._easy_mic_wrap,
@@ -771,7 +772,8 @@ class MainWindow(QtWidgets.QMainWindow):
         app_lay.setSpacing(18)
         app_lay.addWidget(self._label("ui_lang"))
         app_lay.addWidget(self._ui_lang)
-        app_lay.addWidget(self._label("label_close_action"))
+        self._close_action_label = self._label("label_close_action")
+        app_lay.addWidget(self._close_action_label)
         app_lay.addWidget(self._close_action)
         app_lay.addStretch(1)
         self._app_layout = app_lay
@@ -2226,8 +2228,10 @@ class MainWindow(QtWidgets.QMainWindow):
         available = (self._dashboard_scroll.viewport().width()
                      - margins.left() - margins.right())
         changed = self._setup_panel.fit_header(available)
+        # the cards' own rows first, then whether the two option cards still
+        # fit side by side
         for layout in (self._pipe_layout, self._audio_layout, self._context_layout,
-                       self._display_layout, self._app_layout):
+                       self._display_layout, self._app_layout, self._options_layout):
             widths = []
             for index in range(layout.count()):
                 widget = layout.itemAt(index).widget()
@@ -2236,9 +2240,17 @@ class MainWindow(QtWidgets.QMainWindow):
             padding = layout.contentsMargins()
             required = (sum(widths) + max(0, len(widths) - 1) * layout.spacing()
                         + padding.left() + padding.right())
-            if layout in (self._audio_layout, self._display_layout, self._app_layout):
-                frame = layout.parentWidget().contentsMargins()
+            # plus every frame and padding between the row and the page: the
+            # audio row sits in a widget inside its card, and counting only
+            # that inner widget left the full view 22 px too wide at 780 px
+            holder = layout.parentWidget()
+            while holder is not None and holder is not page:
+                frame = holder.contentsMargins()
                 required += frame.left() + frame.right()
+                if holder.layout() is not None and holder.layout() is not layout:
+                    inner = holder.layout().contentsMargins()
+                    required += inner.left() + inner.right()
+                holder = holder.parentWidget()
             stacked = required > available or (layout is self._pipe_layout and self.width() < 900)
             direction = (QtWidgets.QBoxLayout.Direction.TopToBottom if stacked
                          else QtWidgets.QBoxLayout.Direction.LeftToRight)

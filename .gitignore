@@ -46,5 +46,6 @@ Thumbs.db
 desktop.ini
 .vscode/
 .idea/
+.claude/
 
 PLAN.md

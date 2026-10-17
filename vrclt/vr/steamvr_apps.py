@@ -27,6 +27,8 @@ from . import openvr_ctx
 
 log = logging.getLogger(__name__)
 
+# unchanged since the repository moved to the VRCLT organization: SteamVR
+# keeps users' auto-start registration under this key
 APP_KEY = "shgeum.vrclt"
 MANIFEST_PATH = APPDATA_DIR / "vrclt.vrmanifest"
 

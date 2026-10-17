@@ -14,7 +14,7 @@ from urllib.request import Request, urlopen
 
 log = logging.getLogger(__name__)
 
-DEFAULT_REPO = "shgeum/VRCLT"
+DEFAULT_REPO = "VRCLT/VRCLT"
 GITHUB_API_LATEST = "https://api.github.com/repos/{repo}/releases/latest"
 GITHUB_API_LIST = "https://api.github.com/repos/{repo}/releases?per_page=10"
 

@@ -396,3 +396,22 @@ If a release needs to be pulled:
 2. Leave the Git tag in place unless the artifact was never meant to be public.
 3. Create a patch release with a new version number.
 4. Note whether users should delete or keep `%LOCALAPPDATA%\vrclt\config.yaml`.
+
+## 11. Website
+
+The site at <https://vrclt.github.io/> is built from `site/` by
+`scripts/build_site.py`, which also copies the brand assets, the README
+screenshots, and the app icon. Preview it locally:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\build_site.py
+```
+
+The output lands in `build\site`. The **Site** workflow
+(`.github/workflows/site.yml`) builds the site for pull requests that touch
+`site/`, `scripts/build_site.py`, `docs/brand/`, `docs/images/`,
+`vrclt/assets/`, or `LICENSE`. When such a change merges to `main`, it pushes
+the output to `VRCLT/vrclt.github.io`, which GitHub Pages serves. The push uses
+a write deploy key on that repository, whose private half is the
+`SITE_DEPLOY_KEY` secret here. Run the workflow from the Actions tab to
+republish without a change.
