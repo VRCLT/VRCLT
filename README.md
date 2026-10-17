@@ -128,7 +128,6 @@ Subtitles float in front of you, the wrist menu switches translation, subtitles,
 - [VB-Audio Virtual Cable](https://vb-audio.com/Cable/)
 - SteamVR for VR overlays and wrist UI
 - VRChat OSC enabled for chatbox/avatar-control features
-- Python 3.12 only if running from source
 
 ### 1. Download vrclt
 
@@ -513,227 +512,20 @@ With `ui.mode: auto`, SteamVR features activate when SteamVR is running. Use
 
 ## Files And Paths
 
-| Item | Release exe | Source checkout |
-| --- | --- | --- |
-| Config | `%LOCALAPPDATA%\vrclt\config.yaml` | `config.yaml` in the repo root |
-| Config override | `VRCLT_CONFIG` | `VRCLT_CONFIG` |
-| Logs | `%LOCALAPPDATA%\vrclt\logs\vrclt.log` | `%LOCALAPPDATA%\vrclt\logs\vrclt.log` |
-| Build output | `dist\vrclt.exe` | `dist\vrclt.exe` |
+| Item | Path |
+| --- | --- |
+| Config | `%LOCALAPPDATA%\vrclt\config.yaml` |
+| Logs | `%LOCALAPPDATA%\vrclt\logs\vrclt.log` |
 
-Do not commit `config.yaml`, `.venv/`, `build/`, `dist/`, `release/`, or log
-files.
+Set the `VRCLT_CONFIG` environment variable to use a different config file.
+Every `config.yaml` key is described in the wiki's
+[Configuration reference](https://github.com/shgeum/VRCLT/wiki/Configuration).
 
-## Configuration Reference
+## Development
 
-All values are stored in `config.yaml`. Release builds use the AppData path
-shown above; source checkouts use the repository-root `config.yaml` unless
-`VRCLT_CONFIG` is set.
-
-Top-level and app profile settings:
-
-| Key | Default | Description |
-| --- | --- | --- |
-| `provider` | `gemini` | Translation engine for both pipelines: `gemini`, `qwen`, `openai`, or `soniox`. |
-| `api_key` | `""` | Gemini API key. Empty means `GEMINI_API_KEY` can be used. |
-| `model` | `gemini-3.5-live-translate-preview` | Gemini Live model name. |
-| `qwen.api_key` | `""` | DashScope API key. Empty means `DASHSCOPE_API_KEY` can be used. |
-| `qwen.model` | `qwen3.8-livetranslate-flash-realtime` | Qwen realtime translation model name. Qwen 3.8 auto-detects the spoken language and labels speakers; `qwen3.5-livetranslate-flash-realtime` needs the spoken language. |
-| `qwen.endpoint` | `intl` | `intl` (Singapore) or `beijing` (mainland China). Keys are region-bound. |
-| `qwen.workspace_id` | `""` | Model Studio workspace ID (`maas.aliyuncs.com` domain). Required for `intl`; `beijing` may leave it empty. |
-| `qwen.base_url` | `""` | Advanced: full `wss://` URL override. |
-| `qwen.voice_clone` | `once` | Server-side speaker-voice cloning: `once` (session start, low latency), `always` (per response, slower), or `off`. |
-| `qwen.voice` | `""` | With cloning `off`: empty = model default voice, or a pre-cloned voice ID (`qwen-translate-vc-...`). |
-| `openai.api_key` | `""` | OpenAI API key. Empty means `OPENAI_API_KEY` can be used. |
-| `openai.model` | `gpt-realtime-translate` | OpenAI realtime translation model. Speech-to-speech, one target language per session; it speaks only `en es pt fr ja ru zh de ko hi id vi it`. The voice adapts to the speaker and cannot be chosen. |
-| `openai.transcribe_model` | `gpt-realtime-whisper` | Source ASR for the outbound session. The VRChat chatbox needs it to print the original above the translation (`osc.show_source`). Empty leaves the chatbox translation-only. |
-| `openai.inbound_transcribe_model` | `""` | Source ASR for inbound subtitles. Empty (the default) shows the translated line only; set `gpt-realtime-whisper` and `overlay.show_source` to see the original too. Both ASR settings are billed per minute on top of the translation. |
-| `openai.noise_reduction` | `near_field` | Server-side input noise reduction: `near_field` (headset), `far_field` (room mic), or empty to disable. |
-| `soniox.api_key` | `""` | Soniox API key. Empty uses `SONIOX_API_KEY`. |
-| `soniox.model` | `stt-rt-v5` | Streaming speech recognition and translation model. |
-| `soniox.tts_model` | `tts-rt-v2` | TTS model, used only when translated voice is enabled. |
-| `soniox.voice` | `Daniel` | Stock voice name or an existing custom/cloned voice ID; no automatic microphone voice cloning. |
-| `soniox.keep_speaker_context` | `true` | Keeps recognition sessions through short pauses, up to `soniox.speaker_context_idle_sec` of silence; the connection remains billable. When off, uses `audio.mic_idle_disconnect_sec`. The Soniox Dashboard shows this switch and the effective timeout. Reconnecting resets speaker context. |
-| `soniox.speaker_context_idle_sec` | `60.0` | Silence timeout while speaker context is enabled. Adjustable from 5 to 600 seconds in Settings; nonpositive or nonfinite values fall back to 60 seconds. |
-| `log_level` | `INFO` | Python logging level. |
-| `meta.last_version` | `""` | Last app version that acknowledged the current config. Used for one-time update reset prompts. |
-| `app.mode` | `vrchat` | Active profile: `vrchat`, `discord`, or `custom`. |
-| `app.profiles.<mode>.process` | `VRChat.exe` / `Discord.exe` / empty | Process captured for inbound subtitles. Empty (the custom profile default) keeps the current capture target. |
-| `app.profiles.<mode>.ui_mode` | `auto` / `desktop` | UI mode applied by the profile. |
-| `app.profiles.<mode>.voice_output` | `true` | Enables translated voice output. |
-| `app.profiles.<mode>.passthrough_while_translating` | `false` | Sends raw microphone audio while translation is active. |
-| `app.profiles.<mode>.chatbox` | `true` / `false` | Enables VRChat OSC chatbox output. |
-| `app.profiles.<mode>.osc_control` | `true` / `false` | Enables avatar OSC control listener. |
-| `app.profiles.<mode>.vr_overlay` | `true` / `false` | Enables SteamVR subtitle overlay. |
-| `app.profiles.<mode>.wrist_ui` | `true` / `false` | Enables SteamVR wrist menu. |
-
-Dashboard state:
-
-| Key | Default | Description |
-| --- | --- | --- |
-| `dashboard.translation_on` | `true` | Last saved Dashboard translation toggle state. |
-| `dashboard.subtitles_on` | `true` | Last saved Dashboard subtitles toggle state. |
-
-PC hotkeys:
-
-| Key | Default | Description |
-| --- | --- | --- |
-| `hotkeys.enabled` | `true` | Enables Windows global hotkeys. |
-| `hotkeys.enabled_in_vr` | `true` | Keeps global hotkeys active while SteamVR is running. |
-| `hotkeys.translation_toggle` | `Ctrl+Alt+T` | Toggles translation ON/OFF. Empty disables this hotkey. |
-| `hotkeys.subtitles_toggle` | `Ctrl+Alt+S` | Toggles subtitles ON/OFF. Empty disables this hotkey. |
-| `hotkeys.translation_hold` | `""` | Hold-to-pause translation: your raw voice passes through while held. Empty disables it. |
-
-Outbound translation:
-
-| Key | Default | Description |
-| --- | --- | --- |
-| `outbound.enabled` | `true` | Enables the outbound pipeline. |
-| `outbound.target_language` | `ja` | Default BCP-47 language code for translating your speech. The UI can search the 70+ Gemini Live Translation languages. |
-| `outbound.source_language` | `""` | My spoken language. Required for Qwen 3.5 (empty = English), optional hint for Soniox, ignored by Gemini/OpenAI/Qwen 3.8. |
-| `outbound.echo_target_language` | `false` | Also repeats source audio that is already in the target language. |
-| `outbound.mic_device` | `""` | Microphone device name substring. Empty uses the default input. |
-| `outbound.tts_device` | `CABLE Input` | Output device for translated voice and passthrough audio. |
-| `outbound.tts_gain` | `1.0` | Translated-voice volume from `0.0` to `2.0` (also applies to the monitor output; raw passthrough stays at unity). |
-| `outbound.monitor_device` | `""` | Optional local monitor output for translated voice. |
-| `outbound.text_only` | `false` | VRChat text-only mode: raw mic passthrough plus translated chatbox text. |
-| `outbound.voice_output` | `true` | Enables translated TTS audio output. |
-| `outbound.passthrough_while_translating` | `false` | Sends raw mic audio even while translation is active. |
-| `outbound.chatbox` | `true` | Sends translated text to the VRChat OSC chatbox. |
-| `outbound.glossary` | `""` | Translation glossary: one `source=target` per line to pin names/terms. |
-
-Inbound subtitles:
-
-| Key | Default | Description |
-| --- | --- | --- |
-| `inbound.enabled` | `true` | Enables process-audio capture for subtitles. |
-| `inbound.target_language` | `ko` | Default BCP-47 subtitle target language. The UI can search the 70+ Gemini Live Translation languages. |
-| `inbound.source_language` | `""` | Others' spoken language; same provider rules as `outbound.source_language`. |
-| `inbound.languages` | `[ko, en, ja]` | Saved subtitle language list used by the Dashboard and wrist menu. Add only the languages you need from the UI picker. |
-| `inbound.process` | `VRChat.exe` | Process name captured for inbound subtitles. |
-| `inbound.allow_system_audio` | `false` | Per-process capture requires Windows 11 (build 20348+). Where it is unavailable, `true` captures the whole desktop instead of the selected app (other apps and your own translated voice get subtitled); `false` keeps inbound from starting. |
-| `inbound.play_audio` | `false` | Plays translated inbound speech to your headphones. |
-| `inbound.audio_device` | `""` | Output device for inbound translated speech. Empty uses default output. |
-| `inbound.vad_enabled` | `true` | Uses voice activity detection to gate background music/noise. |
-| `inbound.vad_threshold` | `0.5` | VAD strictness from `0` to `1`; higher rejects more non-speech. |
-| `inbound.vad_hangover_sec` | `0.35` | Keeps capturing briefly after speech stops. Lower values reduce subtitle tail latency. |
-
-Overlay and OSC:
-
-| Key | Default | Description |
-| --- | --- | --- |
-| `overlay.enabled` | `true` | Enables the SteamVR subtitle overlay. |
-| `overlay.width_m` | `0.9` | Subtitle overlay width in meters. |
-| `overlay.height_m` | `0.225` | Subtitle overlay height in meters. |
-| `overlay.distance_m` | `1.2` | Subtitle overlay distance from the HMD. |
-| `overlay.below_m` | `0.35` | Vertical offset below the HMD. |
-| `overlay.tilt_deg` | `-15.0` | Overlay tilt angle. |
-| `overlay.transform` | `null` | Exact saved 3x4 subtitle pose, auto-managed after repositioning in VR. |
-| `overlay.font` | `bundled:NotoSansCJKkr-Regular.otf` | Subtitle overlay font. |
-| `overlay.font_size` | `27` | Subtitle font size. |
-| `overlay.display_sec` | `7.0` | Time finalized subtitle lines stay visible. |
-| `overlay.lines` | `3` | Number of recent finalized lines kept on screen. |
-| `overlay.show_source` | `false` | Also shows original source text in subtitles. |
-| `osc.ip` | `127.0.0.1` | VRChat OSC destination IP. |
-| `osc.port` | `9000` | VRChat OSC destination port. |
-| `osc.throttle_sec` | `1.5` | Minimum chatbox send interval, including live partial updates. |
-| `osc.notification_sfx` | `false` | Requests VRChat chatbox notification sound. |
-| `osc.show_source` | `true` | Shows source text above translation in the chatbox. |
-| `osc.stream_sentences` | `true` | Sends each finished sentence to the chatbox immediately, rolling recent sentences through one bubble. `false` restores the old behavior (long segments replayed in `chunk_display_sec`-paced parts). |
-| `osc.chunk_display_sec` | `4.0` | Display time per chunk for long chatbox messages. |
-
-Audio, control, UI, and wrist menu:
-
-| Key | Default | Description |
-| --- | --- | --- |
-| `audio.send_interval_ms` | `50` | Microphone audio flush interval to Gemini. Lower values reduce translation latency at a small network overhead cost. |
-| `audio.finalize_silence_sec` | `2.0` | Silence duration before a segment is finalized. |
-| `audio.mic_idle_disconnect_sec` | `15.0` | Mic idle disconnect timeout. Soniox uses this when `soniox.keep_speaker_context` is off. |
-| `audio.voice_rms_threshold` | `90.0` | Microphone energy gate threshold. |
-| `audio.voice_hangover_sec` | `2.5` | Keeps the mic turn open through short pauses. |
-| `audio.turn_end_silence_sec` | `0.55` | After this much real microphone silence the gated stream is padded with silence so the server voice-activity detector ends the turn and the model finishes the sentence. Lower values can reduce translated voice delay. |
-| `audio.inbound_turn_end_silence_sec` | `0.35` | Same, but faster, for inbound subtitle sessions. |
-| `audio.subtitle_partial_interval_sec` | `0.15` | Live subtitle refresh cadence before a line is finalized. |
-| `audio.subtitle_finalize_silence_sec` | `0.8` | Silence duration before an inbound subtitle line is finalized. |
-| `audio.echo_guard_multiplier` | `4.0` | Raises mic gate while target-app audio is active. `1.0` disables it. |
-| `audio.echo_guard_hold_sec` | `1.2` | Blocks outbound mic input while target-app speech is active. |
-| `audio.echo_guard_barge_in_multiplier` | `3.0` | Lets louder local speech pass during echo guard. Lower values pass barge-in more easily. |
-| `control.enabled` | `true` | Enables avatar OSC control input. |
-| `control.osc_listen_port` | `9001` | Local OSC port for avatar control parameters. |
-| `control.param_enabled` | `VRCLT_Enabled` | Avatar bool parameter for translation on/off. |
-| `control.param_lang` | `VRCLT_Lang` | Avatar int parameter for language index. |
-| `control.languages` | `[ja, en, ko, zh-Hans, zh-Hant, yue, es, ru, fr, de]` | Saved output language list for Dashboard, avatar, and wrist controls. Add only the languages you need from the UI picker. |
-| `control.feedback_chatbox` | `true` | Sends control-change feedback to the VRChat chatbox. |
-| `ui.mode` | `auto` | `auto`, `vr`, or `desktop`. |
-| `ui.lang` | `""` | UI display language. Empty means auto; valid values are `en`, `ko`, `ja`, `zh`. |
-| `ui.close_action` | `tray` | Window close button behavior: `tray` or `exit`. |
-| `ui.easy_mode` | `true` | Simple dashboard view. Configurations saved before v1.0.0 start in the full view (`false`). |
-| `wrist_ui.enabled` | `true` | Enables the SteamVR wrist menu. |
-| `wrist_ui.hand` | `left` | Wrist that wears the menu: `left` or `right`. |
-| `wrist_ui.width_m` | `0.14` | Wrist menu width in meters. |
-| `wrist_ui.offset` | `[-0.0509, -0.065, 0.0891]` | Wrist menu x,y,z offset in controller space. |
-| `wrist_ui.tilt_deg` | `185.636` | Extra tilt toward the face. |
-| `wrist_ui.roll_deg` | `-28.633` | In-plane rotation. `null` uses automatic per-hand rotation. |
-| `wrist_ui.transform` | saved 3x4 pose | Exact saved 3x4 wrist pose, auto-managed after repositioning in VR. |
-| `wrist_ui.pointer_tilt_deg` | `50.0` | Pointer ray downward tilt angle. |
-| `wrist_ui.font` | `bundled:NotoSansCJKkr-Bold.otf` | Wrist menu font. |
-
-## Running From Source
-
-```powershell
-py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m vrclt run --app vrchat
-```
-
-Source checkouts read `config.yaml` from the repository root. Copy
-`config.example.yaml` to `config.yaml` if you want local defaults before opening
-the app:
-
-```powershell
-Copy-Item config.example.yaml config.yaml
-```
-
-`VRCLT_CONFIG` can override the config path for development and debugging.
-
-## Build
-
-```powershell
-.\.venv\Scripts\python.exe -m pip install pyinstaller
-.\.venv\Scripts\pyinstaller.exe vrclt.spec --noconfirm
-```
-
-The build creates:
-
-```text
-dist\vrclt.exe
-```
-
-Create release artifacts:
-
-```powershell
-.\scripts\package_release.ps1 -Version 1.0.0
-```
-
-The release script creates:
-
-```text
-release\vrclt-v1.0.0-windows-x64.exe
-release\vrclt-v1.0.0-windows-x64.exe.sha256
-```
-
-## Smoke Tests
-
-```powershell
-.\.venv\Scripts\python.exe -m compileall vrclt
-.\.venv\Scripts\python.exe -m vrclt --help
-.\.venv\Scripts\pyinstaller.exe vrclt.spec --noconfirm
-.\scripts\package_release.ps1 -Version 1.0.0 -SkipBuild
-```
-
-For a real runtime test, run the exe, save settings in the native UI, confirm
-that `%LOCALAPPDATA%\vrclt\config.yaml` is written, and verify that the target
-app receives audio from `CABLE Output`.
+Running from source, tests, building the exe, and the release flow are
+documented in the [wiki](https://github.com/shgeum/VRCLT/wiki/Development). Changes reach `main` through pull requests,
+and merging a new version publishes its release automatically.
 
 ## Thanks To
 
@@ -741,7 +533,3 @@ app receives audio from `CABLE Output`.
 - [PySide6](https://doc.qt.io/qtforpython-6/) for the native Windows interface.
 - [OpenVR](https://github.com/ValveSoftware/openvr), GLFW, and PyOpenGL for SteamVR overlay rendering.
 - [VB-Audio Virtual Cable](https://vb-audio.com/Cable/) for practical app-to-app audio routing.
-
-## Release Notes
-
-See [docs/RELEASING.md](docs/RELEASING.md) for the release workflow.
