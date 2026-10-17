@@ -13,7 +13,7 @@
 
 适用于 Windows 的 **VRChat** / **Discord** 实时语音翻译与实时字幕。
 
-[![Latest release](https://img.shields.io/github/v/release/shgeum/VRCLT?style=flat-square&label=release&color=2ea44f)](https://github.com/shgeum/VRCLT/releases/latest) [![Downloads](https://img.shields.io/github/downloads/shgeum/VRCLT/total?style=flat-square&color=1f6feb)](https://github.com/shgeum/VRCLT/releases) [![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](#要求) [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/VRCLT/VRCLT?style=flat-square&label=release&color=2ea44f)](https://github.com/VRCLT/VRCLT/releases/latest) [![Downloads](https://img.shields.io/github/downloads/VRCLT/VRCLT/total?style=flat-square&color=1f6feb)](https://github.com/VRCLT/VRCLT/releases) [![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](#要求) [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
 [English](README.md) · [한국어](README.ko.md) · [日本語](README.ja.md) · **中文**
 
@@ -23,7 +23,7 @@
 
 <br><br>
 
-[**⬇ 下载 VRCLT**](https://github.com/shgeum/VRCLT/releases/latest) &nbsp;·&nbsp; [快速开始](#快速开始) &nbsp;·&nbsp; [详细文档](#安装)
+[**⬇ 下载 VRCLT**](https://github.com/VRCLT/VRCLT/releases/latest) &nbsp;·&nbsp; [快速开始](#快速开始) &nbsp;·&nbsp; [详细文档](#安装)
 
 </div>
 
@@ -82,7 +82,7 @@ Google Gemini Live、Qwen3.8 LiveTranslate、OpenAI gpt-realtime-translate 和 S
 
 ## 快速开始
 
-1. 从 [Releases](https://github.com/shgeum/VRCLT/releases/latest) **下载并运行** `vrclt-v<version>-windows-x64.exe`，无需安装。
+1. 从 [Releases](https://github.com/VRCLT/VRCLT/releases/latest) **下载并运行** `vrclt-v<version>-windows-x64.exe`，无需安装。
 2. **填写 API 密钥。** 默认引擎为 Gemini：在 [Google AI Studio](https://aistudio.google.com/apikey) 创建密钥，粘贴到 **设置 → Gemini API 密钥**。其他引擎请参阅[翻译引擎](#翻译引擎)。
 3. **其余交给设置检查。** 如果没有 VB-Cable，点击 **自动安装 VB-Cable**；关闭 VRChat 后点击 **自动设置**。
 4. **启动 VRChat 开始说话。** 在仪表板或手腕菜单中开关翻译和字幕。
@@ -114,7 +114,7 @@ Google Gemini Live、Qwen3.8 LiveTranslate、OpenAI gpt-realtime-translate 和 S
 - 自定义模式: 捕获任意其他应用，从当前正在播放音频的进程中直接选择
 - 原声直通直接使用 48 kHz 原始麦克风流，Gemini 翻译流单独重采样
 - GitHub Releases 更新提醒，以及保留 API 密钥、已保存语言列表、UI 语言、窗口关闭行为和已选择音频设备的安全配置重置
-- 可从 [VRCLT Releases](https://github.com/shgeum/VRCLT/releases) 下载的 Windows exe
+- 可从 [VRCLT Releases](https://github.com/VRCLT/VRCLT/releases) 下载的 Windows exe
 - 用户设置保存位置: `%LOCALAPPDATA%\vrclt\config.yaml`
 
 </details>
@@ -131,7 +131,7 @@ Google Gemini Live、Qwen3.8 LiveTranslate、OpenAI gpt-realtime-translate 和 S
 
 ### 1. 下载 vrclt
 
-最新 Windows 可执行文件可在 [VRCLT Releases](https://github.com/shgeum/VRCLT/releases) 下载。
+最新 Windows 可执行文件可在 [VRCLT Releases](https://github.com/VRCLT/VRCLT/releases) 下载。
 
 请下载类似下面名称的文件。
 
@@ -473,11 +473,11 @@ VRChat 模式可使用:
 | 日志 | `%LOCALAPPDATA%\vrclt\logs\vrclt.log` |
 
 如需使用其他配置文件，请用环境变量 `VRCLT_CONFIG` 指定路径。
-`config.yaml` 的所有键都整理在 Wiki 的[配置参考](https://github.com/shgeum/VRCLT/wiki/%E9%85%8D%E7%BD%AE%E5%8F%82%E8%80%83)中。
+`config.yaml` 的所有键都整理在 Wiki 的[配置参考](https://github.com/VRCLT/VRCLT/wiki/%E9%85%8D%E7%BD%AE%E5%8F%82%E8%80%83)中。
 
 ## 开发
 
-从源码运行、测试、构建 exe 以及发布流程都在 [Wiki](https://github.com/shgeum/VRCLT/wiki/%E5%BC%80%E5%8F%91%E6%8C%87%E5%8D%97) 中。
+从源码运行、测试、构建 exe 以及发布流程都在 [Wiki](https://github.com/VRCLT/VRCLT/wiki/%E5%BC%80%E5%8F%91%E6%8C%87%E5%8D%97) 中。
 更改通过拉取请求合并到 `main`，新版本合并后会自动发布。
 
 ## 致谢

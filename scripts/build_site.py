@@ -103,7 +103,7 @@ def main() -> None:
         "Static pages in English, Korean, Japanese, Simplified Chinese and Traditional Chinese.\n"
         "The root detects the browser language; explicit language choices are remembered locally.\n"
         "v1.0 is released; downloads link to the latest published release.\n\n"
-        "[Application source and downloads](https://github.com/shgeum/VRCLT)\n\n"
+        "[Application source and downloads](https://github.com/VRCLT/VRCLT)\n\n"
         "The website templates live in the application checkout's `site/` directory,\n"
         "built with `scripts/build_site.py`. This repository contains the public\n"
         "build output only. GitHub Pages serves the root of the `main` branch.\n",
@@ -142,7 +142,7 @@ def main() -> None:
                       jsVersion=hashlib.sha256((OUTPUT / "app.js").read_bytes()).hexdigest()[:12],
                       localeVersion=hashlib.sha256((OUTPUT / "locale.js").read_bytes()).hexdigest()[:12],
                       siteUrl=html.escape(site_url, quote=True), canonical=html.escape(site_url + f"{locale}/", quote=True),
-                      docsUrl="https://github.com/shgeum/VRCLT/blob/main/" +
+                      docsUrl="https://github.com/VRCLT/VRCLT/blob/main/" +
                       ("README.md" if locale == "en" else f"README.{image_locale}.md"))
         values["languageLinks"] = "".join(
             f'<a href="{base}{code}/?v={site_version}" data-language="{code}" lang="{content[code]["lang"]}"'

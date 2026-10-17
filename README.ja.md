@@ -13,7 +13,7 @@
 
 Windows 向け **VRChat** / **Discord** リアルタイム音声翻訳とリアルタイム字幕。
 
-[![Latest release](https://img.shields.io/github/v/release/shgeum/VRCLT?style=flat-square&label=release&color=2ea44f)](https://github.com/shgeum/VRCLT/releases/latest) [![Downloads](https://img.shields.io/github/downloads/shgeum/VRCLT/total?style=flat-square&color=1f6feb)](https://github.com/shgeum/VRCLT/releases) [![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](#要件) [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/VRCLT/VRCLT?style=flat-square&label=release&color=2ea44f)](https://github.com/VRCLT/VRCLT/releases/latest) [![Downloads](https://img.shields.io/github/downloads/VRCLT/VRCLT/total?style=flat-square&color=1f6feb)](https://github.com/VRCLT/VRCLT/releases) [![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](#要件) [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
 [English](README.md) · [한국어](README.ko.md) · **日本語** · [中文](README.zh.md)
 
@@ -23,7 +23,7 @@ Windows 向け **VRChat** / **Discord** リアルタイム音声翻訳とリア�
 
 <br><br>
 
-[**⬇ VRCLT をダウンロード**](https://github.com/shgeum/VRCLT/releases/latest) &nbsp;·&nbsp; [クイックスタート](#クイックスタート) &nbsp;·&nbsp; [詳しいドキュメント](#インストール)
+[**⬇ VRCLT をダウンロード**](https://github.com/VRCLT/VRCLT/releases/latest) &nbsp;·&nbsp; [クイックスタート](#クイックスタート) &nbsp;·&nbsp; [詳しいドキュメント](#インストール)
 
 </div>
 
@@ -82,7 +82,7 @@ Google Gemini Live、Qwen3.8 LiveTranslate、OpenAI gpt-realtime-translate、Son
 
 ## クイックスタート
 
-1. [Releases](https://github.com/shgeum/VRCLT/releases/latest) から `vrclt-v<version>-windows-x64.exe` を**ダウンロードして実行**します。インストールは不要です。
+1. [Releases](https://github.com/VRCLT/VRCLT/releases/latest) から `vrclt-v<version>-windows-x64.exe` を**ダウンロードして実行**します。インストールは不要です。
 2. **API キーを入力します。** 既定のエンジンは Gemini です。[Google AI Studio](https://aistudio.google.com/apikey) でキーを作成し、**設定 → Gemini API キー** に貼り付けてください。ほかのエンジンは[翻訳エンジン](#翻訳エンジン)を参照してください。
 3. **残りは設定チェックにお任せ。** VB-Cable がなければ **VB-Cableを自動インストール** を押し、VRChat を終了してから **自動設定** を押します。
 4. **VRChat を起動して話すだけ。** 翻訳と字幕はダッシュボードか手首メニューで切り替えます。
@@ -114,7 +114,7 @@ Google Gemini Live、Qwen3.8 LiveTranslate、OpenAI gpt-realtime-translate、Son
 - 現在音を出しているプロセスから選んで任意のアプリをキャプチャできるカスタムモード
 - 原音送出は 48 kHz の元マイクストリームを直接使い、Gemini 翻訳用ストリームは別にリサンプリング
 - GitHub Releases の更新通知と、API キー、保存済み言語リスト、UI 言語、ウィンドウを閉じる動作、選択したオーディオデバイスを保持する安全な設定リセット
-- [VRCLT Releases](https://github.com/shgeum/VRCLT/releases) からダウンロードできる Windows exe
+- [VRCLT Releases](https://github.com/VRCLT/VRCLT/releases) からダウンロードできる Windows exe
 - ユーザー設定の保存先: `%LOCALAPPDATA%\vrclt\config.yaml`
 
 </details>
@@ -131,7 +131,7 @@ Google Gemini Live、Qwen3.8 LiveTranslate、OpenAI gpt-realtime-translate、Son
 
 ### 1. vrclt をダウンロード
 
-最新の Windows 実行ファイルは [VRCLT Releases](https://github.com/shgeum/VRCLT/releases) からダウンロードできます。
+最新の Windows 実行ファイルは [VRCLT Releases](https://github.com/VRCLT/VRCLT/releases) からダウンロードできます。
 
 次のような名前のファイルを使います。
 
@@ -485,11 +485,11 @@ VR オーバーレイを強制的に有効にするには `ui.mode: vr`、無効
 | ログ | `%LOCALAPPDATA%\vrclt\logs\vrclt.log` |
 
 別の設定ファイルを使うには、環境変数 `VRCLT_CONFIG` でパスを指定します。
-`config.yaml` のすべてのキーは Wiki の[設定リファレンス](https://github.com/shgeum/VRCLT/wiki/%E8%A8%AD%E5%AE%9A%E3%83%AA%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9)にまとめています。
+`config.yaml` のすべてのキーは Wiki の[設定リファレンス](https://github.com/VRCLT/VRCLT/wiki/%E8%A8%AD%E5%AE%9A%E3%83%AA%E3%83%95%E3%82%A1%E3%83%AC%E3%83%B3%E3%82%B9)にまとめています。
 
 ## 開発
 
-ソースからの実行、テスト、exe のビルド、リリース手順は [Wiki](https://github.com/shgeum/VRCLT/wiki/%E9%96%8B%E7%99%BA%E3%82%AC%E3%82%A4%E3%83%89) にあります。
+ソースからの実行、テスト、exe のビルド、リリース手順は [Wiki](https://github.com/VRCLT/VRCLT/wiki/%E9%96%8B%E7%99%BA%E3%82%AC%E3%82%A4%E3%83%89) にあります。
 変更はプルリクエストで `main` に入り、新しいバージョンがマージされるとリリースが自動で公開されます。
 
 ## 謝辞
