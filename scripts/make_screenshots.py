@@ -1,8 +1,9 @@
-"""Generate the README screenshots in docs/images/.
+"""Generate the README and wiki screenshots in docs/images/.
 
-Renders the real UI with sample data: the desktop Dashboard (Simple view) and
-the setup check for every README language, plus the VR panels (subtitle
-overlay, wrist menu, SteamVR Dashboard). Nothing appears on screen, no tray
+Renders the real UI with sample data: the desktop Dashboard (Simple view), the
+setup check and Settings with each engine selected (the wiki's API key guide)
+for every README language, plus the VR panels (subtitle overlay, wrist menu,
+SteamVR Dashboard). Nothing appears on screen, no tray
 icon is created, and no audio device, network, hotkey or VRChat setting is
 touched.
 
@@ -151,6 +152,48 @@ def desktop_shots(app, lang: str) -> None:
         win.close()
 
 
+# fake values: the wiki shows where each engine's key goes, never a real key
+KEY_SAMPLES = {
+    "gemini": {"api_key": "AIza-sample"},
+    "qwen": {"qwen.api_key": "sk-sample", "qwen.workspace_id": "ws-xxxxxxxx"},
+    "openai": {"openai.api_key": "sk-sample"},
+    "soniox": {"soniox.api_key": "sample"},
+}
+
+
+def settings_shots(app, lang: str) -> None:
+    """Settings -> Translation with each engine selected, for the wiki's API
+    key guide."""
+    from vrclt.qt_ui import MainWindow, _install_app_font
+    from vrclt.ui.update_banner import UpdateBanner
+    _install_app_font(app, lang)
+    ctl = Controller(lang)
+    with patch.object(UpdateBanner, "start_check", return_value=False):
+        win = MainWindow(ctl, Path(tempfile.gettempdir()) / "vrclt-shots.log")
+    win._timer.stop()
+    win._desktop_overlay._timer.stop()
+    win.setAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen, True)
+    try:
+        win._collect_setup = ready_env
+        win.resize(1000, 1200)   # the longest engine section fits unscrolled
+        win._tabs.setCurrentIndex(win._tab_settings_idx)
+        win.show()
+        form = win._settings_form
+        group = next(g for g, paths in form._groups
+                     if paths and form._group_keys[paths[0]] == "grp_api")
+        for provider, values in KEY_SAMPLES.items():
+            form._fields["provider"][0].setCurrentText(provider)
+            for path, value in values.items():
+                form._fields[path][0].setText(value)
+            settle(app, win)
+            bottom = group.mapTo(win, QtCore.QPoint(0, group.height())).y()
+            win.grab(QtCore.QRect(0, 0, win.width(), bottom + 16)).save(
+                str(OUT / f"settings-{provider}-{lang}.png"))
+    finally:
+        win._quitting = True
+        win.close()
+
+
 def vr_shots(lang: str) -> None:
     from vrclt.vr.dashboard_panel import DashboardPanel
     from vrclt.vr.subtitle_overlay import SubtitlePanel
@@ -181,6 +224,7 @@ def main() -> None:
     QtWidgets.QSystemTrayIcon.show = lambda self: None   # no tray icon flash
     for lang in SAMPLES:
         desktop_shots(app, lang)
+        settings_shots(app, lang)
         vr_shots(lang)
         print("rendered", lang)
     print("saved to", OUT)

@@ -78,9 +78,11 @@ Record local test results separately from live-provider and physical-device
 checks. Mock Qwen/Soniox sessions and rendered VR images do not establish live
 speaker-recognition accuracy or behavior on a headset.
 
-When the UI changed, regenerate the README screenshots (desktop Dashboard,
-setup check, and VR panels for every README language). The script renders off
-screen with sample data and touches no devices or settings:
+When the UI changed, regenerate the README and wiki screenshots (desktop
+Dashboard, setup check, Settings for each engine, and VR panels for every README
+language). The wiki embeds them from `main`, and its provider console captures
+live in the wiki repository's `images/`. The script renders off screen with
+sample data and touches no devices or settings:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\make_screenshots.py
