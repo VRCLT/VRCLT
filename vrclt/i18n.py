@@ -1476,8 +1476,6 @@ STRINGS = {
         "zh": "没有匹配的设置。请尝试其他关键词或清除搜索。"},
     "dash_language_options": {"ko": "언어 목록 편집", "en": "Language options",
                               "ja": "言語リストを編集", "zh": "编辑语言列表"},
-    "dash_more_options": {"ko": "자막·앱 옵션", "en": "Subtitle & app options",
-                          "ja": "字幕・アプリの設定", "zh": "字幕与应用选项"},
     "dash_live_preview": {"ko": "실시간 자막", "en": "Live subtitles",
                           "ja": "リアルタイム字幕", "zh": "实时字幕"},
     "speaker_label": {"ko": "화자 {speaker}", "en": "Speaker {speaker}",

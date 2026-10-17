@@ -7,6 +7,20 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 Release artifacts are attached to [GitHub Releases](https://github.com/shgeum/VRCLT/releases)
 as `vrclt-v<version>-windows-x64.exe` plus a `.sha256` checksum.
 
+## [Unreleased]
+
+### Changed
+
+- The Dashboard shows the PC subtitle size, **Move subtitles**, **Reset
+  subtitle pos**, and the UI language in both the Simple and Full views, right
+  below the language cards. They used to be folded away at the bottom of the
+  Full view only. The window close action stays in the Full view.
+
+### Fixed
+
+- At a width of 780 px the Full view no longer scrolls sideways: the audio
+  device columns stack when they do not fit.
+
 ## [1.0.0] - 2026-10-17
 
 ### Added

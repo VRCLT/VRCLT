@@ -613,9 +613,13 @@ class QtTests(unittest.TestCase):
             self.app.processEvents()
             full_only = (win._text_only, win._out_language_options,
                          win._in_language_options, win._audio_output_column,
-                         win._dashboard_options, win._audio_group,
+                         win._close_action, win._audio_group,
                          win._engine_button)
             self.assertTrue(all(widget.isHidden() for widget in full_only))
+            # subtitle size/position and the UI language: both views, unfolded
+            both_views = (win._overlay_font_size, win._btn_overlay_move,
+                          win._btn_overlay_reset, win._ui_lang)
+            self.assertTrue(all(not widget.isHidden() for widget in both_views))
             self.assertFalse(win._easy_mic_meter.isHidden())
             self.assertFalse(win._easy_mic_wrap.isHidden())          # mic + Find
             self.assertFalse(win._btn_easy_find_mic.isHidden())
@@ -627,6 +631,7 @@ class QtTests(unittest.TestCase):
             win._view_buttons[False].click()
             self.assertFalse(ctl.cfg["ui"]["easy_mode"])
             self.assertTrue(all(not widget.isHidden() for widget in full_only))
+            self.assertTrue(all(not widget.isHidden() for widget in both_views))
             self.assertTrue(win._easy_mic_meter.isHidden())
             self.assertTrue(win._easy_mic_wrap.isHidden())
             self.assertFalse(win._btn_find_mic.isHidden())           # full view's own
