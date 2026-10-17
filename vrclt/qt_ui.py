@@ -94,11 +94,16 @@ def _apply_app_font(app: QtWidgets.QApplication | None, lang: str = "") -> None:
     app.setFont(font)
 
 
+ENGINE_NAMES = {"gemini": "Gemini", "qwen": "Qwen", "openai": "OpenAI",
+                "soniox": "Soniox"}
+
+
 class _UiSignals(QtCore.QObject):
     refresh = QtCore.Signal()
     toast = QtCore.Signal(str)
     save_done = QtCore.Signal(bool)
     mode_done = QtCore.Signal(bool)
+    engine_done = QtCore.Signal(bool)
     device_done = QtCore.Signal(bool)
     speaker_context_done = QtCore.Signal(bool)
     reset_done = QtCore.Signal(bool)
@@ -158,6 +163,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._signals.toast.connect(self._show_toast)
         self._signals.save_done.connect(self._save_done)
         self._signals.mode_done.connect(self._mode_done)
+        self._signals.engine_done.connect(self._engine_done)
         self._signals.device_done.connect(self._device_done)
         self._signals.speaker_context_done.connect(self._speaker_context_done)
         self._signals.reset_done.connect(self._reset_done)
@@ -434,6 +440,8 @@ class MainWindow(QtWidgets.QMainWindow):
         for widget in (self._out_language_options,
                        self._in_language_options, self._audio_output_column,
                        self._close_action_label, self._close_action,
+                       self._out_engine_label, self._out_engine,
+                       self._in_engine_label, self._in_engine,
                        self._audio_group, self._engine_button):
             if widget.isHidden() != easy:
                 widget.setVisible(not easy)
@@ -547,6 +555,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self._overlay_font_size.setValue(
             int(self._controller.cfg.get("overlay", {}).get("font_size", 27)))
         self._overlay_font_size.valueChanged.connect(self._set_overlay_font_size)
+        # Full view: the translation and the subtitle engine can differ
+        self._out_engine = NoWheelComboBox()
+        self._in_engine = NoWheelComboBox()
+        self._fill_engine_pickers()
+        self._on_retranslate(self._fill_engine_pickers)
+        self._out_engine.activated.connect(lambda _index: self._apply_engines())
+        self._in_engine.activated.connect(lambda _index: self._apply_engines())
         self._close_action = NoWheelComboBox()
         self._on_retranslate(self._sync_close_action)
         self._close_action.currentIndexChanged.connect(self._pick_close_action)
@@ -637,6 +652,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._tip(self._overlay_font_size, "tip_pc_sub_size")
         self._tip(self._btn_overlay_move, "tip_overlay_move")
         self._tip(self._close_action, "tip_close_action")
+        self._tip(self._out_engine, "tip_out_engine")
+        self._tip(self._in_engine, "f.inbound.provider.tip")
 
         for combo in (self._out_lang, self._sub_lang, self._src_lang,
                       self._in_src_lang, self._out_lang_add, self._sub_lang_add,
@@ -689,7 +706,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self._tip(self._easy_mic_meter, "tip_mic_level")
         out_lay.addWidget(self._easy_mic_label, 5, 0)
         out_lay.addWidget(self._easy_mic_meter, 5, 1)
-        out_lay.setRowStretch(6, 1)   # spare height below, so both cards align
+        self._out_engine_label = self._label("label_out_engine")
+        out_lay.addWidget(self._out_engine_label, 6, 0)
+        out_lay.addWidget(self._out_engine, 6, 1)
+        out_lay.setRowStretch(7, 1)   # spare height below, so both cards align
         out_lay.setColumnStretch(1, 1)
 
         grp_in = self._group("dash_grp_in")
@@ -705,6 +725,9 @@ class MainWindow(QtWidgets.QMainWindow):
         in_lay.addWidget(self._in_src_lang, 2, 1)
         self._in_language_options = self._disclosure("dash_language_options", c["sub_add"])
         in_lay.addWidget(self._in_language_options, 3, 0, 1, 2)
+        self._in_engine_label = self._label("label_in_engine")
+        in_lay.addWidget(self._in_engine_label, 4, 0)
+        in_lay.addWidget(self._in_engine, 4, 1)
         self._source_language_labels = (c["src_label"], c["in_src_label"])
         in_lay.setColumnStretch(1, 1)
         in_lay.setRowStretch(6, 1)
@@ -1186,21 +1209,22 @@ class MainWindow(QtWidgets.QMainWindow):
                 fields = ", ".join(self._tr(err.label_key) for err in e.errors)
                 raise ValueError(
                     self._tr("msg_invalid_field").format(fields=fields))
-            prov = config_mod.provider(cfg)
-            key_path = "api_key" if prov == "gemini" else f"{prov}.api_key"
-            key_error = config_mod.api_key_validation_error(
-                _get_path(cfg, key_path, ""), provider_label={
-                    "gemini": "Gemini", "qwen": "DashScope",
-                    "openai": "OpenAI", "soniox": "Soniox",
-                }[prov])
-            if key_error:
-                self._settings_form.focus_field(key_path)
-                self._settings_scroll.ensureWidgetVisible(
-                    self._settings_form._fields[key_path][0])
-                error_key = "err_api_key_url" if prov == "gemini" else f"err_{prov}_api_key_url"
-                raise ValueError(self._tr(error_key))
+            # every engine the runtime will start needs a valid key
+            for prov in config_mod.providers_in_use(cfg):
+                key_path = "api_key" if prov == "gemini" else f"{prov}.api_key"
+                key_error = config_mod.api_key_validation_error(
+                    _get_path(cfg, key_path, ""), provider_label={
+                        "gemini": "Gemini", "qwen": "DashScope",
+                        "openai": "OpenAI", "soniox": "Soniox",
+                    }[prov])
+                if key_error:
+                    self._settings_form.focus_field(key_path)
+                    self._settings_scroll.ensureWidgetVisible(
+                        self._settings_form._fields[key_path][0])
+                    error_key = "err_api_key_url" if prov == "gemini" else f"err_{prov}_api_key_url"
+                    raise ValueError(self._tr(error_key))
             qw = cfg.get("qwen", {})
-            if config_mod.provider(cfg) == "qwen" \
+            if "qwen" in config_mod.providers_in_use(cfg) \
                     and str(qw.get("endpoint", "intl") or "intl").strip() != "beijing" \
                     and not str(qw.get("workspace_id", "") or "").strip() \
                     and not str(qw.get("base_url", "") or "").strip():
@@ -1335,16 +1359,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self._sync_setup_panel(force=True)
 
     def _sync_source_pickers(self) -> None:
-        """Spoken-language pickers: only where the engine uses them, and in
-        the easy view only where it requires them (Qwen 3.5)."""
+        """Spoken-language pickers: only where the direction's engine uses
+        them, and in the easy view only where it requires them (Qwen 3.5)."""
         cfg = self._controller.cfg
         st = self._controller.state
-        shown = config_mod.uses_source_language(cfg) and (
-            not self._easy_mode() or config_mod.provider(cfg) == "qwen")
-        for label in self._source_language_labels:
+        out_label, in_label = self._source_language_labels
+        for direction, label, combo, code in (
+                ("outbound", out_label, self._src_lang, st.source_language),
+                ("inbound", in_label, self._in_src_lang, st.inbound_source_language)):
+            shown = config_mod.uses_source_language(cfg, direction) and (
+                not self._easy_mode() or config_mod.provider_for(cfg, direction) == "qwen")
             label.setVisible(shown)
-        for combo, code in ((self._src_lang, st.source_language),
-                            (self._in_src_lang, st.inbound_source_language)):
             combo.setVisible(shown)
             if combo.isEnabled() != shown:
                 combo.setEnabled(shown)
@@ -1383,7 +1408,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._resume_auto_setup(items)
         app = env.app_name or self._tr("setup_app_generic")
         self._setup_panel.sync(
-            items, provider=config_mod.provider(cfg),
+            items, provider=env.missing_key_provider or config_mod.provider(cfg),
             endpoint=str(cfg.get("qwen", {}).get("endpoint", "intl") or "intl").strip(),
             app=app)
         self._set_default_placeholder(self._mic_device, env.default_input)
@@ -1769,6 +1794,8 @@ class MainWindow(QtWidgets.QMainWindow):
             btn.setEnabled(enabled)
         self._text_only.setEnabled(enabled)
         self._keep_speaker_context.setEnabled(enabled)
+        self._out_engine.setEnabled(enabled)
+        self._in_engine.setEnabled(enabled)
         if hasattr(self, "_mic_device"):
             self._mic_device.setEnabled(enabled)
         if hasattr(self, "_voice_out_device"):
@@ -1825,6 +1852,88 @@ class MainWindow(QtWidgets.QMainWindow):
         if thread is not None:
             self._mode_thread = thread
 
+    def _fill_engine_pickers(self) -> None:
+        for combo, follows in ((self._out_engine, False), (self._in_engine, True)):
+            blocked = combo.blockSignals(True)
+            try:
+                combo.clear()
+                if follows:
+                    combo.addItem(self._tr("engine_same_as_translation"), "")
+                for prov in config_mod.PROVIDERS:
+                    combo.addItem(ENGINE_NAMES[prov], prov)
+            finally:
+                combo.blockSignals(blocked)
+        self._sync_engine_pickers()
+
+    def _sync_engine_pickers(self) -> None:
+        if not hasattr(self, "_in_engine"):
+            return
+        cfg = self._controller.cfg
+        chosen = str(cfg.get("inbound", {}).get("provider") or "").strip().lower()
+        for combo, value in ((self._out_engine, config_mod.provider(cfg)),
+                             (self._in_engine, chosen if chosen in config_mod.PROVIDERS else "")):
+            index = combo.findData(value)
+            if index >= 0 and index != combo.currentIndex() and not combo.view().isVisible():
+                blocked = combo.blockSignals(True)
+                try:
+                    combo.setCurrentIndex(index)
+                finally:
+                    combo.blockSignals(blocked)
+
+    def _apply_engines(self) -> None:
+        """Dashboard engine pickers (Full view): save and restart, but only
+        when every engine the runtime would start has a usable key."""
+        if self._app_mode_applying:
+            self._sync_engine_pickers()
+            return
+        out_prov = self._out_engine.currentData() or "gemini"
+        in_prov = self._in_engine.currentData() or ""
+        current = self._controller.raw_cfg
+        if out_prov == config_mod.provider(current) and in_prov == str(
+                current.get("inbound", {}).get("provider") or "").strip().lower():
+            return
+
+        def build():
+            cfg = copy.deepcopy(self._controller.raw_cfg)
+            cfg["provider"] = out_prov
+            cfg.setdefault("inbound", {})["provider"] = in_prov
+            for prov in config_mod.providers_in_use(cfg):
+                key = config_mod.api_key_for(cfg, prov)
+                if not key:
+                    raise ValueError(self._tr("msg_engine_key_missing").format(
+                        engine=ENGINE_NAMES[prov]))
+                error = config_mod.api_key_validation_error(
+                    key, provider_label="DashScope" if prov == "qwen" else ENGINE_NAMES[prov])
+                if error:
+                    raise ValueError(error)
+            qw = cfg.get("qwen", {})
+            if "qwen" in config_mod.providers_in_use(cfg)                     and str(qw.get("endpoint", "intl") or "intl").strip() != "beijing"                     and not str(qw.get("workspace_id", "") or "").strip()                     and not str(qw.get("base_url", "") or "").strip():
+                raise ValueError(self._tr("err_qwen_workspace_required"))
+            config_mod.save(cfg)
+            return cfg
+
+        def busy():
+            self._app_mode_applying = True
+            self._set_dashboard_apply_enabled(False)
+
+        thread = self._apply_config_async(
+            build, fail_key="msg_engine_failed", busy_key="msg_engine_applying",
+            note=self._dashboard_note, done_signal=self._signals.engine_done,
+            thread_name="vrclt-engine-restart", on_busy=busy,
+            on_build_error=self._sync_engine_pickers)
+        if thread is not None:
+            self._mode_thread = thread
+
+    def _engine_done(self, ok: bool) -> None:
+        self._app_mode_applying = False
+        self._set_dashboard_apply_enabled(True)
+        self._sync_engine_pickers()
+        self._sync_text_only()
+        self._dashboard_note.setText(
+            self._tr("msg_engine_applied") if ok else self._tr("msg_saved_start_failed"))
+        self._populate_settings()
+        self._sync_setup_panel(force=True)
+
     def _sync_text_only(self) -> None:
         blocked = self._text_only.blockSignals(True)
         try:
@@ -1848,7 +1957,7 @@ class MainWindow(QtWidgets.QMainWindow):
             paths = ("soniox.keep_speaker_context", "soniox.speaker_context_idle_sec")
             self._settings_form.sync_from_config(tuple(
                 path for path, old, new in zip(paths, previous, signature) if old != new))
-        soniox_full = (config_mod.provider(self._controller.cfg) == "soniox"
+        soniox_full = ("soniox" in config_mod.providers_in_use(self._controller.cfg)
                        and not self._easy_mode())
         self._keep_speaker_context.setVisible(soniox_full)
         self._soniox_idle_hint.setVisible(soniox_full)
@@ -1878,7 +1987,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 or self._device_applying or self._devices_reloading
                 or (self._test_thread is not None and self._test_thread.is_alive())
                 or not self._btn_save.isEnabled()
-                or config_mod.provider(self._controller.cfg) != "soniox"):
+                or "soniox" not in config_mod.providers_in_use(self._controller.cfg)):
             self._sync_speaker_context()
             return
         if enabled == bool(_get_path(
@@ -2082,13 +2191,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self._error_text.setVisible(bool(detail))
 
         cfg = self._controller.cfg
-        prov = config_mod.provider(cfg)
-        self._speaker_badge.setVisible(config_mod.has_speaker_ids(cfg))
+        out_prov = config_mod.provider(cfg)
+        in_prov = config_mod.inbound_provider(cfg)
+        # the live preview shows the subtitles: the subtitle engine's labels
+        self._speaker_badge.setVisible(config_mod.has_speaker_ids(cfg, "inbound"))
         self._sync_speaker_context()
-        self._engine_button.setText({
-            "gemini": "Gemini Live", "qwen": "Qwen Live",
-            "openai": "OpenAI", "soniox": "Soniox",
-        }.get(prov, prov))
+        names = {"gemini": "Gemini Live", "qwen": "Qwen Live",
+                 "openai": "OpenAI", "soniox": "Soniox"}
+        self._engine_button.setText(
+            names.get(out_prov, out_prov) if in_prov == out_prov
+            else f"{names.get(out_prov, out_prov)} / {names.get(in_prov, in_prov)}")
+        self._sync_engine_pickers()
         self._sync_setup_panel()
 
         self._btn_trans.setText(i18n.tr(st.ui_lang, "btn_trans_on" if st.translation_on else "btn_trans_off"))

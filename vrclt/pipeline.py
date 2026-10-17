@@ -280,7 +280,7 @@ class _TranslationPipeline:
         au = cfg["audio"]
         self.state = state
         self._audio_sinks = tuple(audio_sinks)
-        speakers = config_mod.has_speaker_ids(cfg)
+        speakers = config_mod.has_speaker_ids(cfg, name)
         segmenter_class = SpeakerSegmenter if speakers else Segmenter
         self.segmenter = segmenter_class(finalize_silence_sec, self._on_final,
                                    self._on_partial,
@@ -303,7 +303,8 @@ class _TranslationPipeline:
             on_turn_complete=self.segmenter.turn_complete,
             on_interrupted=self._on_interrupted,
         )
-        prov = config_mod.provider(cfg)
+        # each direction may run its own engine (inbound.provider)
+        prov = config_mod.provider_for(cfg, name)
         if prov == "soniox":
             sx = cfg.get("soniox", {})
             # Preserve session-local speaker IDs through short pauses, but

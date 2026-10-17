@@ -335,6 +335,40 @@ STRINGS = {
     # ---- settings field labels ----
     "f.provider": {"ko": "사용할 엔진", "en": "Engine",
                    "ja": "使用するエンジン", "zh": "使用的引擎"},
+    "f.inbound.provider": {"ko": "자막 엔진", "en": "Subtitle engine",
+                           "ja": "字幕エンジン", "zh": "字幕引擎"},
+    "f.inbound.provider.tip": {
+        "ko": "상대 말 자막에 쓸 엔진입니다. '번역 엔진과 같음'이면 위의 엔진을 함께 씁니다. "
+              "다른 엔진을 고르면 두 엔진의 API 키가 모두 필요하고, 요금도 각각 나갑니다.",
+        "en": "Engine for others' speech (subtitles). 'Same as translation' uses the engine "
+              "above. A different engine needs its own API key and is billed separately.",
+        "ja": "相手の発話（字幕）に使うエンジンです。「翻訳エンジンと同じ」なら上のエンジンを使います。"
+              "別のエンジンを選ぶと両方の API キーが必要になり、料金もそれぞれかかります。",
+        "zh": "用于对方语音（字幕）的引擎。“与翻译引擎相同”时使用上方的引擎。"
+              "选择其他引擎时需要两个引擎各自的 API 密钥，并分别计费。"},
+    "engine_same_as_translation": {"ko": "번역 엔진과 같음", "en": "Same as translation",
+                                   "ja": "翻訳エンジンと同じ", "zh": "与翻译引擎相同"},
+    "label_out_engine": {"ko": "번역 엔진", "en": "Translation engine",
+                         "ja": "翻訳エンジン", "zh": "翻译引擎"},
+    "label_in_engine": {"ko": "자막 엔진", "en": "Subtitle engine",
+                        "ja": "字幕エンジン", "zh": "字幕引擎"},
+    "tip_out_engine": {
+        "ko": "내 말을 번역하고 번역 음성을 만드는 엔진입니다. API 키는 설정 탭에서 입력합니다.",
+        "en": "Engine that translates your speech and makes the translated voice. "
+              "Enter its API key in Settings.",
+        "ja": "自分の発話を翻訳し、翻訳音声を作るエンジンです。API キーは設定タブで入力します。",
+        "zh": "翻译你的语音并生成翻译语音的引擎。请在设置中填写其 API 密钥。"},
+    "msg_engine_applying": {"ko": "엔진을 바꾸는 중...", "en": "Switching engine...",
+                            "ja": "エンジンを切り替えています...", "zh": "正在切换引擎..."},
+    "msg_engine_applied": {"ko": "엔진 변경됨", "en": "Engine changed",
+                           "ja": "エンジンを変更しました", "zh": "引擎已更改"},
+    "msg_engine_failed": {"ko": "엔진 변경 실패", "en": "Engine change failed",
+                          "ja": "エンジンの変更に失敗しました", "zh": "引擎更改失败"},
+    "msg_engine_key_missing": {
+        "ko": "{engine} API 키가 없습니다. 설정 탭에서 키를 먼저 입력하세요.",
+        "en": "{engine} has no API key yet. Enter it in Settings first.",
+        "ja": "{engine} の API キーがありません。先に設定タブでキーを入力してください。",
+        "zh": "{engine} 还没有 API 密钥。请先在设置中填写密钥。"},
     "f.soniox.api_key": {"ko": "Soniox API 키", "en": "Soniox API key",
                          "ja": "Soniox APIキー", "zh": "Soniox API 密钥"},
     "f.soniox.model": {"ko": "Soniox 음성 인식 모델", "en": "Soniox speech recognition model",
