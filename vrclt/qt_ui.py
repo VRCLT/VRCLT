@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import logging
+import os
 import threading
 import time
 from pathlib import Path
@@ -203,7 +204,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self._sync_hotkeys()
         self._refresh()
         self._update_banner.result_ready.connect(self._on_update_result)
-        self._update_banner.start_check(__version__)
+        # VRCLT_NO_UPDATE_CHECK: tests and offline use skip the automatic check
+        if not os.environ.get("VRCLT_NO_UPDATE_CHECK"):
+            self._update_banner.start_check(__version__)
         QtCore.QTimer.singleShot(1200, self._maybe_prompt_config_reset_after_update)
 
     # ---------------- construction ----------------

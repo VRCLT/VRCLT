@@ -8,7 +8,7 @@ os.environ["QT_QPA_PLATFORM"] = "offscreen"
 import pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
-from PySide6 import QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 from vrclt import i18n
 from vrclt.ui.log_view import INITIAL_TAIL_BYTES, MAX_LINE_BYTES, MAX_LINES, LogPanel
@@ -134,8 +134,11 @@ def main():
     fresh._poll()
     assert fresh._text.toPlainText() == "[INFO] appeared"
 
-    # top-level widgets go before the QApplication, or exit can crash
-    del p, fresh
+    # destroy the widgets while the QApplication exists: left to interpreter
+    # exit, the teardown order is arbitrary and can crash after the test passed
+    for widget in (p, fresh):
+        widget.deleteLater()
+    QtCore.QCoreApplication.sendPostedEvents(None, QtCore.QEvent.Type.DeferredDelete)
     print("smoke_logpanel: OK")
 
 
