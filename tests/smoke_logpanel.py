@@ -134,6 +134,8 @@ def main():
     fresh._poll()
     assert fresh._text.toPlainText() == "[INFO] appeared"
 
+    # top-level widgets go before the QApplication, or exit can crash
+    del p, fresh
     print("smoke_logpanel: OK")
 
 

@@ -62,27 +62,17 @@ Run the lightweight checks first:
 .\.venv\Scripts\python.exe -m vrclt --help
 ```
 
-For v1.0.0, also run the regression scripts for the setup check, Qwen, Soniox, speech activity,
-speaker displays/context controls, VR pages and interaction, settings navigation,
-logs, reconnect waits, audio passthrough, and startup:
+Then run every regression script in `tests/` (setup check, Qwen, Soniox, speech
+activity, speaker displays/context controls, VR pages and interaction, settings
+navigation, logs, reconnect waits, audio passthrough, startup, and the rest).
+CI runs the same command on every pull request:
 
 ```powershell
-$releaseChecks = @(
-  'smoke_setup_check.py', 'smoke_qwen_session.py', 'smoke_soniox_session.py',
-  'smoke_speech_activity.py',
-  'smoke_subtitle_speakers.py', 'smoke_speaker_context.py',
-  'smoke_speaker_ui.py', 'smoke_vr_speakers.py',
-  'smoke_vr_render.py', 'test_vr_button_table.py',
-  'smoke_wrist_navigation.py', 'smoke_vr_navigation.py',
-  'smoke_settings_navigation.py', 'smoke_logpanel.py',
-  'smoke_session_wait.py', 'smoke_audio_passthrough.py',
-  'smoke_pipeline_startup.py'
-)
-foreach ($releaseCheck in $releaseChecks) {
-  & .\.venv\Scripts\python.exe (Join-Path 'tests' $releaseCheck)
-  if ($LASTEXITCODE -ne 0) { throw "Failed: $releaseCheck" }
-}
+.\.venv\Scripts\python.exe scripts\run_tests.py
 ```
+
+Pass script names to run only some of them, for example
+`scripts\run_tests.py smoke_setup_check smoke_qwen_session`.
 
 Record local test results separately from live-provider and physical-device
 checks. Mock Qwen/Soniox sessions and rendered VR images do not establish live
@@ -303,44 +293,61 @@ VR page checks:
 If these live checks or headset checks have not been performed, leave that limit
 explicit in the release notes.
 
-## 7. Commit And Tag
+## 7. Branch And Pull Request
 
-After validation, commit only source changes:
+Work happens on a branch; `main` only receives merged pull requests. Name the
+branch after the change (`feature/…`, `fix/…`, `docs/…`):
+
+```powershell
+git switch main
+git pull
+git switch -c feature/<name>
+```
+
+For a release, bump `__version__` in `vrclt/__init__.py`, add the
+`## [<version>]` section to `CHANGELOG.md`, and write
+`docs/releases/v<version>.md`; its first line (`# VRCLT 1.1`) becomes the
+release title. Commit only source changes, never the paths listed in section 1:
 
 ```powershell
 git status
-git add README.md README.ko.md README.en.md README.ja.md README.zh.md CHANGELOG.md docs/RELEASING.md docs/releases/v1.0.0.md docs/images config.example.yaml requirements.txt vrclt.spec scripts/package_release.ps1 scripts/make_screenshots.py vrclt tests
-git status
-git commit -m "chore: prepare v1.0.0 release"
+git add <changed source files>
+git commit
+git push -u origin feature/<name>
+gh pr create --base main
 ```
 
-Create and push the tag:
+The **Build** workflow (`.github/workflows/build.yml`) runs on every pull
+request: it installs `requirements.txt` with PyInstaller on a Windows runner,
+runs `scripts\run_tests.py`, and builds the release exe. Download the exe from
+the run's **Artifacts** for the checks in section 5. When the version has no
+`v<version>` tag yet, the run fails without the release notes or the changelog
+section, and its summary says that merging releases that version.
+
+## 8. Merge And Publish
+
+Merge the pull request once the **Build** check passes. On `main`, the
+workflow tests again and, when `vrclt/__init__.py` carries a version without a
+`v<version>` tag, builds the exe and publishes a GitHub Release: it creates the
+tag on the merge commit, attaches
+`vrclt-v<version>-windows-x64.exe` and its `.sha256`, and uses
+`docs/releases/v<version>.md` as the notes. Merges that keep the version only
+run the tests.
+
+If a release run fails, fix the cause on a new branch, or rerun the failed
+jobs from the Actions tab. Do not create the tag by hand: an existing tag makes
+the workflow skip that version.
+
+Manual fallback when Actions is unavailable, from a validated `main`:
 
 ```powershell
-git tag v1.0.0
-git push origin main
-git push origin v1.0.0
-```
-
-Use a new version number if the tag already exists.
-
-## 8. Publish
-
-Upload these files to a GitHub Release:
-
-```text
-release\vrclt-v1.0.0-windows-x64.exe
-release\vrclt-v1.0.0-windows-x64.exe.sha256
-```
-
-With GitHub CLI:
-
-```powershell
-gh release create v1.0.0 `
-  .\release\vrclt-v1.0.0-windows-x64.exe `
-  .\release\vrclt-v1.0.0-windows-x64.exe.sha256 `
-  --title "vrclt v1.0.0" `
-  --notes-file .\docs\releases\v1.0.0.md
+git tag v<version>
+git push origin v<version>
+gh release create v<version> `
+  .\release\vrclt-v<version>-windows-x64.exe `
+  .\release\vrclt-v<version>-windows-x64.exe.sha256 `
+  --title "VRCLT <version>" `
+  --notes-file .\docs\releases\v<version>.md
 ```
 
 ## 9. Release Notes Checklist
