@@ -266,6 +266,11 @@ class QwenLiveTranslateSession:
         self._speaker_of: dict[str, str] = {}   # source item -> speaker_id
         self._source_of: dict[str, str] = {}    # translation item -> source item
         self._src_open: dict[str, float] = {}   # source item -> last delta time
+        # diagnostics for clipped translations: responses the server ended
+        # early, and translated audio of two items arriving interleaved
+        self._audio_open: dict[str, bool] = {}  # item streaming audio -> overlap logged
+        self._st_cut = 0
+        self._st_overlap = 0
         self._raw_log_left = 0
         # diagnostics (logged every 15s by the watchdog while connected)
         self._st_sent = 0
@@ -402,6 +407,7 @@ class QwenLiveTranslateSession:
             self._speaker_of.clear()
             self._source_of.clear()
             self._src_open.clear()
+            self._audio_open.clear()
             self._raw_log_left = _RAW_EVENT_LOG_COUNT
             await ws.send(json.dumps({
                 "type": "session.update",
@@ -480,6 +486,7 @@ class QwenLiveTranslateSession:
                 self._emit_dst(self._dst_adapter.feed(_event_text(event)))
                 self._dst_adapter.reset()
             elif etype == "response.audio.delta":
+                self._track_audio_item(str(event.get("item_id") or ""))
                 if self._on_audio:
                     for key in ("delta", "audio", "data"):
                         value = event.get(key)
@@ -496,7 +503,13 @@ class QwenLiveTranslateSession:
                                              "text this turn", self.name,
                                              time.time() - self._turn_text_at)
                             break
+            elif etype == "response.audio.done":
+                self._audio_open.pop(str(event.get("item_id") or ""), None)
+            elif etype == "conversation.item.input_audio_transcription.failed":
+                log.warning("[%s] source transcription failed: %.300s", self.name,
+                            json.dumps(event.get("error") or {}, ensure_ascii=False))
             elif etype == "response.done":
+                self._log_unfinished_response(event.get("response") or {})
                 self._src_adapter.reset()
                 self._dst_adapter.reset()
                 self._turn_text_at = 0.0
@@ -555,6 +568,30 @@ class QwenLiveTranslateSession:
         else:
             return False
         return True
+
+    def _track_audio_item(self, item_id: str) -> None:
+        if not item_id or item_id in self._audio_open:
+            return
+        others = [i for i in self._audio_open if i != item_id]
+        self._audio_open[item_id] = bool(others)
+        if others:
+            self._st_overlap += 1
+            log.warning("[%s] translated audio of %s started while %s was still "
+                        "streaming - the two can play interleaved",
+                        self.name, item_id, ", ".join(others))
+        while len(self._audio_open) > _ITEM_HISTORY:
+            self._audio_open.pop(next(iter(self._audio_open)))
+
+    def _log_unfinished_response(self, response: dict) -> None:
+        for output in response.get("output") or []:
+            if isinstance(output, dict):   # the response ended: so did its audio
+                self._audio_open.pop(str(output.get("id") or ""), None)
+        status = str(response.get("status") or "")
+        if status and status != "completed":
+            self._st_cut += 1
+            log.warning("[%s] response ended %s: %.300s", self.name, status,
+                        json.dumps(response.get("status_details") or {},
+                                   ensure_ascii=False))
 
     def _translation_speaker(self, item_id: str):
         return self._speaker_of.get(self._source_of.get(item_id, ""))
@@ -665,11 +702,13 @@ class QwenLiveTranslateSession:
                 last_stats = time.time()
                 qlen = len(getattr(self._source, "buffer", ()))
                 log.info("[%s] stats(15s): sent=%d msg/%.0fKB recv=%d fr "
-                         "src+%d dst+%d queue=%d",
+                         "src+%d dst+%d queue=%d cut=%d overlap=%d",
                          self.name, self._st_sent, self._st_sent_bytes / 1024,
-                         self._st_recv, self._st_src, self._st_dst, qlen)
+                         self._st_recv, self._st_src, self._st_dst, qlen,
+                         self._st_cut, self._st_overlap)
                 self._st_sent = self._st_sent_bytes = 0
                 self._st_recv = self._st_src = self._st_dst = 0
+                self._st_cut = self._st_overlap = 0
             if stop.is_set() or self._restart or not self._enabled():
                 await self._finish_and_close(ws)
                 return

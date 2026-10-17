@@ -1,12 +1,106 @@
-# vrclt
+<div align="center">
 
-语言: [English](README.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [中文](README.zh.md)
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/logo-dark.svg">
+    <img src="docs/brand/logo-light.svg" width="340" height="100" alt="VRCLT">
+  </picture>
+</h1>
 
-`vrclt` 是面向 VRChat 和 Discord 的 Windows 实时翻译工具。它使用所选
-翻译引擎处理你的麦克风音频，通过 VB-Audio Virtual Cable 将翻译语音送入目标
-应用的麦克风输入，并把其他人的语音显示为翻译字幕。
+<p><a href="https://vrclt.github.io/zh/">官方网站</a></p>
 
-## 主要功能
+### 说你的语言，让对方听到他的语言。
+
+适用于 Windows 的 **VRChat** / **Discord** 实时语音翻译与实时字幕。
+
+[![Latest release](https://img.shields.io/github/v/release/shgeum/VRCLT?style=flat-square&label=release&color=2ea44f)](https://github.com/shgeum/VRCLT/releases/latest) [![Downloads](https://img.shields.io/github/downloads/shgeum/VRCLT/total?style=flat-square&color=1f6feb)](https://github.com/shgeum/VRCLT/releases) [![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](#要求) [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+
+[English](README.md) · [한국어](README.ko.md) · [日本語](README.ja.md) · **中文**
+
+<br>
+
+<img src="docs/images/dashboard-zh.png" width="780" alt="简洁视图下的 VRCLT 仪表板">
+
+<br><br>
+
+[**⬇ 下载 VRCLT**](https://github.com/shgeum/VRCLT/releases/latest) &nbsp;·&nbsp; [快速开始](#快速开始) &nbsp;·&nbsp; [详细文档](#安装)
+
+</div>
+
+## 为什么选择 VRCLT
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🎙️ 你的声音，实时翻译
+
+像平时一样说话即可。VRCLT 实时翻译，并把自然的翻译语音作为麦克风送入 VRChat 或 Discord，对方直接用自己的语言听到你。
+
+</td>
+<td width="50%" valign="top">
+
+### 💬 实时字幕
+
+其他人的话会以字幕显示在 SteamVR、桌面叠加层和应用中；使用可区分说话人的引擎时还会显示说话人编号。
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### ⚡ 一键设置
+
+设置检查会告诉你缺少什么。**自动设置** 会完成音频路由、麦克风选择以及 VRChat 的麦克风和 OSC 设置；**自动安装 VB-Cable** 会替你运行官方安装程序。
+
+</td>
+<td width="50%" valign="top">
+
+### 🥽 为 VR 打造
+
+通过手腕菜单和 SteamVR 仪表板页面在 VR 中直接操作，字幕浮在眼前，还可以随 SteamVR 自动启动。
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 💭 VRChat 聊天框
+
+通过 OSC 把原文和译文发送到聊天框。仅文本模式保留你自己的声音，只添加翻译文字。
+
+</td>
+<td width="50%" valign="top">
+
+### 🌐 四种引擎，70+ 种语言
+
+Google Gemini Live、Qwen3.8 LiveTranslate、OpenAI gpt-realtime-translate 和 Soniox，可按价格、地区、语音和说话人区分来选择。
+
+</td>
+</tr>
+</table>
+
+## 快速开始
+
+1. 从 [Releases](https://github.com/shgeum/VRCLT/releases/latest) **下载并运行** `vrclt-v<version>-windows-x64.exe`，无需安装。
+2. **填写 API 密钥。** 默认引擎为 Gemini：在 [Google AI Studio](https://aistudio.google.com/apikey) 创建密钥，粘贴到 **设置 → Gemini API 密钥**。其他引擎请参阅[翻译引擎](#翻译引擎)。
+3. **其余交给设置检查。** 如果没有 VB-Cable，点击 **自动安装 VB-Cable**；关闭 VRChat 后点击 **自动设置**。
+4. **启动 VRChat 开始说话。** 在仪表板或手腕菜单中开关翻译和字幕。
+
+<p align="center"><img src="docs/images/setup-check-zh.png" width="760" alt="带自动设置按钮的设置检查"></p>
+
+## 在 VR 中
+
+<p align="center">
+<img src="docs/images/vr-subtitles-zh.png" width="620" alt="SteamVR 中的字幕"><br><br>
+<img src="docs/images/vr-wrist-zh.png" width="300" alt="手腕菜单">&nbsp;&nbsp;
+<img src="docs/images/vr-dashboard-zh.png" width="300" alt="SteamVR 仪表板页面">
+</p>
+
+字幕浮在眼前，手腕菜单可切换翻译、字幕和语言，SteamVR 仪表板页面可调整语言、音频设备和面板布局。
+
+<details>
+<summary><b>全部功能</b></summary>
 
 - 带有仪表板、设置、日志/关于标签页的 Windows 原生 UI
 - 托盘菜单支持打开应用、打开设置、切换翻译/字幕和退出
@@ -22,6 +116,8 @@
 - GitHub Releases 更新提醒，以及保留 API 密钥、已保存语言列表、UI 语言、窗口关闭行为和已选择音频设备的安全配置重置
 - 可从 [VRCLT Releases](https://github.com/shgeum/VRCLT/releases) 下载的 Windows exe
 - 用户设置保存位置: `%LOCALAPPDATA%\vrclt\config.yaml`
+
+</details>
 
 ## 安装
 
@@ -55,6 +151,10 @@ API 密钥会以明文保存在该文件中。
 ### 2. 安装 VB-Audio Virtual Cable
 
 如果想让 VRChat 或 Discord 把翻译语音当作麦克风输入，需要安装 VB-Audio Virtual Cable。
+
+**最简单的方法:** 在仪表板的 **设置检查** 面板中点击 **自动安装 VB-Cable**。vrclt 会从官方网站（www.vb-cable.com）下载安装包，验证 VB-Audio 的数字签名，然后打开 VB-Audio 自己的安装程序。允许 Windows 权限提示，点击 **Install Driver**，关闭完成窗口后，vrclt 会重新读取设备并继续 **自动设置**。VB-CABLE 是 VB-Audio 的捐赠软件（donationware，all participations are welcome）。
+
+手动安装:
 
 1. 从 [VB-Audio Virtual Cable](https://vb-audio.com/Cable/) 下载 **VB-CABLE**。
 2. 解压下载的 ZIP 文件。
@@ -120,7 +220,7 @@ API 密钥会以明文保存在该文件中。
 
 1. 打开 [Soniox 控制台](https://console.soniox.com)，注册账号并登录。
 2. 打开 **My First Project** 或要使用的项目，在 **API Keys** 中创建密钥。
-   参见[官方入门指南](https://soniox.com/docs/stt/get-started)。v0.20.0 使用美国(US)服务器，
+   参见[官方入门指南](https://soniox.com/docs/stt/get-started)。v1.0.0 使用美国(US)服务器，
    如果可以选择区域，请使用 **US 项目**；目前尚无切换其他区域服务器的设置。
    [区域说明](https://soniox.com/docs/data-residency)
 3. 在 [Billing overview](https://console.soniox.com/org/billing/overview/) 查看 API 余额，
@@ -204,8 +304,12 @@ Soniox 按整个连接时长计费，包括静音和 keepalive，
 6. 在 VRChat 或 Discord 中，将麦克风输入设置为 **CABLE Output (VB-Audio Virtual Cable)**。
 7. 保存设置。运行时会自动重启。
 
+**自动设置（推荐）:** 仪表板以 **简洁** 视图和 **设置检查** 面板打开，面板显示 API 密钥、VB-Cable、翻译语音输出、我的麦克风、VRChat 麦克风和 OSC 的状态。关闭 VRChat 后点击 **自动设置**：翻译语音会输出到 `CABLE Input`，自动选择实体麦克风（VRChat 之前使用的麦克风，否则为系统默认），把 VRChat 的 VR 和桌面麦克风都设为 `CABLE Output`，并开启 VRChat OSC。**自动查找麦克风** 会选择你说话时反应最强的麦克风。上面的第 3–6 步就是自动设置所做的事；无法自动更改的项目会在面板中显示操作方法。点击右上角的 **完整** 可显示仪表板的全部设置。
+
 ## 故障排查
 
+- 安装 VB-Cable 后电脑没有声音: Windows 把 `CABLE Input` 设成了默认播放设备。请把扬声器或耳机重新设为默认（**设置检查 → 打开声音设置**）。
+- 自动设置没有更改 VRChat 的麦克风或 OSC: 请先关闭 VRChat。VRChat 退出时会覆盖其设置，因此 vrclt 只在 VRChat 关闭时写入。
 - 目标应用没有收到翻译语音: 确认 `outbound.tts_device` 是 `CABLE Input`，且目标应用麦克风是 `CABLE Output`。
 - 入站字幕不显示: 确认目标进程名与正在运行的应用一致，例如 `VRChat.exe` 或 `Discord.exe`。
 - 运行时提示需要 API 密钥: 在设置中输入密钥，或设置 `GEMINI_API_KEY`（Qwen 引擎为 `DASHSCOPE_API_KEY`）。
@@ -287,6 +391,8 @@ Qwen 注意事项:
 
 仪表板:
 
+- 右上角的 **简洁 / 完整** 切换。新安装以简洁视图开始（设置检查、应用选择、翻译/字幕开关、语言、我的麦克风与自动查找、麦克风电平、实时字幕），设置检查在全部就绪时折叠为一行。完整视图另外显示仅文本、设备、引擎按钮、语言列表编辑、语音语言、音量以及显示/应用选项。麦克风列表中不会出现只会让翻译语音回流的 `CABLE Output`。v1.0.0 之前保存的配置保持完整视图。
+- 带 **自动设置**、**自动查找麦克风**、**自动安装 VB-Cable** 的 **设置检查** 面板，全部就绪时折叠为一行
 - 运行时状态和连接状态
 - VRChat/Discord/自定义 模式切换和 VRChat 仅文本切换
 - 翻译 ON/OFF
@@ -513,6 +619,7 @@ PC 热键:
 | `ui.mode` | `auto` | `auto`、`vr` 或 `desktop`。 |
 | `ui.lang` | `""` | UI 显示语言。留空为自动，可用 `en`、`ko`、`ja`、`zh`。 |
 | `ui.close_action` | `tray` | 窗口关闭按钮行为: `tray` 或 `exit`。 |
+| `ui.easy_mode` | `true` | 简洁仪表板视图。v1.0.0 之前保存的配置以完整视图（`false`）启动。 |
 | `wrist_ui.enabled` | `true` | 启用 SteamVR 手腕菜单。 |
 | `wrist_ui.hand` | `left` | 佩戴菜单的手: `left` 或 `right`。 |
 | `wrist_ui.width_m` | `0.14` | 手腕菜单宽度，单位米。 |
@@ -557,14 +664,14 @@ dist\vrclt.exe
 创建发布产物:
 
 ```powershell
-.\scripts\package_release.ps1 -Version 0.20.0
+.\scripts\package_release.ps1 -Version 1.0.0
 ```
 
 发布脚本会生成:
 
 ```text
-release\vrclt-v0.20.0-windows-x64.exe
-release\vrclt-v0.20.0-windows-x64.exe.sha256
+release\vrclt-v1.0.0-windows-x64.exe
+release\vrclt-v1.0.0-windows-x64.exe.sha256
 ```
 
 ## 冒烟测试
@@ -573,7 +680,7 @@ release\vrclt-v0.20.0-windows-x64.exe.sha256
 .\.venv\Scripts\python.exe -m compileall vrclt
 .\.venv\Scripts\python.exe -m vrclt --help
 .\.venv\Scripts\pyinstaller.exe vrclt.spec --noconfirm
-.\scripts\package_release.ps1 -Version 0.20.0 -SkipBuild
+.\scripts\package_release.ps1 -Version 1.0.0 -SkipBuild
 ```
 
 实际运行时测试流程: 运行 exe，在原生 UI 中保存设置，确认

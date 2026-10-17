@@ -9,9 +9,13 @@ and Action Menu to control vrclt from the radial menu in VR:
 
 If another OSC app already occupies port 9001 the listener logs a warning
 and in-VR control is disabled (everything else keeps working).
+
+Any packet VRChat sends (avatar parameters change constantly while playing)
+also proves its OSC output is enabled; the setup checklist shows that.
 """
 import logging
 import threading
+import time
 
 from pythonosc.dispatcher import Dispatcher
 from pythonosc.osc_server import ThreadingOSCUDPServer
@@ -30,16 +34,24 @@ class OscControl:
         self._languages = languages or ["en"]
         self._server: ThreadingOSCUDPServer | None = None
         self._thread: threading.Thread | None = None
+        self.bound: bool | None = None   # None until start() ran
+        self.last_rx = 0.0               # time of the last packet (0 = never)
 
         self._dispatcher = Dispatcher()
         self._dispatcher.map(f"/avatar/parameters/{param_enabled}", self._on_enabled)
         self._dispatcher.map(f"/avatar/parameters/{param_lang}", self._on_lang)
+        self._dispatcher.set_default_handler(self._on_any)
+
+    def _on_any(self, _addr, *_args) -> None:
+        self.last_rx = time.time()
 
     def _on_enabled(self, _addr, *args) -> None:
+        self.last_rx = time.time()
         if args:
             self._state.translation_on = bool(args[0])
 
     def _on_lang(self, _addr, *args) -> None:
+        self.last_rx = time.time()
         if not args:
             return
         try:
@@ -57,7 +69,9 @@ class OscControl:
         except OSError as e:
             log.warning("OSC control disabled: cannot bind port %d (%s) - "
                         "another OSC app (VRCT etc.) may be using it", self._port, e)
+            self.bound = False
             return False
+        self.bound = True
         self._thread = threading.Thread(target=self._server.serve_forever,
                                         daemon=True, name="vrclt-osc-control")
         self._thread.start()

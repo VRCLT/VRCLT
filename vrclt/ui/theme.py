@@ -122,9 +122,9 @@ def build_qss() -> str:
         QTabBar::tab:selected {{ color: {text}; border-bottom: 2px solid {info_title}; }}
         QTabBar::tab:hover {{ background: {surface}; color: {text}; }}
         QGroupBox {{ border: 1px solid {border}; border-radius: 8px;
-                     margin-top: 12px; padding: 12px 8px 8px 8px; }}
-        QGroupBox::title {{ subcontrol-origin: margin; left: 14px;
-                           padding: 0 6px; color: {text_dim}; }}
+                     margin-top: 22px; padding: 10px 8px 8px 8px; }}
+        QGroupBox::title {{ subcontrol-origin: margin; subcontrol-position: top left;
+                           left: 10px; padding: 0 4px; color: {text_dim}; }}
         QGroupBox#outboundPanel {{ border-top: 2px solid {ok}; }}
         QGroupBox#inboundPanel {{ border-top: 2px solid {info_title}; }}
         QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QPlainTextEdit {{
@@ -182,6 +182,23 @@ def build_qss() -> str:
         }}
         #setupTitle {{ color: {info_title}; font-weight: 700; }}
         #setupText {{ color: {info_body}; }}
+        #setupPanel {{
+            background: {surface}; border: 1px solid {border}; border-radius: 8px;
+        }}
+        #setupPanel[status="warn"] {{ border: 1px solid {warn}; }}
+        #setupPanel[status="error"] {{ border: 1px solid {err}; }}
+        #setupItemTitle {{ font-weight: 600; }}
+        #setupPanel QLabel, QWidget#setupBody, QWidget#setupActions,
+        QWidget#setupHeader {{
+            background: transparent; }}
+        #setupPanel QLabel#setupIcon {{ border-radius: 10px; font-weight: 800;
+            color: #ffffff; background: {text_idle}; }}
+        #setupPanel QLabel#setupIcon[status="ok"] {{ background: {ok}; }}
+        #setupPanel QLabel#setupIcon[status="info"] {{ background: {sub_blue}; }}
+        #setupPanel QLabel#setupIcon[status="warn"] {{ background: {warn}; color: {bg}; }}
+        #setupPanel QLabel#setupIcon[status="error"] {{ background: {err}; }}
+        #routeHint {{ color: {info_body}; background: {surface}; border-radius: 5px;
+                      padding: 6px 10px; }}
         QToolTip {{
             background: {surface}; color: {text};
             border: 1px solid {border}; padding: 4px 6px;

@@ -19,6 +19,7 @@ import psutil
 
 from . import config as config_mod
 from . import i18n
+from . import setup_check
 from .audio.devices import device_names
 from .control.osc_listener import OscControl
 from .pipeline import InboundPipeline, OutboundPipeline
@@ -545,6 +546,39 @@ class AppController:
             self.cfg.setdefault("ui", {})["close_action"] = value
 
         self._persist("close action", mutate)
+
+    def _picker_devices(self) -> tuple[list[str], list[str]]:
+        """Device lists for the VR pickers, without the cable's mic side."""
+        inputs, outputs = device_names()
+        return setup_check.mic_choices(inputs, self.cfg), outputs
+
+    def easy_mode(self) -> bool:
+        return bool(self.cfg.get("ui", {}).get("easy_mode", True))
+
+    def set_easy_mode(self, enabled: bool) -> None:
+        enabled = bool(enabled)
+
+        def mutate():
+            self.raw_cfg.setdefault("ui", {})["easy_mode"] = enabled
+            self.cfg.setdefault("ui", {})["easy_mode"] = enabled
+
+        self._persist("easy mode", mutate)
+
+    def set_auto_setup_pending(self, pending: bool) -> None:
+        pending = bool(pending)
+
+        def mutate():
+            self.raw_cfg.setdefault("meta", {})["auto_setup_pending"] = pending
+            self.cfg.setdefault("meta", {})["auto_setup_pending"] = pending
+
+        self._persist("auto setup pending", mutate)
+
+    def osc_status(self) -> tuple[bool | None, float]:
+        """(listener bound: None when not running, time VRChat last sent OSC)."""
+        control = self._control
+        if control is None:
+            return None, 0.0
+        return control.bound, control.last_rx
 
     def mic_level(self) -> tuple[float, float] | None:
         """(rms, effective gate threshold incl. echo-guard boost) of the
@@ -1139,7 +1173,7 @@ class AppController:
                         get_auto_launch=self.get_steamvr_auto_launch,
                         set_auto_launch=self.set_steamvr_auto_launch,
                         on_restart=self.restart_async,
-                        get_devices=device_names,
+                        get_devices=self._picker_devices,
                         get_mic_device=lambda: str(
                             self.cfg.get("outbound", {}).get("mic_device", "") or ""),
                         get_tts_device=lambda: str(

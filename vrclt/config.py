@@ -166,6 +166,7 @@ DEFAULTS = {
     },
     "meta": {
         "last_version": "",             # last app version that reviewed config migration/reset
+        "auto_setup_pending": False,    # VB-Cable needed a restart: run Auto setup on next start
     },
     "hotkeys": {                        # Windows global hotkeys for desktop/PC controls
         "enabled": True,
@@ -266,6 +267,8 @@ DEFAULTS = {
         "lang": "",                     # UI display language: ""=auto | en | ko | ja | zh
                                         # applies to Qt UI and VR wrist menu labels
         "close_action": "tray",         # tray | exit; window close button behavior
+        "easy_mode": True,              # simple dashboard (essentials + setup check);
+                                        # configs saved before it existed keep the full view
     },
     "wrist_ui": {                       # SteamVR wrist watch menu (XSOverlay style)
         "enabled": True,
@@ -355,6 +358,9 @@ def load() -> dict:
             except OSError:
                 pass
             return cfg
+        if "easy_mode" not in (data.get("ui") or {}):
+            # existing users keep the dashboard they know; new installs start simple
+            cfg["ui"]["easy_mode"] = False
         cfg = _merge(cfg, data)
     return cfg
 

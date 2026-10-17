@@ -1,12 +1,106 @@
-# vrclt
+<div align="center">
 
-言語: [English](README.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [中文](README.zh.md)
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/logo-dark.svg">
+    <img src="docs/brand/logo-light.svg" width="340" height="100" alt="VRCLT">
+  </picture>
+</h1>
 
-`vrclt` は VRChat と Discord 向けの Windows リアルタイム翻訳ツールです。
-選択した翻訳エンジンで自分のマイク音声を翻訳し、翻訳音声を VB-Audio Virtual
-Cable 経由で対象アプリのマイク入力へ送り、相手の発話は翻訳字幕として表示します。
+<p><a href="https://vrclt.github.io/ja/">公式サイト</a></p>
 
-## 主な機能
+### 自分の言葉で話せば、相手の言葉で届く。
+
+Windows 向け **VRChat** / **Discord** リアルタイム音声翻訳とリアルタイム字幕。
+
+[![Latest release](https://img.shields.io/github/v/release/shgeum/VRCLT?style=flat-square&label=release&color=2ea44f)](https://github.com/shgeum/VRCLT/releases/latest) [![Downloads](https://img.shields.io/github/downloads/shgeum/VRCLT/total?style=flat-square&color=1f6feb)](https://github.com/shgeum/VRCLT/releases) [![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](#要件) [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+
+[English](README.md) · [한국어](README.ko.md) · **日本語** · [中文](README.zh.md)
+
+<br>
+
+<img src="docs/images/dashboard-ja.png" width="780" alt="シンプル表示の VRCLT ダッシュボード">
+
+<br><br>
+
+[**⬇ VRCLT をダウンロード**](https://github.com/shgeum/VRCLT/releases/latest) &nbsp;·&nbsp; [クイックスタート](#クイックスタート) &nbsp;·&nbsp; [詳しいドキュメント](#インストール)
+
+</div>
+
+## VRCLT の特長
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🎙️ あなたの声をそのまま翻訳
+
+いつも通り話すだけ。VRCLT がリアルタイムで翻訳し、自然な翻訳音声を VRChat や Discord のマイクとして届けます。相手は自分の言葉であなたの声を聞けます。
+
+</td>
+<td width="50%" valign="top">
+
+### 💬 リアルタイム字幕
+
+相手の発話が SteamVR、デスクトップオーバーレイ、アプリ画面に字幕で表示されます。話者を区別できるエンジンでは話者番号も表示します。
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### ⚡ ワンクリック設定
+
+設定チェックが足りないものを教えてくれます。**自動設定** は音声の経路、マイク選択、VRChat のマイクと OSC まで整え、**VB-Cableを自動インストール** は公式インストーラーを代わりに起動します。
+
+</td>
+<td width="50%" valign="top">
+
+### 🥽 VR のためのアプリ
+
+手首メニューと SteamVR ダッシュボードのページで VR の中から操作でき、字幕は目の前に浮かび、SteamVR と一緒に自動起動できます。
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 💭 VRChat チャットボックス
+
+原文と翻訳を OSC でチャットボックスに送ります。テキストのみモードでは自分の声はそのままに、翻訳テキストだけを加えます。
+
+</td>
+<td width="50%" valign="top">
+
+### 🌐 4 つのエンジン、70 以上の言語
+
+Google Gemini Live、Qwen3.8 LiveTranslate、OpenAI gpt-realtime-translate、Soniox から、料金・地域・音声・話者分離に合わせて選べます。
+
+</td>
+</tr>
+</table>
+
+## クイックスタート
+
+1. [Releases](https://github.com/shgeum/VRCLT/releases/latest) から `vrclt-v<version>-windows-x64.exe` を**ダウンロードして実行**します。インストールは不要です。
+2. **API キーを入力します。** 既定のエンジンは Gemini です。[Google AI Studio](https://aistudio.google.com/apikey) でキーを作成し、**設定 → Gemini API キー** に貼り付けてください。ほかのエンジンは[翻訳エンジン](#翻訳エンジン)を参照してください。
+3. **残りは設定チェックにお任せ。** VB-Cable がなければ **VB-Cableを自動インストール** を押し、VRChat を終了してから **自動設定** を押します。
+4. **VRChat を起動して話すだけ。** 翻訳と字幕はダッシュボードか手首メニューで切り替えます。
+
+<p align="center"><img src="docs/images/setup-check-ja.png" width="760" alt="自動設定ボタンのある設定チェック"></p>
+
+## VR で
+
+<p align="center">
+<img src="docs/images/vr-subtitles-ja.png" width="620" alt="SteamVR の字幕"><br><br>
+<img src="docs/images/vr-wrist-ja.png" width="300" alt="手首メニュー">&nbsp;&nbsp;
+<img src="docs/images/vr-dashboard-ja.png" width="300" alt="SteamVR ダッシュボードのページ">
+</p>
+
+字幕は目の前に浮かび、手首メニューで翻訳・字幕・言語を切り替え、SteamVR ダッシュボードのページで言語、オーディオデバイス、パネル配置を扱います。
+
+<details>
+<summary><b>すべての機能</b></summary>
 
 - ダッシュボード、設定、ログ/情報タブを備えた Windows ネイティブ UI
 - アプリを開く、設定を開く、翻訳/字幕の切り替え、終了ができるトレイメニュー
@@ -22,6 +116,8 @@ Cable 経由で対象アプリのマイク入力へ送り、相手の発話は�
 - GitHub Releases の更新通知と、API キー、保存済み言語リスト、UI 言語、ウィンドウを閉じる動作、選択したオーディオデバイスを保持する安全な設定リセット
 - [VRCLT Releases](https://github.com/shgeum/VRCLT/releases) からダウンロードできる Windows exe
 - ユーザー設定の保存先: `%LOCALAPPDATA%\vrclt\config.yaml`
+
+</details>
 
 ## インストール
 
@@ -55,6 +151,10 @@ API キーはこのファイルに平文で保存されます。
 ### 2. VB-Audio Virtual Cable をインストール
 
 VRChat または Discord に翻訳音声をマイクとして受け取らせるには、VB-Audio Virtual Cable が必要です。
+
+**いちばん簡単な方法:** ダッシュボードの **設定チェック** パネルで **VB-Cableを自動インストール** を押します。vrclt が公式サイト（www.vb-cable.com）からパッケージをダウンロードし、VB-Audio のデジタル署名を確認してから VB-Audio のインストーラーを開きます。Windows の確認を許可して **Install Driver** を押し、完了画面を閉じると、vrclt がデバイスを再読み込みして **自動設定** を続けます。VB-CABLE は VB-Audio の寄付制（donationware）ソフトウェアです（all participations are welcome）。
+
+手動でインストールする場合:
 
 1. [VB-Audio Virtual Cable](https://vb-audio.com/Cable/) から **VB-CABLE** をダウンロードします。
 2. ダウンロードした ZIP ファイルを展開します。
@@ -120,7 +220,7 @@ Gemini の代わりに **Alibaba Qwen3.8 LiveTranslate** を使えます。
 1. [Soniox コンソール](https://console.soniox.com)でアカウントを作成し、ログインします。
 2. **My First Project** または使用するプロジェクトを開き、**API Keys** でキーを作成します。
    [公式の開始ガイド](https://soniox.com/docs/stt/get-started)を参照してください。
-   v0.20.0 は米国(US)サーバーを使用するため、リージョンを選べる場合は **US プロジェクト**を
+   v1.0.0 は米国(US)サーバーを使用するため、リージョンを選べる場合は **US プロジェクト**を
    使用します。他リージョンへの切り替え設定は未対応です。[リージョン案内](https://soniox.com/docs/data-residency)
 3. [Billing overview](https://console.soniox.com/org/billing/overview/) で API 残高を確認し、
    必要に応じてチャージします。[API 料金表](https://soniox.com/pricing)も確認してください。
@@ -210,8 +310,12 @@ Soniox のダッシュボードにはチェック状態と適用中の無音タ�
 6. VRChat または Discord のマイク入力を **CABLE Output (VB-Audio Virtual Cable)** に設定します。
 7. 設定を保存します。ランタイムは自動で再起動します。
 
+**自動設定（推奨）:** ダッシュボードは **シンプル** 表示と **設定チェック** パネルで開きます。パネルには API キー、VB-Cable、翻訳音声の出力、自分のマイク、VRChat のマイクと OSC の状態が表示されます。VRChat を終了してから **自動設定** を押すと、翻訳音声を `CABLE Input` に送り、実際のマイク（VRChat で使っていたマイク、なければシステム既定）を選び、VRChat のマイクを VR・デスクトップとも `CABLE Output` に変更して VRChat の OSC をオンにします。**マイクを自動検出** は話している間に最も強く反応したマイクを選びます。上の手順 3〜6 が自動設定の内容で、自動で変更できない項目はパネルに方法が表示されます。右上の **詳細** でダッシュボードのすべての設定を表示します。
+
 ## トラブルシューティング
 
+- VB-Cable のインストール後に PC の音が出ない: Windows が `CABLE Input` を既定の再生デバイスにしています。スピーカーやヘッドホンを既定に戻してください（**設定チェック → サウンド設定を開く**）。
+- 自動設定で VRChat のマイクや OSC が変わらない: 先に VRChat を終了してください。VRChat は終了時に設定を上書きするため、vrclt は VRChat が閉じているときだけ書き込みます。
 - 対象アプリに翻訳音声が入らない: `outbound.tts_device` が `CABLE Input` で、対象アプリのマイクが `CABLE Output` になっているか確認します。
 - 受信側字幕が出ない: 対象プロセス名が実行中アプリと一致しているか確認します。例: `VRChat.exe`、`Discord.exe`。
 - API キーが必要と表示される: 設定にキーを入力するか、`GEMINI_API_KEY` を設定します（Qwen エンジンの場合: `DASHSCOPE_API_KEY`）。
@@ -297,6 +401,8 @@ Discord Canary または PTB を使う場合は、設定または `app.profiles.
 
 ダッシュボード:
 
+- 右上の **シンプル / 詳細** 切り替え。新規インストールはシンプル表示（設定チェック、アプリ選択、翻訳・字幕のオン/オフ、言語、自分のマイクと自動検出、マイクレベル、リアルタイム字幕）で始まり、設定チェックはすべて準備できると 1 行にたたまれます。詳細表示ではテキスト専用、デバイス、エンジンボタン、言語リスト編集、発話言語、音量、表示・アプリ設定が加わります。マイク一覧には、翻訳音声が戻ってくるだけの `CABLE Output` は表示されません。v1.0.0 より前に保存した設定は詳細表示のままです。
+- **自動設定**、**マイクを自動検出**、**VB-Cableを自動インストール** を備えた **設定チェック** パネル。すべて準備できると 1 行にたたまれます
 - ランタイム状態と接続状態
 - VRChat/Discord/カスタム モード切り替えと VRChat テキストのみ切り替え
 - 翻訳 ON/OFF
@@ -526,6 +632,7 @@ PC ホットキー:
 | `ui.mode` | `auto` | `auto`、`vr`、`desktop` のいずれか。 |
 | `ui.lang` | `""` | UI 表示言語。空なら自動。`en`、`ko`、`ja`、`zh` を使えます。 |
 | `ui.close_action` | `tray` | ウィンドウを閉じるボタンの動作: `tray` または `exit`。 |
+| `ui.easy_mode` | `true` | シンプルなダッシュボード表示。v1.0.0 より前に保存した設定は詳細表示（`false`）で始まります。 |
 | `wrist_ui.enabled` | `true` | SteamVR 手首メニューを有効にします。 |
 | `wrist_ui.hand` | `left` | メニューを装着する手: `left` または `right`。 |
 | `wrist_ui.width_m` | `0.14` | 手首メニュー幅(m)。 |
@@ -570,14 +677,14 @@ dist\vrclt.exe
 リリース成果物を作成:
 
 ```powershell
-.\scripts\package_release.ps1 -Version 0.20.0
+.\scripts\package_release.ps1 -Version 1.0.0
 ```
 
 リリーススクリプトの結果:
 
 ```text
-release\vrclt-v0.20.0-windows-x64.exe
-release\vrclt-v0.20.0-windows-x64.exe.sha256
+release\vrclt-v1.0.0-windows-x64.exe
+release\vrclt-v1.0.0-windows-x64.exe.sha256
 ```
 
 ## スモークテスト
@@ -586,7 +693,7 @@ release\vrclt-v0.20.0-windows-x64.exe.sha256
 .\.venv\Scripts\python.exe -m compileall vrclt
 .\.venv\Scripts\python.exe -m vrclt --help
 .\.venv\Scripts\pyinstaller.exe vrclt.spec --noconfirm
-.\scripts\package_release.ps1 -Version 0.20.0 -SkipBuild
+.\scripts\package_release.ps1 -Version 1.0.0 -SkipBuild
 ```
 
 実際のランタイムテストは、exe を起動し、ネイティブ UI で設定を保存し、

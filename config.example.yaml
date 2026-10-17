@@ -172,6 +172,7 @@ ui:
   mode: auto                  # auto | vr | desktop
   lang: ""                    # ""=auto | en | ko | ja | zh
   close_action: tray          # tray | exit; window close button behavior
+  easy_mode: true             # simple dashboard: essentials + setup check (false = full)
 
 wrist_ui:                     # SteamVR wrist watch menu
   enabled: true

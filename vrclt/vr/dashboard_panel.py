@@ -66,8 +66,13 @@ BTN_INSRC_NEXT = (920, 574, 984, 678)
 BTN_SPEAKER_CONTEXT = (24, 734, 516, 830)
 CONTEXT_NOTE_BOX = (536, 734, 1000, 830)
 BTN_MIC_PREV = (24, 274, 112, 402)
-LBL_MIC_DEVICE = (128, 274, 896, 402)
-BTN_MIC_NEXT = (912, 274, 1000, 402)
+LBL_MIC_DEVICE = (128, 274, 688, 402)
+BTN_MIC_NEXT = (704, 274, 792, 402)
+BTN_MIC_FIND = (808, 274, 1000, 402)
+PROBE_CONFIRM_SEC = 1.2   # the same mic must lead this long while speaking
+PROBE_TIMEOUT_SEC = 12.0
+PROBE_REDRAW_SEC = 0.25   # listening feedback without re-rendering every frame
+PROBE_RESULT_SEC = 6.0
 BTN_OUT_PREV = (24, 426, 112, 554)
 LBL_OUT_DEVICE = (128, 426, 896, 554)
 BTN_OUT_NEXT = (912, 426, 1000, 554)
@@ -112,6 +117,8 @@ def _build_widgets() -> tuple:
                enabled=lambda p: p._get_provider() == "soniox" and settled(p)),
         Widget("mic_prev", BTN_MIC_PREV, page="audio", enabled=free),
         Widget("mic_next", BTN_MIC_NEXT, page="audio", enabled=free),
+        Widget("mic_find", BTN_MIC_FIND, page="audio",
+               enabled=lambda p: free(p) or p._mic_probe is not None),
         Widget("out_prev", BTN_OUT_PREV, page="audio", enabled=free),
         Widget("out_next", BTN_OUT_NEXT, page="audio", enabled=free),
         Widget("vol_minus", BTN_VOL_MINUS, page="audio",
@@ -136,15 +143,21 @@ def _build_widgets() -> tuple:
 
 def _ensure_icon() -> bool:
     """256px thumbnail: the bundled app icon (scripts/make_icon.py), with
-    the original painted mark as fallback when the asset is missing."""
+    the original painted mark as fallback when the asset is missing.
+
+    Refresh a stale thumbnail after upgrades; the cache outlives both source
+    checkouts and PyInstaller's temporary extraction directory.
+    """
     try:
+        bundled = icon_asset_path("icon.png")
+        if bundled.exists():
+            if not ICON_PATH.exists() or ICON_PATH.read_bytes() != bundled.read_bytes():
+                ICON_PATH.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(bundled, ICON_PATH)
+            return True
         if ICON_PATH.exists():
             return True
         ICON_PATH.parent.mkdir(parents=True, exist_ok=True)
-        bundled = icon_asset_path("icon.png")
-        if bundled.exists():
-            shutil.copyfile(bundled, ICON_PATH)
-            return True
         s = 256
         img = Image.new("RGBA", (s, s), (0, 0, 0, 0))
         d = ImageDraw.Draw(img)
@@ -178,7 +191,8 @@ class DashboardPanel:
                  get_provider=lambda: "gemini",
                  get_speaker_context=lambda: (True, 60.0),
                  set_speaker_context=lambda enabled, on_done: on_done(False),
-                 uses_source_language=None):
+                 uses_source_language=None,
+                 mic_probe_factory=None):
         self._state = state
         self._languages = languages or ["en"]
         self._inbound_languages = inbound_languages or ["ko", "en"]
@@ -213,6 +227,14 @@ class DashboardPanel:
         self._devices_apply_at = 0.0
         self._devices_applying = False
         self._devices_error_until = 0.0
+        # "find my mic" from VR: speak, and the mic that rises most is applied
+        self._mic_probe_factory = mic_probe_factory
+        self._mic_probe = None
+        self._probe_started = 0.0
+        self._probe_candidate = ""
+        self._probe_since = 0.0
+        self._probe_drawn = 0.0
+        self._probe_result = None   # (kind, device, show until)
         self._widgets = _build_widgets()
         self._widget_by_name = {w.name: w for w in self._widgets}
         self._page = "main"
@@ -338,6 +360,7 @@ class DashboardPanel:
             except Exception:
                 pass
 
+        self._tick_mic_probe(now)
         self._maybe_apply_devices(now)
         if self._devices_error_until and now >= self._devices_error_until:
             self._devices_error_until = 0.0
@@ -520,6 +543,8 @@ class DashboardPanel:
             st.request_position_reset()
         elif button in ("mic_prev", "mic_next"):
             self._cycle_device("mic", 1 if button == "mic_next" else -1)
+        elif button == "mic_find":
+            self._toggle_mic_probe()
         elif button in ("out_prev", "out_next"):
             self._cycle_device("out", 1 if button == "out_next" else -1)
         elif button in ("vol_minus", "vol_plus"):
@@ -597,6 +622,71 @@ class DashboardPanel:
             self._pending_out = names[new]
         self._devices_apply_at = time.time() + DEVICE_APPLY_DELAY_SEC
         self._devices_error_until = 0.0
+
+    def _toggle_mic_probe(self) -> None:
+        """Start listening to every real mic, or cancel a running search."""
+        if self._mic_probe is not None:
+            self._stop_mic_probe(None, cancelled=True)
+            return
+        from ..setup_check import real_inputs
+        names = real_inputs(self._dev_inputs)
+        factory = self._mic_probe_factory
+        if factory is None:
+            from ..audio.mic_probe import MicProbe as factory
+        probe = factory(names) if names else None
+        try:
+            if probe is not None:
+                probe.start()
+        except Exception:
+            log.exception("dashboard panel: mic probe failed to start")
+            probe = None
+        if probe is None:
+            self._probe_result = ("none", "", time.time() + PROBE_RESULT_SEC)
+        else:
+            self._mic_probe = probe
+            self._probe_started = time.time()
+            self._probe_candidate = ""
+            self._probe_result = None
+        self._dirty.set()
+
+    def _tick_mic_probe(self, now: float) -> None:
+        probe = self._mic_probe
+        if probe is None:
+            if self._probe_result and now >= self._probe_result[2]:
+                self._probe_result = None
+                self._dirty.set()
+            return
+        if now - self._probe_drawn >= PROBE_REDRAW_SEC:
+            self._probe_drawn = now
+            self._dirty.set()
+        best = probe.best()
+        if best != self._probe_candidate:
+            self._probe_candidate = best
+            self._probe_since = now
+        elif best and now - self._probe_since >= PROBE_CONFIRM_SEC:
+            self._stop_mic_probe(best)
+            return
+        if now - self._probe_started >= PROBE_TIMEOUT_SEC:
+            self._stop_mic_probe(best)
+
+    def _stop_mic_probe(self, found: str, cancelled: bool = False) -> None:
+        probe, self._mic_probe = self._mic_probe, None
+        if probe is not None:
+            try:
+                probe.stop()
+            except Exception:
+                log.debug("dashboard panel: mic probe stop failed", exc_info=True)
+        if cancelled:
+            self._probe_result = None
+        elif found:
+            # through the regular device path: applies with a runtime restart
+            self._pending_mic = found
+            self._devices_apply_at = time.time()
+            self._devices_error_until = 0.0
+            self._probe_result = ("found", found, time.time() + PROBE_RESULT_SEC)
+        else:
+            self._probe_result = ("none", "", time.time() + PROBE_RESULT_SEC)
+        self._dirty.set()
 
     def _maybe_apply_devices(self, now: float) -> None:
         if self._devices_applying or self._context_applying or self._restart_pending:
@@ -782,6 +872,26 @@ class DashboardPanel:
         self._device_block(d, lang, BTN_MIC_PREV, LBL_MIC_DEVICE, BTN_MIC_NEXT,
                            self._dev_inputs, self._get_mic_device(), self._pending_mic,
                            tr(lang, "f.outbound.mic_device"), "mic_prev", "mic_next")
+        probing = self._mic_probe is not None
+        self._btn(d, BTN_MIC_FIND,
+                  tr(lang, "vr_find_mic_cancel" if probing else "btn_find_mic"),
+                  fill=COL_SUB_ON if probing else COL_BTN, name="mic_find",
+                  text_fill=COL_TEXT if self._enabled("mic_find") else COL_DIM)
+        if probing:
+            # the mic field becomes the listening prompt
+            d.rounded_rectangle(LBL_MIC_DEVICE, 16, fill=COL_INSET)
+            left = max(0, int(PROBE_TIMEOUT_SEC - (time.time() - self._probe_started) + 0.99))
+            text = (tr(lang, "mic_finder_found").format(name=self._probe_candidate)
+                    if self._probe_candidate else tr(lang, "vr_find_mic_speak"))
+            draw_fit_text(d, (LBL_MIC_DEVICE[0] + 8, LBL_MIC_DEVICE[1] + 8,
+                              LBL_MIC_DEVICE[2] - 8, LBL_MIC_DEVICE[3] - 40),
+                          text, fonts=(self._font_small, self._font_tiny),
+                          fill=COL_PENDING, max_lines=1, pad_x=4, pad_y=2)
+            draw_fit_text(d, (LBL_MIC_DEVICE[0] + 8, LBL_MIC_DEVICE[3] - 36,
+                              LBL_MIC_DEVICE[2] - 8, LBL_MIC_DEVICE[3] - 8),
+                          f"{tr(lang, 'mic_finder_listening')} {left}s",
+                          fonts=(self._font_tiny,), fill=COL_DIM, max_lines=1,
+                          pad_x=4, pad_y=1, line_spacing=0)
         self._device_block(d, lang, BTN_OUT_PREV, LBL_OUT_DEVICE, BTN_OUT_NEXT,
                            self._dev_outputs, self._get_tts_device(), self._pending_out,
                            tr(lang, "f.outbound.tts_device"), "out_prev", "out_next")
@@ -795,8 +905,15 @@ class DashboardPanel:
                   tr(lang, "btn_text_only_on" if self._state.text_only else "btn_text_only_off"),
                   fill=COL_SUB_ON if self._state.text_only else COL_BTN, name="text_only",
                   text_fill=COL_TEXT if self._enabled("text_only") else COL_DIM)
-        note = "dash_applying" if self._devices_applying else "vr_hint_audio_apply"
-        self._caption(d, (24, 874, 1000, 932), tr(lang, note))
+        result = self._probe_result
+        if result is not None and result[0] == "found":
+            self._caption(d, (24, 874, 1000, 932),
+                          tr(lang, "vr_find_mic_applied").format(name=result[1]), fill=COL_ON)
+        elif result is not None:
+            self._caption(d, (24, 874, 1000, 932), tr(lang, "vr_find_mic_none"), fill=COL_WARN)
+        else:
+            note = "dash_applying" if self._devices_applying else "vr_hint_audio_apply"
+            self._caption(d, (24, 874, 1000, 932), tr(lang, note))
 
     def _render_layout(self, d, lang):
         self._caption(d, (24, 210, 1000, 250), tr(lang, "vr_section_subtitles"))

@@ -13,7 +13,8 @@ from PySide6 import QtWidgets
 from vrclt import config, i18n
 from vrclt.ui.settings_form import SettingsForm, SettingsValidationError
 from vrclt.ui.settings_schema import CATEGORIES, GROUPS
-from vrclt.ui.setup_banner import SetupBanner
+from vrclt import setup_check
+from vrclt.ui.setup_panel import SetupPanel
 
 
 class Controller:
@@ -121,13 +122,20 @@ def main():
             for lang in i18n.LANGS:
                 assert lang in i18n.STRINGS[spec.label_key], (spec.label_key, lang)
 
-    urls = []
-    banner = SetupBanner(lambda key: i18n.tr("en", key),
-                         on_open_settings=lambda: None, on_open_url=urls.append)
-    banner.sync("soniox", False)
-    banner._open_key_page()
+    urls, opened = [], []
+    panel = SetupPanel(lambda key: i18n.tr("en", key), on_open_settings=opened.append,
+                       on_open_url=urls.append, on_auto_fix=lambda: None,
+                       on_find_mic=lambda: None, on_recheck=lambda: None)
+    item = setup_check.Item("api_key", setup_check.ERROR, "missing")
+    panel.sync([item], provider="soniox")
+    actions = {button.property("actionKey"): button
+               for button in panel.findChildren(QtWidgets.QPushButton)
+               if button.property("actionKey")}
+    actions["setup_btn_get_key"].click()
     assert urls[-1].toString() == "https://console.soniox.com/"
-    assert "soniox" in banner._steps.text()
+    actions["setup_btn_open_settings"].click()
+    assert opened == ["soniox.api_key"]
+    assert "Soniox" in panel.detail_text(item)
 
     root.close()
     print("smoke_settings_navigation: OK")

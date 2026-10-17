@@ -17,6 +17,9 @@ from vrclt.state import AppState
 class StubController:
     def __init__(self):
         self.cfg = copy.deepcopy(config_mod.DEFAULTS)
+        # an existing configuration: the full dashboard (smoke_setup_check
+        # covers the simple view new installs start in)
+        self.cfg["ui"]["easy_mode"] = False
         self.raw_cfg = self.cfg  # plain dict attribute, like AppController
         self.state = AppState()
         self.config_revision = 0
