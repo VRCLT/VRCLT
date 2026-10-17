@@ -13,7 +13,7 @@
 
 适用于 Windows 的 **VRChat** / **Discord** 实时语音翻译与实时字幕。
 
-[![Latest release](https://img.shields.io/github/v/release/shgeum/VRCLT?style=flat-square&label=release&color=2ea44f)](https://github.com/shgeum/VRCLT/releases/latest) [![Downloads](https://img.shields.io/github/downloads/shgeum/VRCLT/total?style=flat-square&color=1f6feb)](https://github.com/shgeum/VRCLT/releases) [![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](#要求) [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/VRCLT/VRCLT?style=flat-square&label=release&color=2ea44f)](https://github.com/VRCLT/VRCLT/releases/latest) [![Downloads](https://img.shields.io/github/downloads/VRCLT/VRCLT/total?style=flat-square&color=1f6feb)](https://github.com/VRCLT/VRCLT/releases) [![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square)](https://github.com/VRCLT/VRCLT/wiki/%E5%AE%89%E8%A3%85) [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
 [English](README.md) · [한국어](README.ko.md) · [日本語](README.ja.md) · **中文**
 
@@ -23,7 +23,7 @@
 
 <br><br>
 
-[**⬇ 下载 VRCLT**](https://github.com/shgeum/VRCLT/releases/latest) &nbsp;·&nbsp; [快速开始](#快速开始) &nbsp;·&nbsp; [详细文档](#安装)
+[**⬇ 下载 VRCLT**](https://github.com/VRCLT/VRCLT/releases/latest) &nbsp;·&nbsp; [快速开始](#快速开始) &nbsp;·&nbsp; [详细文档](#文档)
 
 </div>
 
@@ -82,8 +82,8 @@ Google Gemini Live、Qwen3.8 LiveTranslate、OpenAI gpt-realtime-translate 和 S
 
 ## 快速开始
 
-1. 从 [Releases](https://github.com/shgeum/VRCLT/releases/latest) **下载并运行** `vrclt-v<version>-windows-x64.exe`，无需安装。
-2. **填写 API 密钥。** 默认引擎为 Gemini：在 [Google AI Studio](https://aistudio.google.com/apikey) 创建密钥，粘贴到 **设置 → Gemini API 密钥**。其他引擎请参阅[翻译引擎](#翻译引擎)。
+1. 从 [Releases](https://github.com/VRCLT/VRCLT/releases/latest) **下载并运行** `vrclt-v<version>-windows-x64.exe`，无需安装。
+2. **填写 API 密钥。** 默认引擎为 Gemini。按照[各引擎的密钥获取步骤](https://github.com/VRCLT/VRCLT/wiki/%E8%8E%B7%E5%8F%96-API-%E5%AF%86%E9%92%A5)（含截图）获取密钥，然后粘贴到 **设置 → 翻译与语言**。
 3. **其余交给设置检查。** 如果没有 VB-Cable，点击 **自动安装 VB-Cable**；关闭 VRChat 后点击 **自动设置**。
 4. **启动 VRChat 开始说话。** 在仪表板或手腕菜单中开关翻译和字幕。
 
@@ -99,386 +99,20 @@ Google Gemini Live、Qwen3.8 LiveTranslate、OpenAI gpt-realtime-translate 和 S
 
 字幕浮在眼前，手腕菜单可切换翻译、字幕和语言，SteamVR 仪表板页面可调整语言、音频设备和面板布局。
 
-<details>
-<summary><b>全部功能</b></summary>
+## 文档
 
-- 带有仪表板、设置、日志/关于标签页的 Windows 原生 UI
-- 托盘菜单支持打开应用、打开设置、切换翻译/字幕和退出
-- 出站翻译: 你的麦克风 -> selected engine -> 翻译语音 -> 目标应用麦克风
-- 入站字幕: 目标应用音频 -> selected engine -> 翻译字幕
-- 四种翻译引擎: Google Gemini Live（默认）、Alibaba Qwen3.8 LiveTranslate、OpenAI gpt-realtime-translate，以及 Soniox
-- 支持 VRChat OSC 聊天框输出、角色 OSC 控制、SteamVR 字幕和手腕菜单
-- 支持 SteamVR 仪表板设置面板和随 SteamVR 自动启动（注册到启动/叠加层应用）
-- VRChat 仅文本模式: 保留原始语音直通，只向 OSC 聊天框追加翻译文本
-- Discord 模式: 捕获 Discord 进程音频，并自动禁用 VRChat 专用功能
-- 自定义模式: 捕获任意其他应用，从当前正在播放音频的进程中直接选择
-- 原声直通直接使用 48 kHz 原始麦克风流，Gemini 翻译流单独重采样
-- GitHub Releases 更新提醒，以及保留 API 密钥、已保存语言列表、UI 语言、窗口关闭行为和已选择音频设备的安全配置重置
-- 可从 [VRCLT Releases](https://github.com/shgeum/VRCLT/releases) 下载的 Windows exe
-- 用户设置保存位置: `%LOCALAPPDATA%\vrclt\config.yaml`
+完整指南请见 [Wiki](https://github.com/VRCLT/VRCLT/wiki)：
 
-</details>
-
-## 安装
-
-### 要求
-
-- 推荐 Windows 11
-- 所选引擎的 API 密钥: Gemini、Qwen/DashScope、OpenAI 或 Soniox
-- [VB-Audio Virtual Cable](https://vb-audio.com/Cable/)
-- 使用 VR 叠加层和手腕 UI 时需要 SteamVR
-- 使用 VRChat 聊天框/角色控制功能时需要启用 VRChat OSC
-
-### 1. 下载 vrclt
-
-最新 Windows 可执行文件可在 [VRCLT Releases](https://github.com/shgeum/VRCLT/releases) 下载。
-
-请下载类似下面名称的文件。
-
-```text
-vrclt-v<version>-windows-x64.exe
-```
-
-发布版 exe 会把设置保存到:
-
-```text
-%LOCALAPPDATA%\vrclt\config.yaml
-```
-
-API 密钥会以明文保存在该文件中。
-
-### 2. 安装 VB-Audio Virtual Cable
-
-如果想让 VRChat 或 Discord 把翻译语音当作麦克风输入，需要安装 VB-Audio Virtual Cable。
-
-**最简单的方法:** 在仪表板的 **设置检查** 面板中点击 **自动安装 VB-Cable**。vrclt 会从官方网站（www.vb-cable.com）下载安装包，验证 VB-Audio 的数字签名，然后打开 VB-Audio 自己的安装程序。允许 Windows 权限提示，点击 **Install Driver**，关闭完成窗口后，vrclt 会重新读取设备并继续 **自动设置**。VB-CABLE 是 VB-Audio 的捐赠软件（donationware，all participations are welcome）。
-
-手动安装:
-
-1. 从 [VB-Audio Virtual Cable](https://vb-audio.com/Cable/) 下载 **VB-CABLE**。
-2. 解压下载的 ZIP 文件。
-3. 右键点击 `VBCABLE_Setup_x64.exe`，选择 **以管理员身份运行**。
-4. 点击 **Install Driver**。
-5. 如果看不到 `CABLE Input` / `CABLE Output`，请重启 Windows。
-
-安装后，Windows 会出现两个重要设备:
-
-| 设备 | 含义 | 在哪里选择 |
-| --- | --- | --- |
-| `CABLE Input` | 虚拟线缆的播放/输出侧 | 在 vrclt 中选择为翻译语音输出 |
-| `CABLE Output` | 虚拟线缆的录音/麦克风侧 | 在 VRChat 或 Discord 中选择为麦克风 |
-
-真实麦克风应在 vrclt 中选择。若要让对方听到翻译语音，VRChat/Discord 的麦克风不要选真实麦克风，而要选 `CABLE Output`。
-
-### 3. 获取 Gemini API 密钥
-
-> **中国大陆用户**: 无法访问 Google 服务时，请跳过本节，直接使用 Qwen 引擎 — 见下文 **3b** 节。
-
-1. 打开 [Google AI Studio](https://aistudio.google.com/) 并使用 Google 账号登录。
-   - 如果没有 Google 账号，请先创建。
-2. 点击左侧边栏或页面顶部的 **Get API key** 按钮。
-   - 也可以直接访问 [https://aistudio.google.com/apikey](https://aistudio.google.com/apikey)。
-3. 点击 **Create API key**。
-4. 选择要关联此密钥的 Google Cloud 项目。
-   - 如果没有现有项目，选择 **Create API key in new project** 会自动创建。
-5. 复制生成的密钥 (以 `AIza...` 开头)。
-   - 完整密钥只会显示一次，请妥善保存。
-6. 将复制的密钥粘贴到 `vrclt` 设置标签页中的 **API 密钥** 字段，
-   或写入 `config.yaml` 的 `gemini.api_key`。
-
-> **注意**: Gemini API 有带每分钟请求限制的免费层，个人使用通常足够。
-> 不要分享你的 API 密钥。它会以明文保存在 `config.yaml` 中，因此不要把该文件提交到公开仓库。
-
-### 3b. 备选: Qwen API 密钥（无法访问 Gemini 的地区）
-
-如果所在地区无法访问 Google 服务（例如中国大陆），vrclt 可以使用
-**Alibaba Qwen3.8 LiveTranslate** 代替 Gemini:
-
-1. 创建阿里云账号并开通 **百炼 (Model Studio)**:
-   - 中国大陆: [bailian.console.aliyun.com](https://bailian.console.aliyun.com/)
-   - 国际版（新加坡）: [Alibaba Cloud Model Studio](https://www.alibabacloud.com/en/product/modelstudio)
-2. 创建 API 密钥（DashScope 密钥，以 `sk-...` 开头）。
-   **密钥与地域绑定**: 大陆（北京）密钥只能配合 `beijing` 端点使用，
-   国际版密钥只能配合 `intl` 使用。
-3. 在 vrclt 设置中将 **翻译引擎** 设为 `qwen`，把密钥粘贴到
-   **Qwen API 密钥 (DashScope)**，并选择与密钥匹配的 **Qwen 服务器**
-   （中国大陆选 `beijing`，其他地区选 `intl`）。密钥也可以通过
-   `DASHSCOPE_API_KEY` 环境变量提供。
-4. **Qwen 工作空间 ID — `intl` 必填**: 国际版（新加坡）端点只通过工作空间
-   专属域名提供服务。在百炼控制台首页点击左下角图标，打开
-   **业务空间详情 (Workspace Details)**，复制 ID（形如 `llm-7c72iiw36kd8****`）
-   填入 **Qwen 工作空间 ID** 字段。`beijing` 端点可以留空（经典共享
-   `dashscope` 域名）。
-   参见 [Obtain the workspace ID](https://www.alibabacloud.com/help/en/model-studio/obtain-api-key-app-id-and-workspace-id)。
-5. 默认模型 `qwen3.8-livetranslate-flash-realtime` 会自动检测语音语言并区分
-   说话人。仅当把 **Qwen 模型** 改为 `qwen3.5-livetranslate-flash-realtime` 时，
-   才需要设置 **我的语音语言** 和 **对方语音语言** — Qwen 3.5 无法自动检测语音语言
-   （见下文"翻译引擎"一节）。
-
-### 3c. Soniox 设置
-
-1. 打开 [Soniox 控制台](https://console.soniox.com)，注册账号并登录。
-2. 打开 **My First Project** 或要使用的项目，在 **API Keys** 中创建密钥。
-   参见[官方入门指南](https://soniox.com/docs/stt/get-started)。v1.0.0 使用美国(US)服务器，
-   如果可以选择区域，请使用 **US 项目**；目前尚无切换其他区域服务器的设置。
-   [区域说明](https://soniox.com/docs/data-residency)
-3. 在 [Billing overview](https://console.soniox.com/org/billing/overview/) 查看 API 余额，
-   按需充值并查看 [API 价格](https://soniox.com/pricing)。试用额度是否提供及其金额，
-   以注册时控制台显示的条件为准。
-4. 在 vrclt 的**设置 → 翻译引擎**中选择 `soniox`，将密钥粘贴到 **Soniox API 密钥**。
-   初次使用保留默认识别模型 `stt-rt-v5`、TTS 模型 `tts-rt-v2` 和音色 `Daniel`。
-5. 选择应用模式、实际麦克风和翻译语音输出设备，然后保存设置并重启。
-   虚拟麦克风连接请参照下方**首次启动设置**中的 `CABLE Input` / `CABLE Output` 说明。
-6. 仪表盘的**输出语言**是自己说话的翻译目标，**字幕语言**是阅读对方发言时使用的语言。
-   例如用中文与日语使用者交流，可选择日语输出和中文字幕。
-   **我的/对方语音语言**可保留自动检测，或选择中文/日语作为识别提示。
-
-使用环境变量 `SONIOX_API_KEY` 时，将应用中的 Soniox API 密钥栏留空，并在设置环境变量后
-完全退出应用再启动。手动配置可在 `config.yaml` 中使用以下内容；通过 GUI 设置则无需编辑文件：
-
-```yaml
-provider: soniox
-soniox:
-  api_key: ""  # 留空时使用 SONIOX_API_KEY
-  model: stt-rt-v5
-  tts_model: tts-rt-v2
-  voice: Daniel
-  keep_speaker_context: true
-  speaker_context_idle_sec: 60.0
-```
-
-Soniox 提供双向语音识别和翻译；启用翻译语音时，还会使用单独的 TTS。
-`voice` 支持预设语音名称或已有的自定义/克隆语音 ID，不会自动克隆麦克风中的声音。
-仅文本管线不会连接 TTS。**我的/对方语音语言**可保留自动检测，也可设置为识别提示。
-说话人分离会分别保留各说话人的原文和译文，并在字幕中显示说话人编号。
-编号仅在当前识别会话中有效，不代表 VRChat 账号或真实姓名。
-所有说话人的翻译语音均使用设置中选择的同一个 TTS 音色。
-
-**保持说话人上下文**默认开启（`soniox.keep_speaker_context: true`）。短暂的交谈间隔会
-保留识别会话，**静音 60 秒后断开连接**（`soniox.speaker_context_idle_sec: 60.0`）。
-可在设置中调整为 5～600 秒；时间越长，重连越少，但计费的连接也会保留更久。
-Soniox 仪表盘显示勾选状态和当前生效的静音超时时间，开关与设置页面共用同一个保存值。
-已保存的选择会保留。无论开关状态如何，说话人分离都保持开启。
-Soniox 按整个连接时长计费，包括静音和 keepalive，
-仅文本模式也一样。参见[官方 keepalive 计费说明](https://soniox.com/docs/stt/rt/connection-keepalive)。
-关闭此设置后，改用 `audio.mic_idle_disconnect_sec`（默认 15 秒）作为静音断开时间。
-停止或禁用管线、结束捕获的进程也会关闭连接。重新连接会开始新的说话人上下文。
-保持连接不能保证同一人始终获得相同编号；Soniox 返回不同说话人 ID 时仍分别显示。
-
-已通过本地模拟服务器测试，尚未验证实际付费 Soniox API 调用。
-
-**首次检查：**在目标应用中有人说话时开启**字幕**，检查仪表盘预览中的翻译字幕和
-说话人编号/颜色。让多人轮流说话便于检查说话人分离。开启**翻译**后说一个短句，检查自己的输出翻译。
-
-- 认证错误(`401`)：确认已选择 Soniox，且使用 US 项目的有效密钥。
-- 余额或预算错误(`402`)：检查控制台余额及项目/组织每月限额。
-  [官方错误说明](https://soniox.com/docs/api-reference/errors)
-- 没有字幕或声音：检查目标应用/进程、翻译/字幕开关、麦克风和输出设备，再查看**日志/关于**。
-  如果有字幕但没有翻译语音，也请检查**仅文本**设置和语音输出。
-
-### 4. 首次启动设置
-
-1. 运行 `vrclt-v<version>-windows-x64.exe`。
-2. 打开设置标签页，配置要使用的翻译引擎:
-
-   **使用 Qwen（中国大陆推荐）**
-   1. 将 **翻译引擎** 设为 `qwen`。
-   2. 把 DashScope 密钥粘贴到 **Qwen API 密钥 (DashScope)**（见 3b 节），
-      并选择与密钥地域匹配的 **Qwen 服务器**（中国大陆选 `beijing`，
-      其他地区选 `intl`）。
-   3. 使用 `intl` 时: 填写 **Qwen 工作空间 ID**（见 3b 节）。
-   4. 使用默认模型 `qwen3.8-livetranslate-flash-realtime` 时到此为止 — 它会
-      自动检测语音语言。使用 `qwen3.5-livetranslate-flash-realtime` 时，还需设置
-      **我的语音语言**（你说的语言）和 **对方语音语言**（游戏里对方说的语言）。
-      Qwen 3.5 无法自动检测，留空会按英语处理。使用 Qwen 3.5 时，这两项之后
-      也可以在仪表盘标签页或 SteamVR 仪表盘面板上修改。
-
-   **使用 Gemini（默认，需要能访问 Google 服务）**
-   1. 把 Gemini API 密钥粘贴到 **Gemini API 密钥**（见第 3 节）。引擎设置
-      到此为止 — Gemini 会自动检测语音语言。
-
-3. 选择应用模式: `vrchat`、`discord` 或 `custom`（选 `custom` 后在设置中选择要捕获的应用）。
-4. **麦克风输入**选择你的真实麦克风。
-5. **语音输出**或翻译语音输出设备选择 `CABLE Input`。
-6. 在 VRChat 或 Discord 中，将麦克风输入设置为 **CABLE Output (VB-Audio Virtual Cable)**。
-7. 保存设置。运行时会自动重启。
-
-**自动设置（推荐）:** 仪表板以 **简洁** 视图和 **设置检查** 面板打开，面板显示 API 密钥、VB-Cable、翻译语音输出、我的麦克风、VRChat 麦克风和 OSC 的状态。关闭 VRChat 后点击 **自动设置**：翻译语音会输出到 `CABLE Input`，自动选择实体麦克风（VRChat 之前使用的麦克风，否则为系统默认），把 VRChat 的 VR 和桌面麦克风都设为 `CABLE Output`，并开启 VRChat OSC。**自动查找麦克风** 会选择你说话时反应最强的麦克风。上面的第 3–6 步就是自动设置所做的事；无法自动更改的项目会在面板中显示操作方法。点击右上角的 **完整** 可显示仪表板的全部设置。
-
-## 故障排查
-
-- 安装 VB-Cable 后电脑没有声音: Windows 把 `CABLE Input` 设成了默认播放设备。请把扬声器或耳机重新设为默认（**设置检查 → 打开声音设置**）。
-- 自动设置没有更改 VRChat 的麦克风或 OSC: 请先关闭 VRChat。VRChat 退出时会覆盖其设置，因此 vrclt 只在 VRChat 关闭时写入。
-- 目标应用没有收到翻译语音: 确认 `outbound.tts_device` 是 `CABLE Input`，且目标应用麦克风是 `CABLE Output`。
-- 入站字幕不显示: 确认目标进程名与正在运行的应用一致，例如 `VRChat.exe` 或 `Discord.exe`。
-- 运行时提示需要 API 密钥: 在设置中输入密钥，或设置 `GEMINI_API_KEY`（Qwen 引擎为 `DASHSCOPE_API_KEY`）。
-- Qwen 密钥被拒绝或连接立即失败: 检查 `qwen.endpoint` 是否与密钥的地域匹配 — `beijing` 密钥和 `intl` 密钥不能混用 — 并确认使用 `intl` 时已设置工作空间 ID。
-- Qwen 报错 `Voice '...' is not supported`: 字面值音色 `default` 只在声音复刻启用时可用。请保持 `qwen.voice_clone` 开启，或将 **Qwen 语音 ID** 留空以使用模型默认音色。
-- Qwen 3.5 从错误的语言进行翻译: 设置 **我的语音语言** / **对方语音语言**（在设置、仪表板或 SteamVR 面板中均可）。Qwen 3.5 无法自动检测；留空按英语处理。默认模型 Qwen 3.8 会自动检测。
-- VR 叠加层不显示: 确认 SteamVR 正在运行，且 `overlay.enabled` / `wrist_ui.enabled` 已启用。
-- passthrough 或字幕延迟较大: 先使用本 README 中的默认值；如果连接稳定，再谨慎降低 `audio.turn_end_silence_sec`、`audio.inbound_turn_end_silence_sec` 或 `audio.subtitle_finalize_silence_sec`。
-- 想重置设置: 使用设置标签页中的 **恢复默认设置**。它会保留 API 密钥、输出语言列表、字幕语言列表、UI 语言、窗口关闭行为和已选择音频设备，并将其他设置恢复默认。应用更新后，vrclt 也会就此重置询问一次。
-
-## 翻译引擎
-
-vrclt 支持四种实时翻译引擎，通过 **翻译引擎** 设置（`config.yaml` 中的
-`provider`）选择。该选择同时作用于两个方向: 你的语音和入站字幕。
-
-| | Gemini Live（默认） | Qwen3.8 LiveTranslate | gpt-realtime-translate | Soniox |
-| --- | --- | --- | --- | --- |
-| 提供方 / 密钥 | Google AI Studio (`GEMINI_API_KEY`) | 阿里云百炼 / DashScope (`DASHSCOPE_API_KEY`) | OpenAI (`OPENAI_API_KEY`) | Soniox (`SONIOX_API_KEY`) |
-| 必要设置 | 仅需 API 密钥 | 引擎设为 `qwen`、API 密钥 + 服务器（`intl` 还需工作空间 ID）；Qwen 3.5 还需 **我的/对方语音语言** | 引擎设为 `openai`，仅需 API 密钥 | 引擎 `soniox` + API 密钥 |
-| 中国大陆可用性 | 需要能访问 Google 服务 | 可直连 `beijing` 端点 | 需要能访问 OpenAI 服务 | 未验证 |
-| 语音语言检测 | 自动检测 | 自动检测（Qwen 3.5: **手动** — 需设置"我的/对方语音语言"） | 自动检测（语音语言设置会被忽略） | 自动检测；语音语言为可选提示 |
-| 支持语言 | 70+ 种 BCP-47 目标语言，含 `zh-Hans`/`zh-Hant` | 29 种带语音 + 另外 31 种仅文本；中文只有 `zh`（不区分简体/繁体）；粤语（`yue`）仅文本 | 输入 70+ 种，但目标语言仅 **13 种**（`en es pt fr ja ru zh de ko hi id vi it`）；中文只有 `zh`；每个会话一种目标语言 | 应用支持 60 种语言；中文使用 `zh`，不支持粤语（`yue`） |
-| 翻译语音 | 复刻说话者音色 | 通过服务端声音复刻还原说话者音色（`qwen.voice_clone`，默认 `once`）；关闭复刻时使用固定音色 | 自动贴合说话人音色；无音色选项 | 单独 TTS；默认 `Daniel` 或自定义语音；无自动克隆 |
-| 抢话打断（barge-in） | 支持 | 不支持 — 同时说话时音频可能排队播放 | 不支持 — 同时说话时音频可能排队播放 | 不支持 — 重叠语音可能排队播放 |
-
-Qwen 注意事项:
-
-- `qwen.model` 默认为 `qwen3.8-livetranslate-flash-realtime`。它会自动检测语音语言，
-  并像 Soniox 一样在字幕中区分说话人。已保存的配置会保留原有模型；如需切换，
-  请修改 **Qwen 模型**。
-- `qwen3.5-livetranslate-flash-realtime` 仍可使用，但**必须设置语音语言**。可在
-  设置标签页、仪表板标签页或 SteamVR 仪表板面板的**对话**页面设置。留空按英语
-  处理。Qwen 3.5 不显示说话人区分。
-- `zh-Hans`/`zh-Hant` 目标语言发送给 Qwen 时都会作为 `zh`。
-- 如果所选目标语言没有 Qwen 语音支持，vrclt 会自动以仅文本方式运行会话
-  （聊天框/字幕仍正常工作）。
-- 端点: `intl`（新加坡）或 `beijing`。`intl` **必须**设置百炼工作空间 ID；
-  `beijing` 无需设置（见上文 3b 节）。
-- 声音复刻: `qwen.voice_clone: once`（默认）在会话开始时复刻说话者音色 —
-  适合你自己的麦克风，且音频延迟低。`always` 对每次回复重新复刻（适合多人
-  说话的音频，但合成开始会明显变慢）；`off` 使用模型默认音色，或使用
-  `qwen.voice` 中预先复刻的语音 ID（`qwen-translate-vc-...`）。
-
-## 应用模式
-
-| 模式 | 适用对象 | 行为 |
-| --- | --- | --- |
-| `vrchat` | VRChat | 捕获 `VRChat.exe` 音频，启用 OSC 聊天框、角色 OSC 控制、SteamVR 字幕和手腕 UI |
-| `discord` | Discord | 捕获根 `Discord.exe` 进程树音频，禁用 VRChat OSC/SteamVR 功能，保留 PC UI 和桌面字幕 |
-| `custom` | 任意其他应用 | 捕获在设置中选定的进程，保留 SteamVR 字幕和手腕菜单，禁用 VRChat OSC 功能 |
-
-可以在设置中选择模式，也可以只为一次启动传入参数:
-
-```powershell
-.\vrclt.exe run --app vrchat
-.\vrclt.exe run --app discord
-.\vrclt.exe run --app custom
-```
-
-若要在 VRChat 中使用仅文本行为，请在仪表板或设置中启用 **仅文本**。
-原始麦克风会直通到 VRChat，Gemini 翻译结果只会作为 OSC 聊天框文本发送，
-不会输出翻译语音。
-
-如果使用 Discord Canary 或 PTB，请在设置或 `app.profiles.discord.process`
-中修改 Discord 进程名。
-
-若要为其他应用（浏览器、媒体播放器、别的游戏）生成字幕，请切换到 **自定义**
-模式，并在设置中指定 **自定义捕获进程**。打开该下拉列表会列出持有 Windows
-音频会话的进程，当前正在播放声音的会带标记并排在最前，因此无需事先知道 exe
-名称。**捕获进程** 使用同一个选择器，显示此刻实际捕获的目标。
-
-## 原生 UI
-
-仪表板集中显示翻译、字幕、语言和音频操作，并展示当前引擎和设置快捷入口。
-语言列表编辑及显示、应用附加选项可展开使用。设置支持分类导航和搜索，
-只显示当前所选引擎的相关配置。
-日志批量更新，追赶读取最多 256 KiB，历史最多 2,000 行，未完成行最多 64 KiB。
-重连等待直接响应停止事件，不再定期轮询。
-
-仪表板:
-
-- 右上角的 **简洁 / 完整** 切换。新安装以简洁视图开始（设置检查、应用选择、翻译/字幕开关、语言、我的麦克风与自动查找、麦克风电平、实时字幕），设置检查在全部就绪时折叠为一行。完整视图另外显示仅文本、设备、引擎按钮、语言列表编辑、语音语言、音量以及显示/应用选项。麦克风列表中不会出现只会让翻译语音回流的 `CABLE Output`。v1.0.0 之前保存的配置保持完整视图。
-- 带 **自动设置**、**自动查找麦克风**、**自动安装 VB-Cable** 的 **设置检查** 面板，全部就绪时折叠为一行
-- 运行时状态和连接状态
-- VRChat/Discord/自定义 模式切换和 VRChat 仅文本切换
-- 翻译 ON/OFF
-- 字幕 ON/OFF
-- 使用 PC 全局热键切换翻译/字幕
-- 输出语言和字幕语言，并可搜索添加 Gemini Live Translation 支持的 70+ 种语言
-- 麦克风输入和翻译语音输出设备选择，附输出测试音按钮；刷新设备会重启运行时并识别后插入的设备
-- 翻译语音音量滑块和带检测阈值标记的实时麦克风电平表
-- 我的/对方语音语言: Qwen 3.5 必填，Soniox 为可选识别提示，Gemini/OpenAI/Qwen 3.8 自动检测
-- PC 字幕位置移动/重置、字幕框大小和字号
-- 实时字幕预览
-
-设置:
-
-- 翻译引擎（Gemini / Qwen / OpenAI / Soniox）、API 密钥、模型，以及 Qwen 端点/工作空间
-- 应用模式和目标进程
-- 麦克风、翻译语音输出、监听输出和入站音频设备
-- 默认目标语言和已保存语言列表
-- PC 全局热键设置
-- 音频阈值和 VAD 设置
-- 保留 API 密钥、输出语言列表、字幕语言列表、UI 语言、窗口关闭行为和已选择音频设备的恢复默认设置按钮
-- OSC、聊天框、SteamVR 叠加层和手腕 UI 选项
-- UI 语言和 UI 模式
-
-日志/关于:
-
-- 当前配置路径
-- 当前日志文件路径
-- 最近日志内容
-
-关闭窗口时，应用会隐藏到托盘。若要停止运行时并完全退出，请使用托盘中的
-`Quit` 或 `退出` 操作。
-
-## 音频路由
-
-出站翻译:
-
-```text
-microphone -> selected engine -> translated voice -> CABLE Input
-                                     target app mic <- CABLE Output
-```
-
-入站字幕:
-
-```text
-target app process audio -> ProcTap -> selected engine -> subtitles
-```
-
-翻译关闭时，麦克风不会经过 Gemini，而是直接发送到 `CABLE Input`。
-在 VRChat **仅文本** 模式中，原始语音始终 passthrough，翻译开关只控制
-Gemini 文本翻译和聊天框输出。
-
-原声 passthrough 直接使用捕获到的 48 kHz 麦克风流，Gemini 翻译流会单独重采样。
-因此 passthrough 不需要等待翻译会话，也能减少不必要的音质损失。
-
-## VRChat 功能
-
-VRChat 模式可使用:
-
-- 翻译文本的 OSC 聊天框输出
-- `VRCLT_Enabled`、`VRCLT_Lang` 等角色 OSC 参数
-- 用于入站字幕的 SteamVR 字幕叠加层
-- 降低高度的紧凑 SteamVR 手腕菜单。首页**对话**集中翻译、字幕、输出/字幕语言、连接状态、独立的**语音 / 文本**选择按钮及运行时重启。**设置**集中 UI 语言、字幕字号、面板移动/位置重置和 Soniox 说话人上下文保持。保留原有的视线与握持操作
-- 手腕菜单默认宽度为 **14 厘米**，面板高度也已降低。保留已保存的宽度，可在应用设置中调整手腕菜单宽度。小于 16 厘米的设置现在也能正确生效
-- 分为**对话 / 音频 / 位置与应用**三页的 SteamVR 仪表板（在 SteamVR 菜单中选择 vrclt 图标）。**对话**集中翻译、字幕、语言及连接/错误状态；**音频**包含麦克风、语音输出选择及翻译语音音量；**位置与应用**集中面板位置和应用控制。设备变更会在最后一次点击稍后随运行时重启一起生效
-- SteamVR 仪表板可设置 Qwen 3.5 的语音语言及 Soniox 的可选识别提示；手腕菜单可选择翻译输出语言和字幕语言。选择 Soniox 时，两个 VR 面板均显示**保持说话人上下文**及当前生效的静音超时时间，与 PC UI 共用保存值。关闭此开关后，说话人分离本身仍保持开启
-- 随 SteamVR 自动启动: 发布版 exe 会自动注册到 SteamVR 设置 > 启动/叠加层应用，可在 SteamVR 设置或 vrclt 设置中开关自动启动
-- 更新到新版本后请先运行一次新 exe。注册本身会保留，但自动启动指向的 exe 路径需要首次运行时才会更新为新文件
-- VR 字幕编辑 laser/cursor 显示和角落尺寸调整手柄
-
-使用 `ui.mode: auto` 时，SteamVR 运行后会启用 VR 功能。使用 `ui.mode: vr`
-可强制启用 VR 叠加层，使用 `ui.mode: desktop` 可保持禁用。
-
-## 文件和路径
-
-| 项目 | 路径 |
+| | |
 | --- | --- |
-| 配置 | `%LOCALAPPDATA%\vrclt\config.yaml` |
-| 日志 | `%LOCALAPPDATA%\vrclt\logs\vrclt.log` |
-
-如需使用其他配置文件，请用环境变量 `VRCLT_CONFIG` 指定路径。
-`config.yaml` 的所有键都整理在 Wiki 的[配置参考](https://github.com/shgeum/VRCLT/wiki/%E9%85%8D%E7%BD%AE%E5%8F%82%E8%80%83)中。
-
-## 开发
-
-从源码运行、测试、构建 exe 以及发布流程都在 [Wiki](https://github.com/shgeum/VRCLT/wiki/%E5%BC%80%E5%8F%91%E6%8C%87%E5%8D%97) 中。
-更改通过拉取请求合并到 `main`，新版本合并后会自动发布。
+| [安装](https://github.com/VRCLT/VRCLT/wiki/%E5%AE%89%E8%A3%85) | 要求、VB-Cable、首次启动、文件位置 |
+| [获取 API 密钥](https://github.com/VRCLT/VRCLT/wiki/%E8%8E%B7%E5%8F%96-API-%E5%AF%86%E9%92%A5) | 获取 Gemini、Qwen、OpenAI、Soniox 密钥（含截图） |
+| [翻译引擎](https://github.com/VRCLT/VRCLT/wiki/%E7%BF%BB%E8%AF%91%E5%BC%95%E6%93%8E) | 四种引擎对比：语言、语音、地区 |
+| [使用方法](https://github.com/VRCLT/VRCLT/wiki/%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95) | 全部功能、应用模式、仪表板与设置、音频路由 |
+| [VRChat 与 VR](https://github.com/VRCLT/VRCLT/wiki/VRChat-%E4%B8%8E-VR) | 聊天框、角色 OSC、SteamVR 字幕、手腕菜单、SteamVR 仪表板 |
+| [故障排查](https://github.com/VRCLT/VRCLT/wiki/%E6%95%85%E9%9A%9C%E6%8E%92%E6%9F%A5) | 常见问题及解决方法 |
+| [配置参考](https://github.com/VRCLT/VRCLT/wiki/%E9%85%8D%E7%BD%AE%E5%8F%82%E8%80%83) | `config.yaml` 的所有键 |
+| [开发指南](https://github.com/VRCLT/VRCLT/wiki/%E5%BC%80%E5%8F%91%E6%8C%87%E5%8D%97) | 从源码运行、测试、构建与发布 |
 
 ## 致谢
 

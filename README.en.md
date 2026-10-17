@@ -15,45 +15,4 @@ Languages: [English](README.md) | [한국어](README.ko.md) | [日本語](README
 
 `README.md` is the canonical English README. This file is kept for older links.
 
-See [README.md](README.md).
-
-For Soniox account signup, project API keys, billing balance, app setup,
-language selection, and first-run troubleshooting, see
-[Soniox API Key](README.md#3c-soniox-api-key). The updated dashboard and
-settings navigation are described in [Native UI](README.md#native-ui).
-
-Soniox's `soniox.keep_speaker_context` option is on by default and retains the
-session through short pauses, disconnecting after 60 seconds of silence.
-Adjust `soniox.speaker_context_idle_sec` in Settings (5–600 seconds). The Soniox
-Dashboard shows the synchronized checkbox and effective timeout. Connections
-remain billable during silence; speaker diarization stays enabled with either
-choice. See the setup section for details.
-
-In v1.0.0, the Dashboard opens with a **Setup check** panel. **Auto setup**
-routes the translated voice to `CABLE Input`, picks your real microphone, and,
-while VRChat is closed, sets VRChat's microphone to `CABLE Output` and turns
-on its OSC. **Install VB-Cable** runs VB-Audio's official setup for you, and
-**Find my mic** selects the microphone you are speaking into. New installs
-start in the **Simple** view; switch to **Full** at the top right. See
-[First Launch Setup](README.md#4-first-launch-setup).
-
-In v0.20.0, Qwen's default model is `qwen3.8-livetranslate-flash-realtime`. It
-detects the spoken language automatically and labels speakers like Soniox.
-Saved configurations keep their model, and `qwen3.5-livetranslate-flash-realtime`
-still requires the spoken-language settings. Soniox now sends the API key when
-the connection opens, which Soniox requires from 15 January 2027. See
-[Translation Engines](README.md#translation-engines).
-
-In v0.19.1, the SteamVR Dashboard groups controls into **Live**, **Audio**, and
-**Layout & app** pages. The compact wrist menu's **Live** page includes separate
-**Voice / Text** buttons and runtime restart alongside translation and subtitle
-controls. **Settings** groups UI language, subtitle size, panel movement/reset,
-and Soniox speaker-context retention. The SteamVR Dashboard includes Qwen
-spoken-language controls and optional Soniox recognition hints; the wrist menu
-selects translation output and subtitle
-languages. Both VR panels show Soniox's synchronized speaker-context switch
-with the effective silence timeout. See [VRChat Features](README.md#vrchat-features).
-
-The wrist menu defaults to 14 cm wide with a shorter panel shape. Existing saved
-widths are preserved; adjust the wrist width in Settings, including values below
-16 cm.
+See [README.md](README.md) for an overview and the [wiki](https://github.com/VRCLT/VRCLT/wiki) for the guides: [Installation](https://github.com/VRCLT/VRCLT/wiki/Installation), [API Keys](https://github.com/VRCLT/VRCLT/wiki/API-Keys), [Translation Engines](https://github.com/VRCLT/VRCLT/wiki/Translation-Engines), [Using VRCLT](https://github.com/VRCLT/VRCLT/wiki/Using-VRCLT), [VRChat and VR](https://github.com/VRCLT/VRCLT/wiki/VRChat-and-VR), and [Troubleshooting](https://github.com/VRCLT/VRCLT/wiki/Troubleshooting). Release notes are in [CHANGELOG.md](CHANGELOG.md).
