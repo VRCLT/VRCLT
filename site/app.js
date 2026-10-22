@@ -34,3 +34,38 @@ document.addEventListener("keydown", (event) => {
     languageMenu.querySelector("summary").focus();
   }
 });
+
+// Reveal each section once. No scroll handlers, and no hidden content when
+// JavaScript, IntersectionObserver, or motion preferences disable enhancement.
+const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+if (!motionPreference.matches && "IntersectionObserver" in window) {
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      entry.target.classList.add("is-visible");
+      observer.unobserve(entry.target);
+    }
+  }, { threshold: 0.08 });
+
+  const sections = document.querySelectorAll(
+    ".hero h1, .hero-copy, .cover-figure, .ways article, .section-heading, " +
+    ".gallery, .steps li, .audio-route, .engine-intro, .engine-list, " +
+    ".faq h2, .faq-items, .closing .wrap, .site-footer"
+  );
+  for (const section of sections) {
+    section.classList.add("will-reveal");
+    observer.observe(section);
+  }
+  for (const selector of [".ways article", ".steps li"]) {
+    document.querySelectorAll(selector).forEach((item, index) => {
+      item.style.setProperty("--reveal-delay", `${index * 60}ms`);
+    });
+  }
+
+  // A preference change must never leave a section waiting to become visible.
+  motionPreference.addEventListener("change", (event) => {
+    if (!event.matches) return;
+    observer.disconnect();
+    sections.forEach((section) => section.classList.add("is-visible"));
+  });
+}

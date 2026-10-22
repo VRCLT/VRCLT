@@ -26,6 +26,10 @@ two small WOFF2 subsets under `assets/`, with its OFL license alongside them.
 After adding new translated text, refresh those subsets with
 `scripts/make_site_fonts.py` (build-time dependency: fonttools and brotli).
 
+Section entrances use IntersectionObserver once per section. Gallery changes,
+menus and buttons have short transitions. The site respects reduced-motion
+preferences, including changes during a visit; content remains visible without JS.
+
 Content comes from `content.json`; `config.json` holds the canonical URL.
 v1.0 is marked as released. Downloads link to the latest public
 release at `https://github.com/VRCLT/VRCLT/releases/latest`.
@@ -38,10 +42,11 @@ From the application repository root:
 ```
 
 Build output is isolated in `build/site/`. The builder copies only the selected
-public brand assets and screenshot images. Publish that output to the public
-`vrclt/vrclt.github.io` repository and enable Pages from its `main` branch root.
-Keep the application checkout's pending changes and private configuration out
-of the website repository.
+public brand assets and screenshot images. The `Site` workflow validates pull
+requests and publishes the output to `VRCLT/vrclt.github.io` after a merge to
+`main`. GitHub Pages serves that repository's `main` branch root. Commit source
+changes through a pull request; generated output and private configuration do
+not belong in the application commit.
 
 Before publishing, run `node tests/smoke_site_locale.cjs`, then check every language
 on desktop and mobile, automatic entry and remembered choices, the four gallery
