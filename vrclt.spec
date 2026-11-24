@@ -54,7 +54,7 @@ for icon_name in ("icon.ico", "icon.png"):
 # native / data-heavy packages PyInstaller can't fully trace on its own
 for pkg in [
     "onnxruntime", "soxr", "proctap", "openvr", "sounddevice",
-    "glfw", "OpenGL", "PIL", "google.genai", "pythonosc", "yaml",
+    "glfw", "OpenGL", "PIL", "pythonosc", "yaml",
     "psutil", "websockets", "certifi",
 ]:
     try:
