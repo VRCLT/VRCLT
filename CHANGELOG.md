@@ -7,24 +7,6 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 Release artifacts are attached to [GitHub Releases](https://github.com/VRCLT/VRCLT/releases)
 as `vrclt-v<version>-windows-x64.exe` plus a `.sha256` checksum.
 
-## [Unreleased]
-
-### Added
-
-- A folder build next to the single executable. `vrclt-v<version>-windows-x64.zip`
-  holds a `vrclt` folder; extract it and run `vrclt\vrclt.exe`. The single
-  executable unpacks about 390 MB to `%TEMP%` on every start, and the folder
-  skips that: loading the whole app took about 0.8 seconds from the folder and
-  about 6.9 seconds from the single file on the build machine. Both hold the
-  same code and settings.
-
-### Changed
-
-- Gemini talks to the Live API over a WebSocket directly, like the other
-  engines, instead of through the `google-genai` SDK. Translation, the
-  glossary, and the Cantonese fallback behave as before. The app's own modules
-  load in about 0.8 seconds instead of 1.9.
-
 ## [1.1.0] - 2026-11-24
 
 ### Added
@@ -45,6 +27,12 @@ as `vrclt-v<version>-windows-x64.exe` plus a `.sha256` checksum.
   the voice's ID into `soniox.voice`, and translated speech then uses that
   voice in every target language. The sample is uploaded to and stored by
   Soniox.
+- A folder build next to the single executable. `vrclt-v<version>-windows-x64.zip`
+  holds a `vrclt` folder; extract it and run `vrclt\vrclt.exe`. The single
+  executable unpacks about 390 MB to `%TEMP%` on every start, and the folder
+  skips that: loading the whole app took about 0.8 seconds from the folder and
+  about 6.9 seconds from the single file on a development PC. Both hold the
+  same code and use the same settings.
 
 ### Changed
 
@@ -55,6 +43,10 @@ as `vrclt-v<version>-windows-x64.exe` plus a `.sha256` checksum.
 - Gemini's Cantonese fallback uses `gemini-3.8-live` in place of the legacy
   `gemini-3.1-flash-live-preview`. The translation model,
   `gemini-3.5-live-translate-preview`, is unchanged.
+- Gemini talks to the Live API over a WebSocket directly, like the other
+  engines, instead of through the `google-genai` SDK. Translation, the
+  glossary, and the Cantonese fallback behave as before. The app's own modules
+  load in about 0.8 seconds instead of 1.9.
 
 ### Fixed
 
