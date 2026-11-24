@@ -81,6 +81,7 @@ class SonioxVoiceDialog(QtWidgets.QDialog):
         self._busy = ""
         self._closed = False
         self._loaded = False
+        self._opened_new = False
         self.selected = ""                     # voice ID the user chose to use
         self.deleted: set[str] = set()
         self._finished.connect(self._on_finished)
@@ -88,7 +89,7 @@ class SonioxVoiceDialog(QtWidgets.QDialog):
         self._timer.setInterval(100)
         self._timer.timeout.connect(self._tick)
         self.setWindowTitle(tr("sx_voice_title"))
-        self.setMinimumWidth(620)
+        self.setMinimumWidth(660)
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.setSpacing(12)
@@ -96,11 +97,12 @@ class SonioxVoiceDialog(QtWidgets.QDialog):
         self._intro.setWordWrap(True)
         layout.addWidget(self._intro)
 
-        self._list_box = QtWidgets.QGroupBox()
-        list_layout = QtWidgets.QVBoxLayout(self._list_box)
-        list_layout.setContentsMargins(12, 4, 12, 6)
+        # two tabs keep the window short: the reading script needs the room
+        # the voice list would otherwise take
+        self._tabs = QtWidgets.QTabWidget()
+        list_page = QtWidgets.QWidget()
+        list_layout = QtWidgets.QVBoxLayout(list_page)
         self._list = QtWidgets.QListWidget()
-        self._list.setFixedHeight(112)      # three rows; the rest scrolls
         self._list.setAccessibleName(tr("sx_voice_list").format(count=0))
         self._list.itemSelectionChanged.connect(self._sync)
         self._list.itemDoubleClicked.connect(lambda _item: self._use())
@@ -114,11 +116,14 @@ class SonioxVoiceDialog(QtWidgets.QDialog):
         row.addWidget(self._btn_delete)
         row.addStretch(1)
         list_layout.addLayout(row)
-        layout.addWidget(self._list_box)
+        self._tabs.addTab(list_page, "")
 
-        new_box = QtWidgets.QGroupBox(tr("sx_voice_new"))
-        form = QtWidgets.QFormLayout(new_box)
-        form.setContentsMargins(12, 4, 12, 6)
+        # a plain column: a form layout over-estimates the wrapped script's
+        # height, which leaves a blank band under it
+        new_page = QtWidgets.QWidget()
+        column = QtWidgets.QVBoxLayout(new_page)
+        form = QtWidgets.QFormLayout()
+        column.addLayout(form)
         self._name = QtWidgets.QLineEdit()
         self._name.setMaxLength(voices_api.MAX_NAME_CHARS)
         self._name.textChanged.connect(self._sync)
@@ -132,6 +137,19 @@ class SonioxVoiceDialog(QtWidgets.QDialog):
         row.addWidget(self._btn_file)
         row.addStretch(1)
         form.addRow(tr("sx_voice_sample"), row)
+        # something to read aloud: nobody knows what to say to a microphone
+        script_title = QtWidgets.QLabel(tr("sx_voice_script_title"))
+        script_title.setObjectName("noteText")
+        script_title.setWordWrap(True)
+        column.addWidget(script_title)
+        self._script = QtWidgets.QLabel(tr("sx_voice_script"))
+        self._script.setWordWrap(True)
+        self._script.setTextInteractionFlags(
+            QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
+        font = self._script.font()
+        font.setPointSizeF(font.pointSizeF() * 1.1)
+        self._script.setFont(font)
+        column.addWidget(self._script)
         self._meter = MicLevelMeter()
         self._sample_label = QtWidgets.QLabel(tr("sx_voice_no_sample"))
         self._sample_label.setObjectName("noteText")
@@ -141,8 +159,10 @@ class SonioxVoiceDialog(QtWidgets.QDialog):
         row.addWidget(self._sample_label, 1)
         row.addWidget(self._meter, 1)
         row.addWidget(self._btn_create)
-        form.addRow("", row)
-        layout.addWidget(new_box)
+        column.addLayout(row)
+        column.addStretch(1)
+        self._tabs.addTab(new_page, tr("sx_voice_new"))
+        layout.addWidget(self._tabs)
 
         note = QtWidgets.QLabel(tr("sx_voice_note"))
         note.setObjectName("noteText")
@@ -151,7 +171,8 @@ class SonioxVoiceDialog(QtWidgets.QDialog):
         self._status = QtWidgets.QLabel()
         self._status.setObjectName("setupText")
         self._status.setWordWrap(True)
-        self._status.setMinimumHeight(2 * self._status.fontMetrics().lineSpacing())
+        # room for a service error message next to the buttons
+        self._status.setMinimumHeight(3 * self._status.fontMetrics().lineSpacing())
 
         self._buttons = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.StandardButton.Ok
@@ -175,10 +196,25 @@ class SonioxVoiceDialog(QtWidgets.QDialog):
         super().showEvent(event)
         if not self._loaded:
             self._loaded = True
+            self._fit_height()
             if self._client is None:
                 self._status.setText(self._tr("sx_voice_no_key"))
             else:
                 self._load()
+
+    def _fit_height(self) -> None:
+        """Size hints wrap the long texts narrower than the window really is,
+        and a tab widget does not report height-for-width at all, so the
+        default size leaves a blank band. Fit both to the real width."""
+        pages = [self._tabs.widget(i) for i in range(self._tabs.count())]
+        chrome = self._tabs.sizeHint().height() - max(p.sizeHint().height() for p in pages)
+        width = self._tabs.currentWidget().width()
+        self._tabs.setFixedHeight(chrome + max(
+            p.layout().totalHeightForWidth(width) if p.layout().hasHeightForWidth()
+            else p.sizeHint().height() for p in pages))
+        layout = self.layout()
+        if layout.hasHeightForWidth():
+            self.resize(self.width(), layout.totalHeightForWidth(self.width()))
 
     def _voice(self):
         item = self._list.currentItem()
@@ -225,7 +261,7 @@ class SonioxVoiceDialog(QtWidgets.QDialog):
             if voice.id == select:
                 self._list.setCurrentItem(item)
         self._list.blockSignals(False)
-        self._list_box.setTitle(self._tr("sx_voice_list").format(count=len(voices)))
+        self._tabs.setTabText(0, self._tr("sx_voice_list").format(count=len(voices)))
         self._sync()
 
     # ---------------- worker plumbing ----------------
@@ -265,9 +301,13 @@ class SonioxVoiceDialog(QtWidgets.QDialog):
                 self._max_sec = limit if limit > 0 else self._max_sec
             self._status.setText("" if self._supported else self._tr("sx_voice_unsupported"))
             self._set_voices(voices)
+            if not voices and self._supported and not self._opened_new:
+                self._opened_new = True     # nothing to pick yet: start at "new voice"
+                self._tabs.setCurrentIndex(1)
         elif operation == "create":
             voice, failure, voices = result
             self._set_voices(voices, select=voice.id)
+            self._tabs.setCurrentIndex(0)   # where "Use this voice" applies
             if failure is not None:
                 self._status.setText(self._tr("sx_voice_error").format(detail=str(failure)))
             else:

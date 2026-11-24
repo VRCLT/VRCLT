@@ -513,6 +513,42 @@ STRINGS = {
                       "ja": "音声ファイルを選択…", "zh": "选择音频文件…"},
     "sx_voice_file_filter": {"ko": "오디오 파일", "en": "Audio files",
                              "ja": "音声ファイル", "zh": "音频文件"},
+    "sx_voice_script_title": {
+        "ko": "읽을 글 예시 (약 1분 분량입니다. 다른 말을 해도 됩니다.)",
+        "en": "Something to read (about one minute; you can say anything else instead)",
+        "ja": "読み上げ用の文章（約1分。ほかの内容を話してもかまいません）",
+        "zh": "朗读示例（约一分钟，也可以说别的内容）"},
+    "sx_voice_script": {
+        "ko": "안녕하세요, 만나서 반가워요. 오늘은 제 목소리를 녹음하고 있어요. 평소에 친구와 "
+              "이야기하듯이 편하게 말해 볼게요. 저는 주말이면 늦게까지 자고, 일어나서 따뜻한 커피를 "
+              "한 잔 마시는 걸 좋아해요. 날씨가 좋으면 가까운 공원을 천천히 걷기도 하고, 비가 오면 "
+              "집에서 영화를 보거나 게임을 해요. 요즘은 새로운 사람들을 만나서 이야기하는 게 정말 "
+              "즐거워요. 혹시 좋아하는 음식이 있나요? 저는 매운 떡볶이랑 바삭한 치킨을 제일 좋아해요. "
+              "와, 생각만 해도 배가 고파지네요! 처음에는 조금 어색했지만, 이야기를 나누다 보니 금방 "
+              "친해질 수 있었어요. 다음에 또 만나면 더 재미있는 이야기를 들려줄게요. 오늘 들어 "
+              "주셔서 고마워요.",
+        "en": "Hi there, it's nice to meet you. I'm recording my voice today, so I'll just talk "
+              "the way I usually do with friends. On weekends I like to sleep in, then make a warm "
+              "cup of coffee and take my time waking up. If the weather is nice, I go for a slow "
+              "walk in the park nearby. If it rains, I stay home and watch a movie or play a game. "
+              "Lately I really enjoy meeting new people and hearing their stories. What kind of "
+              "food do you like? I can never say no to spicy noodles or crispy fried chicken. Wow, "
+              "just thinking about it makes me hungry! It felt a little awkward at first, but "
+              "after talking for a while we became friends quickly. Next time we meet, I'll tell "
+              "you an even better story. Thanks for listening today.",
+        "ja": "こんにちは、はじめまして。今日は自分の声を録音しています。いつも友だちと話すときの"
+              "ように、気楽に話してみますね。週末はゆっくり寝て、起きたら温かいコーヒーを一杯飲むのが"
+              "好きです。天気がよければ近くの公園をのんびり散歩して、雨の日は家で映画を見たりゲームを"
+              "したりします。最近は新しい人と出会って話すのが本当に楽しいです。好きな食べ物は"
+              "ありますか？私は辛いラーメンとサクサクのから揚げが大好きです。わあ、考えただけでお腹が"
+              "すいてきました！最初は少し緊張しましたが、話しているうちにすぐ仲良くなれました。"
+              "今度会ったら、もっと面白い話を聞かせますね。今日は聞いてくれてありがとうございました。",
+        "zh": "你好，很高兴认识你。今天我在录自己的声音，所以就像平时跟朋友聊天一样，轻松地说一说。"
+              "周末我喜欢睡个懒觉，起床后喝一杯热咖啡，慢慢清醒过来。天气好的时候，我会去附近的公园"
+              "散散步；下雨的话，就待在家里看电影或者打游戏。最近我特别喜欢认识新朋友，听他们讲自己的"
+              "故事。你有喜欢吃的东西吗？我最爱吃辣辣的面条和脆脆的炸鸡。哇，光是想想就饿了！"
+              "一开始有点紧张，不过聊着聊着，我们很快就熟悉起来了。下次见面的时候，我再给你讲一个"
+              "更有趣的故事。谢谢你今天听我说话。"},
     "sx_voice_no_sample": {"ko": "샘플 없음", "en": "No sample yet",
                            "ja": "サンプルなし", "zh": "尚无样本"},
     "sx_voice_recorded": {"ko": "녹음됨 {time}", "en": "Recorded {time}",

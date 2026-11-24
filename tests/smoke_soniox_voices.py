@@ -463,7 +463,8 @@ class DialogTests(unittest.TestCase):
         self.assertEqual(dialog._list.item(1).text(), "Beta  ·  not prepared")
         self.assertEqual(dialog._voice().id, ID_A)          # the current voice is preselected
         self.assertIn("1:30", dialog._intro.text())         # the model's own clip limit
-        self.assertEqual(dialog._list_box.title(), "My cloned voices (2)")
+        self.assertEqual(dialog._tabs.tabText(0), "My cloned voices (2)")
+        self.assertEqual(dialog._tabs.currentIndex(), 0)    # voices exist: start at the list
         dialog._btn_use.click()
         self.assertEqual(dialog.selected, ID_A)
         self.assertEqual(dialog.result(), QtWidgets.QDialog.DialogCode.Accepted)
@@ -476,8 +477,25 @@ class DialogTests(unittest.TestCase):
         self.assertIn(("wait_ready", ID_B, MODEL), self.clients[0].calls)
         self.assertEqual(dialog.selected, ID_B)
 
+    def test_a_first_voice_starts_at_the_reading_script(self):
+        dialog = self.dialog(voices=[])
+        self.assertEqual(dialog._tabs.currentIndex(), 1)    # nothing to pick: "New voice"
+        self.assertEqual(dialog._tabs.tabText(0), "My cloned voices (0)")
+        self.assertEqual(dialog._script.text(), i18n.tr("en", "sx_voice_script"))
+        self.assertTrue(dialog._script.wordWrap())
+        dialog._tabs.setCurrentIndex(0)
+        dialog._btn_refresh.click()                         # still empty: the tab stays put
+        self.assertEqual(dialog._tabs.currentIndex(), 0)
+        # each language reads its own text, about a minute of it
+        scripts = i18n.STRINGS["sx_voice_script"]
+        self.assertEqual(len(set(scripts.values())), len(i18n.LANGS))
+        self.assertGreater(len(scripts["en"].split()), 110)
+        for lang in ("ko", "ja", "zh"):
+            self.assertGreater(len(scripts[lang]), 180, lang)
+
     def test_record_then_create_selects_the_new_voice(self):
         dialog = self.dialog()
+        dialog._tabs.setCurrentIndex(1)
         self.assertFalse(dialog._btn_create.isEnabled())
         dialog._btn_record.click()
         recorder = self.recorders[0]
@@ -504,6 +522,7 @@ class DialogTests(unittest.TestCase):
         self.assertIn(("create", "Mine", b"RIFF-recorded", ui.RECORDED_FILENAME), client.calls)
         self.assertIn(("wait_ready", ID_NEW, MODEL), client.calls)
         self.assertEqual(dialog._voice().id, ID_NEW)
+        self.assertEqual(dialog._tabs.currentIndex(), 0)    # back at the list to use it
         self.assertEqual(dialog._list.currentItem().text(), "Mine  ·  ready")
         self.assertIn("'Mine' is ready", dialog._status.text())
         self.assertEqual(dialog._name.text(), "")

@@ -22,9 +22,11 @@ as `vrclt-v<version>-windows-x64.exe` plus a `.sha256` checksum.
 - Soniox voice cloning. In Settings, **Soniox voice** has a **Clone voice…**
   button. It creates a cloned voice from a microphone recording or an audio
   file (up to 2 minutes and 35 MB), lists the cloned voices of your Soniox
-  project, and deletes them. **Use this voice** puts the voice's ID into
-  `soniox.voice`, and translated speech then uses that voice in every target
-  language. The sample is uploaded to and stored by Soniox.
+  project, and deletes them. For a recording, the **New voice** tab shows about
+  a minute of text to read aloud, in the UI language. **Use this voice** puts
+  the voice's ID into `soniox.voice`, and translated speech then uses that
+  voice in every target language. The sample is uploaded to and stored by
+  Soniox.
 
 ### Changed
 
