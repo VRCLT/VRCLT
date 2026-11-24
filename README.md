@@ -82,7 +82,7 @@ Google Gemini Live, Qwen3.8 LiveTranslate, OpenAI gpt-realtime-translate, and So
 
 ## Quick start
 
-1. **Download** `vrclt-v<version>-windows-x64.exe` from [Releases](https://github.com/VRCLT/VRCLT/releases/latest) and run it. There is nothing to install.
+1. **Download** `vrclt-v<version>-windows-x64.exe` from [Releases](https://github.com/VRCLT/VRCLT/releases/latest) and run it. There is nothing to install. The `.zip` next to it is the same app as a folder that starts several seconds faster: extract it and run `vrclt\vrclt.exe`.
 2. **Add an API key.** Gemini is the default. [Get a key for any engine](https://github.com/VRCLT/VRCLT/wiki/API-Keys) (step-by-step with screenshots), then paste it into **Settings → Translation**.
 3. **Let the Setup check do the rest.** Click **Install VB-Cable** if it is missing, close VRChat, then click **Auto setup**.
 4. **Start VRChat and talk.** Toggle **Translate** and **Subtitles** on the Dashboard or from the wrist menu.

@@ -82,7 +82,7 @@ Google Gemini Live、Qwen3.8 LiveTranslate、OpenAI gpt-realtime-translate 和 S
 
 ## 快速开始
 
-1. 从 [Releases](https://github.com/VRCLT/VRCLT/releases/latest) **下载并运行** `vrclt-v<version>-windows-x64.exe`，无需安装。
+1. 从 [Releases](https://github.com/VRCLT/VRCLT/releases/latest) **下载并运行** `vrclt-v<version>-windows-x64.exe`，无需安装。旁边的 `.zip` 是同一应用的文件夹版本，启动快几秒：解压后运行 `vrclt\vrclt.exe`。
 2. **填写 API 密钥。** 默认引擎为 Gemini。按照[各引擎的密钥获取步骤](https://github.com/VRCLT/VRCLT/wiki/%E8%8E%B7%E5%8F%96-API-%E5%AF%86%E9%92%A5)（含截图）获取密钥，然后粘贴到 **设置 → 翻译与语言**。
 3. **其余交给设置检查。** 如果没有 VB-Cable，点击 **自动安装 VB-Cable**；关闭 VRChat 后点击 **自动设置**。
 4. **启动 VRChat 开始说话。** 在仪表板或手腕菜单中开关翻译和字幕。

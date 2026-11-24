@@ -1,8 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""PyInstaller spec for vrclt onefile build.
+"""PyInstaller spec for vrclt: one analysis, two builds.
 
 Build: pyinstaller vrclt.spec --noconfirm
-Output: dist/vrclt.exe
+Output: dist/vrclt.exe   single file; unpacks itself to %TEMP% on every start
+        dist/vrclt/      folder (vrclt.exe + _internal); starts without unpacking
 """
 from pathlib import Path
 import ast
@@ -77,12 +78,7 @@ a = Analysis(
     noarchive=False,
 )
 pyz = PYZ(a.pure)
-exe = EXE(
-    pyz,
-    a.scripts,
-    a.binaries,
-    a.datas,
-    [],
+exe_options = dict(
     name="vrclt",
     console=False,
     version=version_info,
@@ -90,3 +86,8 @@ exe = EXE(
     strip=False,
     upx=False,
 )
+exe = EXE(pyz, a.scripts, a.binaries, a.datas, [], **exe_options)
+
+# The folder build shares everything above; only the launcher differs.
+folder_exe = EXE(pyz, a.scripts, [], exclude_binaries=True, **exe_options)
+folder = COLLECT(folder_exe, a.binaries, a.datas, name="vrclt", strip=False, upx=False)

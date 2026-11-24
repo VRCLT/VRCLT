@@ -82,7 +82,7 @@ Google Gemini Live、Qwen3.8 LiveTranslate、OpenAI gpt-realtime-translate、Son
 
 ## クイックスタート
 
-1. [Releases](https://github.com/VRCLT/VRCLT/releases/latest) から `vrclt-v<version>-windows-x64.exe` を**ダウンロードして実行**します。インストールは不要です。
+1. [Releases](https://github.com/VRCLT/VRCLT/releases/latest) から `vrclt-v<version>-windows-x64.exe` を**ダウンロードして実行**します。インストールは不要です。同じ場所にある `.zip` は同じアプリをフォルダーにまとめたもので、起動が数秒速くなります。展開して `vrclt\vrclt.exe` を実行してください。
 2. **API キーを入力します。** 既定のエンジンは Gemini です。[エンジン別のキー取得手順](https://github.com/VRCLT/VRCLT/wiki/API%E3%82%AD%E3%83%BC%E3%81%AE%E5%8F%96%E5%BE%97)（画面キャプチャ付き）でキーを取得し、**設定 → 翻訳・言語** に貼り付けます。
 3. **残りは設定チェックにお任せ。** VB-Cable がなければ **VB-Cableを自動インストール** を押し、VRChat を終了してから **自動設定** を押します。
 4. **VRChat を起動して話すだけ。** 翻訳と字幕はダッシュボードか手首メニューで切り替えます。
