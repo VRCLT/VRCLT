@@ -1,11 +1,17 @@
 """Gemini Live translate session with auto-reconnect.
 
-SDK facts this code is built around (verified against google-genai 2.8.0 source):
-- AsyncSession.receive() terminates after EVERY turn_complete -> the receiver
-  must re-enter receive() on the same websocket to keep the session long-lived.
-- Any websocket close (including our own session.close(), code 1000) surfaces
-  as errors.APIError raised from receive() -> a _closing flag distinguishes
-  intentional closes from genuine failures.
+Protocol facts this code is built around (Gemini Live API over a raw
+WebSocket; the frames match what google-genai 2.8.0 put on the wire, which
+this module used before, and were re-checked against the live service):
+- BidiGenerateContent endpoint, API key in the x-goog-api-key upgrade header.
+  The first client frame is `setup`; the server answers `setupComplete`
+  before anything else.
+- A bad key or model is not an HTTP error: the upgrade succeeds and the server
+  closes with 1007/1008 and a reason text.
+- Server frames are JSON in *binary* frames. Client frames are JSON text; the
+  audio goes in as base64 PCM under realtime_input.
+- A normal close (1000/1001) ends iteration quietly, anything else raises ->
+  a _closing flag distinguishes intentional closes from genuine failures.
 - Turn boundaries come from the server's automatic VAD. The client-side gates
   (mic RMS gate, Silero VAD) strip nearly all silence from the stream, so that
   VAD never hears a pause. Cutting the turn instead with audio_stream_end ends
@@ -16,18 +22,28 @@ SDK facts this code is built around (verified against google-genai 2.8.0 source)
   the turn itself - and only falls back to audio_stream_end if it never does.
 """
 import asyncio
+import base64
+import json
 import logging
 import time
 
-from google import genai
-from google.genai import errors as genai_errors
-from google.genai import types
+import websockets
 
 from ..session_base import (AudioSource, FatalSessionError,
                             RECONNECT_MIN_BACKOFF, RECONNECT_MAX_BACKOFF,
                             sleep_interruptible)
 
 log = logging.getLogger(__name__)
+# The upgrade request carries the API key. Do not let the websockets DEBUG
+# handshake logger expose it even when the application's level is DEBUG.
+_wire_log = logging.getLogger("vrclt.gemini.wire")
+_wire_log.setLevel(logging.WARNING)
+
+LIVE_URL = ("wss://generativelanguage.googleapis.com/ws/"
+            "google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent")
+SETUP_TIMEOUT_SEC = 10.0
+AUDIO_MIME = "audio/pcm;rate=16000"
+STREAM_END = json.dumps({"realtime_input": {"audioStreamEnd": True}})
 
 # languages the dedicated translate model does NOT support; for these we fall
 # back to a conversational live model with an interpreter system instruction
@@ -35,7 +51,7 @@ log = logging.getLogger(__name__)
 AGENT_FALLBACK_LANGUAGES = {
     "yue": "Cantonese",
 }
-AGENT_MODEL = "gemini-3.1-flash-live-preview"
+AGENT_MODEL = "gemini-3.8-live"
 AGENT_INSTRUCTION = (
     "You are a professional simultaneous interpreter. Translate everything "
     "you hear into {language}. Speak ONLY the translation - never answer "
@@ -51,6 +67,32 @@ GAP_FILL_GRACE_SEC = 0.25
 GAP_FILL_MAX_SEC = 2.5
 
 
+class _ServerClosed(RuntimeError):
+    """The service refused or dropped the session: a WebSocket close code (or
+    the HTTP status of a refused upgrade) with the server's reason text."""
+
+    def __init__(self, code, reason: str):
+        self.code = code
+        super().__init__(f"{code} {reason}".strip())
+
+
+def _closed_error(exc: websockets.ConnectionClosed) -> _ServerClosed:
+    frame = exc.rcvd
+    if frame is None:
+        return _ServerClosed(1006, "connection lost")
+    return _ServerClosed(frame.code, frame.reason or "")
+
+
+def _decode(raw) -> dict:
+    event = json.loads(raw)
+    return event if isinstance(event, dict) else {}
+
+
+def _audio_message(pcm: bytes) -> str:
+    return json.dumps({"realtime_input": {"audio": {
+        "data": base64.b64encode(pcm).decode("ascii"), "mimeType": AUDIO_MIME}}})
+
+
 def _is_invalid_api_key_error(exc: Exception) -> bool:
     text = str(exc).lower()
     code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
@@ -58,17 +100,18 @@ def _is_invalid_api_key_error(exc: Exception) -> bool:
 
 
 def _looks_like_glossary_rejection(exc: Exception) -> bool:
-    text = str(exc).lower()
+    # the reason names the field as system_instruction or systemInstruction
+    text = str(exc).lower().replace("_", "")
     code = str(getattr(exc, "code", None) or getattr(exc, "status_code", None))
-    return code in ("400", "1007", "1008") and "system_instruction" in text
+    return code in ("400", "1007", "1008") and "systeminstruction" in text
 
 
 def _classify_session_error(exc: Exception) -> str:
     """Short reason class for UI display: 'quota' | 'network'."""
     text = str(exc).lower()
     code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
-    if str(code) == "429" or "resource_exhausted" in text or "quota" in text \
-            or "rate limit" in text:
+    if str(code) == "429" or "resource_exhausted" in text or "resource exhausted" in text \
+            or "quota" in text or "rate limit" in text:
         return "quota"
     return "network"
 
@@ -82,7 +125,7 @@ class LiveTranslateSession:
                  glossary: str = "",
                  on_src=None, on_dst=None, on_audio=None, on_turn_complete=None,
                  on_interrupted=None, on_session_state=None):
-        self._client = genai.Client(api_key=api_key)
+        self._api_key = str(api_key or "").strip()
         self._model = model
         self._get_target = get_target_language
         self._echo = echo_target_language
@@ -133,61 +176,38 @@ class LiveTranslateSession:
                 "specified (source=target), overriding your default wording:\n"
                 + self._glossary)
 
-    def _model_and_config(self) -> tuple[str, types.LiveConnectConfig]:
+    def _model_and_setup(self) -> tuple[str, dict]:
+        """The model and the `setup` frame that opens a session for it."""
         target = self._get_target()
         instr = self._glossary_instruction()
+        generation: dict = {"responseModalities": ["AUDIO"]}
         if target in AGENT_FALLBACK_LANGUAGES:
+            model = AGENT_MODEL
             system = AGENT_INSTRUCTION.format(
                 language=AGENT_FALLBACK_LANGUAGES[target])
             if instr:
                 system += "\n\n" + instr
-            return AGENT_MODEL, types.LiveConnectConfig(
-                response_modalities=["AUDIO"],
-                system_instruction=system,
-                input_audio_transcription=types.AudioTranscriptionConfig(),
-                output_audio_transcription=types.AudioTranscriptionConfig(),
-            )
-        kwargs = dict(
-            response_modalities=["AUDIO"],
-            translation_config=types.TranslationConfig(
-                target_language_code=target,
-                echo_target_language=self._echo,
-            ),
-            input_audio_transcription=types.AudioTranscriptionConfig(),
-            output_audio_transcription=types.AudioTranscriptionConfig(),
-        )
-        if instr:
+        else:
+            model = self._model
+            generation["translationConfig"] = {
+                "echo_target_language": bool(self._echo),
+                "target_language_code": target,
+            }
             # only attached when a glossary is set, so the empty-glossary
-            # config stays byte-identical to the pre-glossary behavior
-            kwargs["system_instruction"] = instr
-        return self._model, types.LiveConnectConfig(**kwargs)
+            # setup stays identical to the pre-glossary behavior
+            system = instr
+        setup: dict = {
+            "model": model if "/" in model else f"models/{model}",
+            "generationConfig": generation,
+        }
+        if system:
+            setup["systemInstruction"] = {"parts": [{"text": system}], "role": "user"}
+        setup["inputAudioTranscription"] = {}
+        setup["outputAudioTranscription"] = {}
+        return model, {"setup": setup}
 
     async def run(self, stop: asyncio.Event) -> None:
         """Supervisor: wait for voice, run sessions, reconnect with backoff."""
-        try:
-            await self._run_supervisor(stop)
-        finally:
-            # genai.Client holds httpx sync+async clients and an SSL context
-            # bound to this loop; without closing them here every runtime
-            # restart would pin them until process exit
-            await self._close_client()
-
-    async def _close_client(self) -> None:
-        client = self._client
-        for closer in (getattr(getattr(client, "aio", None), "aclose", None),
-                       getattr(client, "close", None)):
-            if closer is None:
-                continue
-            try:
-                result = closer()
-                if asyncio.iscoroutine(result):
-                    await result
-            except (Exception, asyncio.CancelledError):
-                # CancelledError included: on a forced stop the sync close
-                # below must still get its chance
-                log.debug("[%s] client close failed", self.name, exc_info=True)
-
-    async def _run_supervisor(self, stop: asyncio.Event) -> None:
         backoff = RECONNECT_MIN_BACKOFF
         waiting_logged = False
         while not stop.is_set():
@@ -238,11 +258,33 @@ class LiveTranslateSession:
     async def _session_once(self, stop: asyncio.Event) -> bool:
         """One Live session. Returns True if it ended cleanly (goAway/idle/stop)."""
         target = self._get_target()
-        model, config = self._model_and_config()
+        model, setup = self._model_and_setup()
         log.info("[%s] connecting (model=%s target=%s echo=%s)",
                  self.name, model, target, self._echo)
-        async with self._client.aio.live.connect(model=model, config=config) as session:
-            self._closing = False
+        self._closing = False
+        try:
+            return await self._connected_session(setup, target, stop)
+        except websockets.exceptions.InvalidStatus as e:
+            # a refused upgrade: keep the status for the error classifiers
+            body = (e.response.body or b"")[:300].decode("utf-8", errors="replace")
+            raise _ServerClosed(e.response.status_code, body) from None
+        except websockets.ConnectionClosed as e:
+            code = e.rcvd.code if e.rcvd else None
+            if self._closing or code in (1000, 1001):
+                log.info("[%s] connection closed cleanly (code=%s)", self.name, code)
+                return True
+            raise _closed_error(e) from None
+
+    async def _connected_session(self, setup: dict, target: str,
+                                 stop: asyncio.Event) -> bool:
+        async with websockets.connect(
+            LIVE_URL, additional_headers={"x-goog-api-key": self._api_key},
+            open_timeout=10, close_timeout=2, max_size=2**24, logger=_wire_log,
+        ) as session:
+            await session.send(json.dumps(setup, ensure_ascii=False))
+            first = _decode(await asyncio.wait_for(session.recv(), SETUP_TIMEOUT_SEC))
+            if "setupComplete" not in first:
+                raise RuntimeError("Gemini did not confirm the session setup.")
             self._turn_open = False
             self.connected = True
             # clear on successful connect (not on retry start) so the status
@@ -272,15 +314,10 @@ class LiveTranslateSession:
                     if exc is not None and error is None:
                         error = exc
                 if error is not None:
-                    if isinstance(error, genai_errors.APIError) and \
-                            (self._closing or getattr(error, "code", None) in (1000, 1001)):
-                        log.info("[%s] connection closed cleanly (code=%s)",
-                                 self.name, getattr(error, "code", None))
-                        return True
                     if self._closing:
                         return True
-                    raise error
-                return True  # receiver returned (goAway) or watchdog closed intentionally
+                    raise error   # a ConnectionClosed is sorted out by the caller
+                return True  # receiver returned (goAway/close) or watchdog closed intentionally
             finally:
                 self.connected = False
                 if self._on_session_state:
@@ -288,46 +325,45 @@ class LiveTranslateSession:
                 log.info("[%s] session ended", self.name)
 
     async def _receiver(self, session) -> None:
-        # SDK 2.8.0: receive() ends after each turn_complete -> re-enter on the
-        # same websocket; an actual socket close raises APIError from inside it.
-        while True:
-            async for response in session.receive():
-                self._st_recv += 1
-                sc = response.server_content
-                if sc is not None:
-                    it = sc.input_transcription
-                    if it is not None and it.text:
-                        self._st_src += 1
-                        if self._on_src:
-                            self._on_src(it.text, getattr(it, "language_code", None))
-                    ot = sc.output_transcription
-                    if ot is not None and ot.text:
-                        self._st_dst += 1
-                        if self._on_dst:
-                            self._on_dst(ot.text)
-                    if sc.model_turn is not None and self._on_audio:
-                        for part in (sc.model_turn.parts or []):
-                            if part.inline_data is not None and \
-                                    isinstance(part.inline_data.data, (bytes, bytearray)):
-                                self._on_audio(bytes(part.inline_data.data))
-                    if getattr(sc, "interrupted", None):
-                        log.info("[%s] interrupted (barge-in)", self.name)
-                        if self._on_interrupted:
-                            self._on_interrupted()
-                    if getattr(sc, "turn_complete", None):
-                        self._turn_open = False
-                        if self._on_turn_complete:
-                            self._on_turn_complete()
-                if response.go_away is not None:
-                    log.info("[%s] goAway (time_left=%s) - reconnecting",
-                             self.name, response.go_away.time_left)
-                    return
+        # iteration ends by itself on a normal close and raises on any other
+        async for raw in session:
+            event = _decode(raw)
+            self._st_recv += 1
+            sc = event.get("serverContent")
+            if isinstance(sc, dict):
+                it = sc.get("inputTranscription") or {}
+                if it.get("text"):
+                    self._st_src += 1
+                    if self._on_src:
+                        self._on_src(it["text"], it.get("languageCode"))
+                ot = sc.get("outputTranscription") or {}
+                if ot.get("text"):
+                    self._st_dst += 1
+                    if self._on_dst:
+                        self._on_dst(ot["text"])
+                if self._on_audio:
+                    for part in (sc.get("modelTurn") or {}).get("parts") or []:
+                        data = (part.get("inlineData") or {}).get("data")
+                        if data:
+                            self._on_audio(base64.b64decode(data))
+                if sc.get("interrupted"):
+                    log.info("[%s] interrupted (barge-in)", self.name)
+                    if self._on_interrupted:
+                        self._on_interrupted()
+                if sc.get("turnComplete"):
+                    self._turn_open = False
+                    if self._on_turn_complete:
+                        self._on_turn_complete()
+            if event.get("goAway") is not None:
+                log.info("[%s] goAway (time_left=%s) - reconnecting",
+                         self.name, event["goAway"].get("timeLeft"))
+                return
 
     async def _sender(self, session) -> None:
         speaking = False
         last_audio = 0.0   # when real audio last went out
         gap_filled = 0.0   # zeroed seconds streamed into the current pause
-        fill_chunk = b"\x00" * (int(INPUT_RATE * self._interval) * 2)
+        fill_message = _audio_message(b"\x00" * (int(INPUT_RATE * self._interval) * 2))
         # the connect pre-roll must be flushed even when the handshake took
         # longer than turn_end_silence (active() already false) - otherwise a
         # short utterance that triggered this very connection is dropped
@@ -337,7 +373,7 @@ class LiveTranslateSession:
             if self._restart or not self._enabled():
                 if speaking:
                     try:
-                        await session.send_realtime_input(audio_stream_end=True)
+                        await session.send(STREAM_END)
                     except Exception:
                         pass
                 return
@@ -347,8 +383,7 @@ class LiveTranslateSession:
                 pcm = b"".join(chunks)
                 sent = False
                 try:
-                    await session.send_realtime_input(
-                        audio=types.Blob(data=pcm, mime_type="audio/pcm;rate=16000"))
+                    await session.send(_audio_message(pcm))
                     sent = True
                     self._st_sent += 1
                     self._st_sent_bytes += len(pcm)
@@ -379,14 +414,12 @@ class LiveTranslateSession:
                     speaking = False
                     self._turn_open = False
                     try:
-                        await session.send_realtime_input(audio_stream_end=True)
+                        await session.send(STREAM_END)
                     except Exception:
                         return
                     continue
                 try:
-                    await session.send_realtime_input(
-                        audio=types.Blob(data=fill_chunk,
-                                         mime_type="audio/pcm;rate=16000"))
+                    await session.send(fill_message)
                 except Exception:
                     return
                 gap_filled += self._interval
@@ -412,7 +445,7 @@ class LiveTranslateSession:
                 log.info("[%s] voice idle %.0fs - flushing and closing",
                          self.name, self._idle_disconnect)
                 try:
-                    await session.send_realtime_input(audio_stream_end=True)
+                    await session.send(STREAM_END)
                 except Exception:
                     pass
                 close_at = time.time() + 2.0  # let final transcripts arrive

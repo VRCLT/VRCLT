@@ -4,11 +4,16 @@ This project keeps source code in Git and distributes Windows builds as release
 attachments. Do not commit local settings, virtual environments, logs, or build
 outputs.
 
-The release artifact is a single executable:
+A release carries the same build in two forms:
 
 ```text
-release\vrclt-v<version>-windows-x64.exe
+release\vrclt-v<version>-windows-x64.exe   single file
+release\vrclt-v<version>-windows-x64.zip   folder: vrclt\vrclt.exe + _internal
 ```
+
+The single file unpacks itself to `%TEMP%` on every start, which costs several
+seconds. The folder starts without unpacking; users extract it once and run
+`vrclt\vrclt.exe`.
 
 User settings are created at runtime in:
 
@@ -107,7 +112,7 @@ No matches are expected, except unrelated dependency names such as
 
 ## 3. Build
 
-Build the one-file, windowed executable:
+Build the windowed executable, as a single file and as a folder:
 
 ```powershell
 .\.venv\Scripts\pyinstaller.exe vrclt.spec --noconfirm
@@ -117,36 +122,39 @@ Expected output:
 
 ```text
 dist\vrclt.exe
+dist\vrclt\vrclt.exe
+dist\vrclt\_internal\
 ```
 
-The spec must remain a onefile/windowed build. It should not use `COLLECT`, and
-it should not copy web static files or an external config into the distribution.
+Both come from one analysis in `vrclt.spec`, so they always hold the same code.
+The spec must remain a windowed build, and it should not copy web static files
+or an external config into the distribution.
 
 Some optional PyInstaller warnings from OpenGL, onnxruntime, or test modules can
 appear during analysis. Treat the build as failed only if PyInstaller exits with
-a non-zero status or `dist\vrclt.exe` is missing.
+a non-zero status or either output is missing.
 
 ## 4. Package Release Artifact
 
-Create the release executable and checksum:
+Create the release executable, the folder zip, and their checksums:
 
 The script defaults to `vrclt.__version__`. An explicit `-Version` must match it.
-Build failures stop packaging, and `-SkipBuild` checks the version inside the
-executable before copying it. Windows file and product versions also use the
+Build failures stop packaging, and `-SkipBuild` checks the version inside both
+executables before packaging them. Windows file and product versions also use the
 application version from the spec.
 
 ```powershell
 .\scripts\package_release.ps1 -Version 1.0.0
 ```
 
-If `dist\vrclt.exe` has already been built and only the release copy needs to be
+If `dist` has already been built and only the release copies need to be
 refreshed:
 
 ```powershell
 .\scripts\package_release.ps1 -Version 1.0.0 -SkipBuild
 ```
 
-Use `-SkipBuild` only when that executable was built from the exact source being
+Use `-SkipBuild` only when those outputs were built from the exact source being
 released. Confirm `vrclt/__init__.py`, the changelog, and the artifact name all
 use `1.0.0`.
 
@@ -155,14 +163,18 @@ Expected output:
 ```text
 release\vrclt-v1.0.0-windows-x64.exe
 release\vrclt-v1.0.0-windows-x64.exe.sha256
+release\vrclt-v1.0.0-windows-x64.zip
+release\vrclt-v1.0.0-windows-x64.zip.sha256
 ```
 
 ## 5. Smoke Test The Executable
 
-Start the built exe directly:
+Start both builds directly, one after the other (only one instance runs at a
+time):
 
 ```powershell
 .\dist\vrclt.exe
+.\dist\vrclt\vrclt.exe
 ```
 
 Repeat the launch check with the packaged release executable, which is the file
@@ -332,7 +344,8 @@ Merge the pull request once the **Build** check passes. On `main`, the
 workflow tests again and, when `vrclt/__init__.py` carries a version without a
 `v<version>` tag, builds the exe and publishes a GitHub Release: it creates the
 tag on the merge commit, attaches
-`vrclt-v<version>-windows-x64.exe` and its `.sha256`, and uses
+`vrclt-v<version>-windows-x64.exe`, `vrclt-v<version>-windows-x64.zip` and
+their `.sha256` files, and uses
 `docs/releases/v<version>.md` as the notes. Merges that keep the version only
 run the tests.
 
@@ -348,6 +361,8 @@ git push origin v<version>
 gh release create v<version> `
   .\release\vrclt-v<version>-windows-x64.exe `
   .\release\vrclt-v<version>-windows-x64.exe.sha256 `
+  .\release\vrclt-v<version>-windows-x64.zip `
+  .\release\vrclt-v<version>-windows-x64.zip.sha256 `
   --title "VRCLT <version>" `
   --notes-file .\docs\releases\v<version>.md
 ```
@@ -356,7 +371,8 @@ gh release create v<version> `
 
 Include these points in the release body:
 
-- Windows-only single executable.
+- Windows only: a single executable, or the same build as a folder (zip) that
+  starts faster.
 - VB-Audio Virtual Cable is required.
 - The selected engine's API key is configured in the Settings tab.
 - Qwen 3.8 is the default Qwen model for new configurations; it detects the

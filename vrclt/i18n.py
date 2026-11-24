@@ -459,10 +459,152 @@ STRINGS = {
         "ja": "翻訳音声を生成するモデルです。テキスト専用モードでは使用しません。",
         "zh": "用于生成翻译语音的模型。仅文本模式下不使用。"},
     "f.soniox.voice.tip": {
-        "ko": "번역 음성에 사용할 Soniox 음성 이름 또는 ID입니다.",
-        "en": "Soniox voice name or ID used for translated speech.",
-        "ja": "翻訳音声に使用するSonioxの音声名またはIDです。",
-        "zh": "翻译语音使用的 Soniox 声音名称或 ID。"},
+        "ko": "번역 음성에 사용할 Soniox 음성 이름 또는 복제 음성 ID입니다. "
+              "[음성 복제…]에서 내 목소리로 음성을 만들 수 있습니다.",
+        "en": "Soniox voice name or cloned-voice ID used for translated speech. "
+              "[Clone voice…] creates a voice from your own.",
+        "ja": "翻訳音声に使用するSonioxの音声名またはクローン音声IDです。"
+              "[音声クローン…]で自分の声から音声を作成できます。",
+        "zh": "翻译语音使用的 Soniox 声音名称或克隆声音 ID。"
+              "可在[声音克隆…]中用自己的声音创建。"},
+    # ---- Soniox voice cloning dialog ----
+    "sx_voice_button": {"ko": "음성 복제…", "en": "Clone voice…",
+                        "ja": "音声クローン…", "zh": "声音克隆…"},
+    "sx_voice_title": {"ko": "Soniox 음성 복제", "en": "Soniox voice cloning",
+                       "ja": "Soniox音声クローン", "zh": "Soniox 声音克隆"},
+    "sx_voice_intro": {
+        "ko": "목소리 샘플 하나로 복제 음성을 만들면 번역 음성이 그 목소리로 나옵니다. "
+              "한 사람이 또렷하게 말하고 잡음이 적은 녹음이 가장 좋습니다(최대 {max}).",
+        "en": "Create a cloned voice from one voice sample and translations are spoken in "
+              "that voice. A clear recording of a single speaker with little background "
+              "noise works best (up to {max}).",
+        "ja": "音声サンプル1つからクローン音声を作成すると、翻訳音声がその声で再生されます。"
+              "1人がはっきり話した、雑音の少ない録音が最適です（最大 {max}）。",
+        "zh": "用一段声音样本创建克隆声音后，翻译语音将使用该声音播放。"
+              "单人清晰、背景噪音少的录音效果最佳（最长 {max}）。"},
+    "sx_voice_note": {
+        "ko": "본인 목소리나 사용 허락을 받은 목소리만 사용하세요. 샘플은 Soniox에 업로드되어 "
+              "저장됩니다. 녹음하는 동안 번역이 켜져 있으면 읽는 말도 번역됩니다.",
+        "en": "Use only your own voice or a voice you have permission to use. The sample is "
+              "uploaded to and stored by Soniox. While you record, running translation also "
+              "translates what you read.",
+        "ja": "自分の声、または使用許可を得た声のみを使用してください。サンプルはSonioxに"
+              "アップロードされ保存されます。録音中に翻訳がオンの場合、読み上げた内容も翻訳されます。",
+        "zh": "请仅使用自己的声音或已获许可的声音。样本会上传并保存在 Soniox。"
+              "录音期间如果翻译处于开启状态，朗读内容也会被翻译。"},
+    "sx_voice_list": {"ko": "내 복제 음성 ({count})", "en": "My cloned voices ({count})",
+                      "ja": "クローン音声 ({count})", "zh": "我的克隆声音 ({count})"},
+    "sx_voice_refresh": {"ko": "새로고침", "en": "Refresh", "ja": "更新", "zh": "刷新"},
+    "sx_voice_delete": {"ko": "삭제", "en": "Delete", "ja": "削除", "zh": "删除"},
+    "sx_voice_delete_confirm": {
+        "ko": "'{name}' 음성을 삭제할까요? 되돌릴 수 없습니다.",
+        "en": "Delete the voice '{name}'? This cannot be undone.",
+        "ja": "音声「{name}」を削除しますか？元に戻せません。",
+        "zh": "要删除声音“{name}”吗？此操作无法撤销。"},
+    "sx_voice_new": {"ko": "새 음성 만들기", "en": "New voice",
+                     "ja": "新しい音声を作成", "zh": "创建新声音"},
+    "sx_voice_name": {"ko": "이름", "en": "Name", "ja": "名前", "zh": "名称"},
+    "sx_voice_sample": {"ko": "샘플", "en": "Sample", "ja": "サンプル", "zh": "样本"},
+    "sx_voice_record": {"ko": "마이크로 녹음", "en": "Record from mic",
+                        "ja": "マイクで録音", "zh": "用麦克风录音"},
+    "sx_voice_stop": {"ko": "녹음 중지", "en": "Stop recording",
+                      "ja": "録音を停止", "zh": "停止录音"},
+    "sx_voice_file": {"ko": "오디오 파일 선택…", "en": "Choose audio file…",
+                      "ja": "音声ファイルを選択…", "zh": "选择音频文件…"},
+    "sx_voice_file_filter": {"ko": "오디오 파일", "en": "Audio files",
+                             "ja": "音声ファイル", "zh": "音频文件"},
+    "sx_voice_script_title": {
+        "ko": "읽을 글 예시 (약 1분 분량입니다. 다른 말을 해도 됩니다.)",
+        "en": "Something to read (about one minute; you can say anything else instead)",
+        "ja": "読み上げ用の文章（約1分。ほかの内容を話してもかまいません）",
+        "zh": "朗读示例（约一分钟，也可以说别的内容）"},
+    "sx_voice_script": {
+        "ko": "안녕하세요, 만나서 반가워요. 오늘은 제 목소리를 녹음하고 있어요. 평소에 친구와 "
+              "이야기하듯이 편하게 말해 볼게요. 저는 주말이면 늦게까지 자고, 일어나서 따뜻한 커피를 "
+              "한 잔 마시는 걸 좋아해요. 날씨가 좋으면 가까운 공원을 천천히 걷기도 하고, 비가 오면 "
+              "집에서 영화를 보거나 게임을 해요. 요즘은 새로운 사람들을 만나서 이야기하는 게 정말 "
+              "즐거워요. 혹시 좋아하는 음식이 있나요? 저는 매운 떡볶이랑 바삭한 치킨을 제일 좋아해요. "
+              "와, 생각만 해도 배가 고파지네요! 처음에는 조금 어색했지만, 이야기를 나누다 보니 금방 "
+              "친해질 수 있었어요. 다음에 또 만나면 더 재미있는 이야기를 들려줄게요. 오늘 들어 "
+              "주셔서 고마워요.",
+        "en": "Hi there, it's nice to meet you. I'm recording my voice today, so I'll just talk "
+              "the way I usually do with friends. On weekends I like to sleep in, then make a warm "
+              "cup of coffee and take my time waking up. If the weather is nice, I go for a slow "
+              "walk in the park nearby. If it rains, I stay home and watch a movie or play a game. "
+              "Lately I really enjoy meeting new people and hearing their stories. What kind of "
+              "food do you like? I can never say no to spicy noodles or crispy fried chicken. Wow, "
+              "just thinking about it makes me hungry! It felt a little awkward at first, but "
+              "after talking for a while we became friends quickly. Next time we meet, I'll tell "
+              "you an even better story. Thanks for listening today.",
+        "ja": "こんにちは、はじめまして。今日は自分の声を録音しています。いつも友だちと話すときの"
+              "ように、気楽に話してみますね。週末はゆっくり寝て、起きたら温かいコーヒーを一杯飲むのが"
+              "好きです。天気がよければ近くの公園をのんびり散歩して、雨の日は家で映画を見たりゲームを"
+              "したりします。最近は新しい人と出会って話すのが本当に楽しいです。好きな食べ物は"
+              "ありますか？私は辛いラーメンとサクサクのから揚げが大好きです。わあ、考えただけでお腹が"
+              "すいてきました！最初は少し緊張しましたが、話しているうちにすぐ仲良くなれました。"
+              "今度会ったら、もっと面白い話を聞かせますね。今日は聞いてくれてありがとうございました。",
+        "zh": "你好，很高兴认识你。今天我在录自己的声音，所以就像平时跟朋友聊天一样，轻松地说一说。"
+              "周末我喜欢睡个懒觉，起床后喝一杯热咖啡，慢慢清醒过来。天气好的时候，我会去附近的公园"
+              "散散步；下雨的话，就待在家里看电影或者打游戏。最近我特别喜欢认识新朋友，听他们讲自己的"
+              "故事。你有喜欢吃的东西吗？我最爱吃辣辣的面条和脆脆的炸鸡。哇，光是想想就饿了！"
+              "一开始有点紧张，不过聊着聊着，我们很快就熟悉起来了。下次见面的时候，我再给你讲一个"
+              "更有趣的故事。谢谢你今天听我说话。"},
+    "sx_voice_no_sample": {"ko": "샘플 없음", "en": "No sample yet",
+                           "ja": "サンプルなし", "zh": "尚无样本"},
+    "sx_voice_recorded": {"ko": "녹음됨 {time}", "en": "Recorded {time}",
+                          "ja": "録音済み {time}", "zh": "已录音 {time}"},
+    "sx_voice_recording": {"ko": "녹음 중 {time} / {max}", "en": "Recording {time} / {max}",
+                           "ja": "録音中 {time} / {max}", "zh": "录音中 {time} / {max}"},
+    "sx_voice_create": {"ko": "음성 만들기", "en": "Create voice",
+                        "ja": "音声を作成", "zh": "创建声音"},
+    "sx_voice_use": {"ko": "이 음성 사용", "en": "Use this voice",
+                     "ja": "この音声を使う", "zh": "使用此声音"},
+    "sx_voice_close": {"ko": "닫기", "en": "Close", "ja": "閉じる", "zh": "关闭"},
+    "sx_voice_state_ready": {"ko": "준비됨", "en": "ready", "ja": "準備完了", "zh": "已就绪"},
+    "sx_voice_state_processing": {"ko": "처리 중", "en": "processing",
+                                  "ja": "処理中", "zh": "处理中"},
+    "sx_voice_state_not_computed": {"ko": "준비 안 됨", "en": "not prepared",
+                                    "ja": "未準備", "zh": "未准备"},
+    "sx_voice_state_failed": {"ko": "실패", "en": "failed", "ja": "失敗", "zh": "失败"},
+    "sx_voice_in_use": {"ko": "사용 중", "en": "in use", "ja": "使用中", "zh": "使用中"},
+    "sx_voice_loading": {"ko": "불러오는 중…", "en": "Loading…",
+                         "ja": "読み込み中…", "zh": "正在加载…"},
+    "sx_voice_creating": {"ko": "샘플을 올리고 음성을 준비하는 중…",
+                          "en": "Uploading the sample and preparing the voice…",
+                          "ja": "サンプルをアップロードして音声を準備中…",
+                          "zh": "正在上传样本并准备声音…"},
+    "sx_voice_preparing": {"ko": "음성을 준비하는 중…", "en": "Preparing the voice…",
+                           "ja": "音声を準備中…", "zh": "正在准备声音…"},
+    "sx_voice_deleting": {"ko": "삭제하는 중…", "en": "Deleting…",
+                          "ja": "削除中…", "zh": "正在删除…"},
+    "sx_voice_created": {
+        "ko": "'{name}' 음성이 준비됐습니다. [이 음성 사용]을 누른 뒤 설정을 저장하세요.",
+        "en": "'{name}' is ready. Press [Use this voice], then save the settings.",
+        "ja": "「{name}」の準備ができました。[この音声を使う]を押してから設定を保存してください。",
+        "zh": "“{name}”已就绪。请点击[使用此声音]，然后保存设置。"},
+    "sx_voice_deleted": {"ko": "삭제했습니다.", "en": "Deleted.",
+                         "ja": "削除しました。", "zh": "已删除。"},
+    "sx_voice_error": {"ko": "오류: {detail}", "en": "Error: {detail}",
+                       "ja": "エラー: {detail}", "zh": "错误：{detail}"},
+    "sx_voice_too_short": {
+        "ko": "녹음이 너무 짧습니다. {seconds}초 이상 녹음하세요.",
+        "en": "The recording is too short. Record at least {seconds} seconds.",
+        "ja": "録音が短すぎます。{seconds}秒以上録音してください。",
+        "zh": "录音太短。请至少录制 {seconds} 秒。"},
+    "sx_voice_too_large": {
+        "ko": "파일이 너무 큽니다(최대 35MB).", "en": "The file is too large (35 MB at most).",
+        "ja": "ファイルが大きすぎます（最大35MB）。", "zh": "文件过大（最大 35MB）。"},
+    "sx_voice_no_key": {
+        "ko": "먼저 Soniox API 키를 입력하세요.", "en": "Enter the Soniox API key first.",
+        "ja": "先にSoniox APIキーを入力してください。", "zh": "请先输入 Soniox API 密钥。"},
+    "sx_voice_unsupported": {
+        "ko": "이 음성 합성 모델은 음성 복제를 지원하지 않습니다.",
+        "en": "This speech synthesis model does not support voice cloning.",
+        "ja": "この音声合成モデルは音声クローンに対応していません。",
+        "zh": "此语音合成模型不支持声音克隆。"},
+    "sx_voice_mic_failed": {
+        "ko": "마이크를 열 수 없습니다: {detail}", "en": "Could not open the microphone: {detail}",
+        "ja": "マイクを開けません: {detail}", "zh": "无法打开麦克风：{detail}"},
     "err_soniox_api_key_empty": {
         "ko": "Soniox API 키가 비어 있습니다.", "en": "Soniox API key is empty.",
         "ja": "Soniox APIキーが空です。", "zh": "Soniox API 密钥为空。"},

@@ -27,8 +27,10 @@ $VersionName = "v$AppVersion"
 $Python = Join-Path $Root ".venv\Scripts\python.exe"
 $ReleaseDir = Join-Path $Root "release"
 $DistExe = Join-Path $Root "dist\vrclt.exe"
+$DistFolder = Join-Path $Root "dist\vrclt"
+$DistFolderExe = Join-Path $DistFolder "vrclt.exe"
 $ReleaseExe = Join-Path $ReleaseDir "vrclt-$VersionName-windows-x64.exe"
-$ChecksumPath = "$ReleaseExe.sha256"
+$ReleaseZip = Join-Path $ReleaseDir "vrclt-$VersionName-windows-x64.zip"
 
 if (-not $SkipBuild) {
     if (-not (Test-Path $Python)) {
@@ -46,21 +48,34 @@ if (-not $SkipBuild) {
     }
 }
 
-if (-not (Test-Path $DistExe)) {
-    throw "Build output not found. Expected: $DistExe"
-}
-
-# -SkipBuild must not relabel an executable left over from an older version.
-& $Python -c 'import sys; from PyInstaller.archive.readers import CArchiveReader; archive = CArchiveReader(sys.argv[1]).open_embedded_archive("PYZ.pyz"); code = archive.extract("vrclt"); assert sys.argv[2] in code.co_consts, "Packaged application version does not match release version"' $DistExe $AppVersion
-if ($LASTEXITCODE -ne 0) {
-    throw "The built executable does not match v$AppVersion. Rebuild before packaging."
+# the spec builds the single file and the folder from one analysis
+foreach ($Built in @($DistExe, $DistFolderExe)) {
+    if (-not (Test-Path $Built)) {
+        throw "Build output not found. Expected: $Built"
+    }
+    # -SkipBuild must not relabel an executable left over from an older version.
+    & $Python -c 'import sys; from PyInstaller.archive.readers import CArchiveReader; archive = CArchiveReader(sys.argv[1]).open_embedded_archive("PYZ.pyz"); code = archive.extract("vrclt"); assert sys.argv[2] in code.co_consts, "Packaged application version does not match release version"' $Built $AppVersion
+    if ($LASTEXITCODE -ne 0) {
+        throw "$Built does not match v$AppVersion. Rebuild before packaging."
+    }
 }
 
 New-Item -ItemType Directory -Force -Path $ReleaseDir | Out-Null
 Copy-Item -LiteralPath $DistExe -Destination $ReleaseExe -Force
 
-$Hash = Get-FileHash -LiteralPath $ReleaseExe -Algorithm SHA256
-Set-Content -LiteralPath $ChecksumPath -Encoding ascii -Value "$($Hash.Hash)  $(Split-Path $ReleaseExe -Leaf)"
+# The zip holds one top-level "vrclt" folder, so a new version extracted over
+# the old one keeps the path SteamVR auto-start points at.
+if (Test-Path $ReleaseZip) {
+    Remove-Item -LiteralPath $ReleaseZip -Force
+}
+& $Python -c 'import shutil, sys; shutil.make_archive(sys.argv[1][:-4], "zip", root_dir=sys.argv[2], base_dir="vrclt")' $ReleaseZip (Split-Path -Parent $DistFolder)
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path $ReleaseZip)) {
+    throw "Could not create $ReleaseZip"
+}
 
-Write-Host "Release executable created: $ReleaseExe"
-Write-Host "SHA256 checksum:            $ChecksumPath"
+foreach ($Artifact in @($ReleaseExe, $ReleaseZip)) {
+    $Hash = Get-FileHash -LiteralPath $Artifact -Algorithm SHA256
+    Set-Content -LiteralPath "$Artifact.sha256" -Encoding ascii -Value "$($Hash.Hash)  $(Split-Path $Artifact -Leaf)"
+    Write-Host "Release artifact: $Artifact"
+    Write-Host "SHA256 checksum:  $Artifact.sha256"
+}

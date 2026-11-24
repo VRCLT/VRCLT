@@ -33,9 +33,10 @@ openai:                      # OpenAI realtime translation (/v1/realtime/transla
 
 soniox:                      # Soniox streaming speech recognition + translation
   api_key: ""                # empty -> SONIOX_API_KEY env var
-  model: stt-rt-v5
+  model: stt-rt-v6
   tts_model: tts-rt-v2        # used only when translated voice is enabled
-  voice: Daniel             # multilingual voice name or cloned voice ID
+  voice: Daniel             # stock voice name, or a cloned voice ID (a UUID;
+                             # Settings > Soniox voice > Clone voice creates one)
                              # source_language is an optional recognition hint
                              # glossary source=target pairs are supported
                              # speaker diarization is enabled; IDs are session-local

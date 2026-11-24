@@ -1,4 +1,5 @@
-# Pull requests: test and build the exe (downloadable from the run's artifacts).
+# Pull requests: test and build the exe and the folder zip (downloadable from
+# the run's artifacts).
 # Pushes to main: test, and when vrclt/__init__.py carries a version with no
 # v<version> tag yet, build and publish that GitHub release automatically.
 name: Build
@@ -67,7 +68,7 @@ jobs:
         shell: pwsh
         run: .\.venv\Scripts\python.exe scripts\run_tests.py
 
-      - name: Build exe
+      - name: Build exe and folder zip
         if: github.event_name != 'push' || steps.version.outputs.release == 'true'
         shell: pwsh
         run: .\scripts\package_release.ps1 -Version ${{ steps.version.outputs.version }}
@@ -76,7 +77,7 @@ jobs:
         if: github.event_name != 'push' || steps.version.outputs.release == 'true'
         with:
           name: vrclt-v${{ steps.version.outputs.version }}-windows-x64
-          path: release/vrclt-v${{ steps.version.outputs.version }}-windows-x64.exe*
+          path: release/vrclt-v${{ steps.version.outputs.version }}-windows-x64.*
           if-no-files-found: error
           retention-days: 14
           compression-level: 0

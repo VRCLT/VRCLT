@@ -30,7 +30,13 @@ _wire_log = logging.getLogger("vrclt.soniox.wire")
 _wire_log.setLevel(logging.WARNING)
 
 TRANSCRIBE_URL = "wss://stt-rt.soniox.com/transcribe-websocket"
-TRANSCRIBE_MODEL = "stt-rt-v5"
+TRANSCRIBE_MODEL = "stt-rt-v6"
+# endpoint_sensitivity is rejected by models that do not list it
+ENDPOINT_SENSITIVITY_MODELS = ("stt-rt-v5", "stt-rt-v6")
+# TTS refusals that no retry fixes: a cloned voice that is deleted or belongs
+# to another project (404), failed processing (503), or was never prepared
+# for this TTS model (409)
+VOICE_SETUP_ERRORS = ("voice_not_found", "voice_failed", "voice_not_prepared")
 GAP_FILL_GRACE_SEC = 0.25
 GAP_FILL_MAX_SEC = 4.0
 KEEPALIVE_SEC = 5.0
@@ -112,6 +118,11 @@ class SonioxLiveTranslateSession:
         if code == 401 or kind == "unauthenticated":
             raise FatalSessionError(
                 "Soniox API key is invalid. Update the Soniox API key in Settings.")
+        if kind in VOICE_SETUP_ERRORS:
+            # voice_not_ready is the transient one: it stays on the retry path
+            raise FatalSessionError(
+                f"Soniox cannot use the selected cloned voice: {message} "
+                "Choose or prepare a voice with Clone voice in Settings.")
         if code in (400, 403):
             raise FatalSessionError(f"Soniox configuration error: {message}")
         raise _ServerError(code, kind, message)
@@ -138,7 +149,7 @@ class SonioxLiveTranslateSession:
             "max_endpoint_delay_ms": 3000,
             "translation": {"type": "one_way", "target_language": target},
         }
-        if self._model == "stt-rt-v5":
+        if self._model in ENDPOINT_SENSITIVITY_MODELS:
             # Give short hesitations more context before speaker IDs become
             # final. Keep semantic endpoints for subtitle/TTS turn completion.
             cfg["endpoint_sensitivity"] = -0.3

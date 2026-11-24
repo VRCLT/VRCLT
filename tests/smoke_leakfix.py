@@ -1,5 +1,5 @@
-"""Verify the memory-leak fixes: forced task cancellation on stop timeout,
-genai client close, and the diagnostics tick."""
+"""Verify the memory-leak fixes: forced task cancellation on stop timeout
+and the diagnostics tick."""
 import asyncio
 import sys
 import threading
@@ -45,39 +45,6 @@ def test_cancel_all_tasks_unblocks_hung_runtime():
     assert cleaned.is_set(), "finally-block cleanup did not run"
 
 
-def test_gemini_close_client_calls_both_closers():
-    from vrclt.gemini.session import LiveTranslateSession
-
-    calls = []
-
-    class FakeAio:
-        async def aclose(self):
-            calls.append("aclose")
-
-    class FakeClient:
-        aio = FakeAio()
-
-        def close(self):
-            calls.append("close")
-
-    sess = object.__new__(LiveTranslateSession)
-    sess._client = FakeClient()
-    sess.name = "test"
-    asyncio.run(sess._close_client())
-    assert calls == ["aclose", "close"], calls
-
-    # a failing aclose must not block the sync close
-    class BrokenAio:
-        async def aclose(self):
-            raise RuntimeError("boom")
-
-    calls.clear()
-    sess._client = FakeClient()
-    sess._client.aio = BrokenAio()
-    asyncio.run(sess._close_client())
-    assert calls == ["close"], calls
-
-
 def test_pipeline_finally_awaits_cancelled_tasks():
     """The outbound-style finally must consume its cancelled tasks without
     warnings even when cancellation is delivered at the gather await."""
@@ -119,7 +86,6 @@ def test_diag_tick():
 
 if __name__ == "__main__":
     test_cancel_all_tasks_unblocks_hung_runtime()
-    test_gemini_close_client_calls_both_closers()
     test_pipeline_finally_awaits_cancelled_tasks()
     test_diag_tick()
     print("smoke_leakfix: OK")
