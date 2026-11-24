@@ -20,6 +20,7 @@ from .. import i18n
 from ..audio import sessions as audio_sessions
 from . import settings_schema
 from .settings_schema import FieldSpec
+from .soniox_voices import SonioxVoiceDialog, VoiceField
 from .widgets import (
     AudioProcessCombo,
     AxesField,
@@ -367,6 +368,11 @@ class SettingsForm(QtCore.QObject):
             w.addItems(list(config_mod.OPENAI_NOISE_REDUCTION))
             w.setCurrentText(str(value or ""))
             return w
+        if kind == "soniox_voice":
+            w = VoiceField(self._tr("sx_voice_button"))
+            w.setText("" if value is None else str(value))
+            w.clone_requested.connect(lambda w=w: self._open_soniox_voices(w))
+            return w
         if kind == "audio_process":
             w = AudioProcessCombo(audio_sessions.audio_processes,
                                   self._tr("process_playing"))
@@ -380,6 +386,29 @@ class SettingsForm(QtCore.QObject):
             w.setCurrentText("" if value is None else str(value))
             return w
         return QtWidgets.QLineEdit("" if value is None else str(value))
+
+    def _draft_text(self, path: str) -> str:
+        """A field's current, possibly unsaved, text."""
+        widget, spec = self._fields[path]
+        return str(self._field_value(widget, spec) or "").strip()
+
+    def _open_soniox_voices(self, field, dialog_factory=SonioxVoiceDialog) -> None:
+        # the draft key and model apply: a key typed a moment ago works here
+        default = settings_schema.default_for
+        dialog = dialog_factory(
+            self._tr,
+            api_key=config_mod.soniox_api_key(
+                {"soniox": {"api_key": self._draft_text("soniox.api_key")}}),
+            model=self._draft_text("soniox.tts_model") or default("soniox.tts_model"),
+            current=field.text().strip(),
+            mic_device=self._draft_text("outbound.mic_device"),
+            threshold=self._field_value(*self._fields["audio.voice_rms_threshold"]),
+            parent=field.window())
+        dialog.exec()
+        if dialog.selected:
+            field.setText(dialog.selected)
+        elif field.text().strip() in dialog.deleted:
+            field.setText(default("soniox.voice"))
 
     def _set_spin_value(self, spin, spec: FieldSpec, value, coerce) -> None:
         try:

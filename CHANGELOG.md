@@ -7,7 +7,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 Release artifacts are attached to [GitHub Releases](https://github.com/VRCLT/VRCLT/releases)
 as `vrclt-v<version>-windows-x64.exe` plus a `.sha256` checksum.
 
-## [Unreleased]
+## [1.1.0] - 2026-11-24
 
 ### Added
 
@@ -19,6 +19,28 @@ as `vrclt-v<version>-windows-x64.exe` plus a `.sha256` checksum.
   separately. The setup check names the engine whose key is missing, and the
   Dashboard refuses an engine that has no key yet. The Simple view keeps one
   engine for both.
+- Soniox voice cloning. In Settings, **Soniox voice** has a **Clone voice…**
+  button. It creates a cloned voice from a microphone recording or an audio
+  file (up to 2 minutes and 35 MB), lists the cloned voices of your Soniox
+  project, and deletes them. **Use this voice** puts the voice's ID into
+  `soniox.voice`, and translated speech then uses that voice in every target
+  language. The sample is uploaded to and stored by Soniox.
+
+### Changed
+
+- Soniox speech recognition defaults to `stt-rt-v6`. A saved configuration
+  that names `stt-rt-v5` moves to `stt-rt-v6` when it loads: Soniox removes v5
+  on 2026-12-15 and routes it to v6. The endpoint sensitivity of `-0.3` applies
+  to v6 as it did to v5.
+- Gemini's Cantonese fallback uses `gemini-3.8-live` in place of the legacy
+  `gemini-3.1-flash-live-preview`. The translation model,
+  `gemini-3.5-live-translate-preview`, is unchanged.
+
+### Fixed
+
+- A Soniox cloned voice that was deleted, failed processing, or was never
+  prepared for the speech model stops translation with a message that says so.
+  It used to reconnect without end.
 
 ## [1.0.1] - 2026-10-17
 

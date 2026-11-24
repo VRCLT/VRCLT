@@ -9,6 +9,7 @@ import copy
 import json
 import pathlib
 import sys
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -48,7 +49,7 @@ class FakeSource:
 
 
 def make_session(**overrides):
-    kwargs = dict(api_key="test-soniox-key", model="stt-rt-v5", source=FakeSource(),
+    kwargs = dict(api_key="test-soniox-key", model="stt-rt-v6", source=FakeSource(),
                   name="test", get_target_language=lambda: "en",
                   send_interval_ms=50, idle_disconnect_sec=30)
     kwargs.update(overrides)
@@ -74,6 +75,21 @@ class SonioxConfigTests(unittest.TestCase):
         self.assertEqual(reset["provider"], "soniox")
         self.assertEqual(reset["soniox"]["api_key"], "saved-test")
         self.assertEqual(reset["soniox"]["tts_model"], "tts-rt-v2")
+        self.assertEqual(reset["soniox"]["model"], "stt-rt-v6")
+
+    def test_saved_retired_model_moves_to_the_default(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = pathlib.Path(folder) / "config.yaml"
+            with patch.object(config, "CONFIG_PATH", path):
+                for saved, loaded in (("stt-rt-v5", "stt-rt-v6"),
+                                      ("stt-rt-v4", "stt-rt-v4"),
+                                      ("custom-model", "custom-model")):
+                    path.write_text(f"soniox:\n  model: {saved}\n", encoding="utf-8")
+                    self.assertEqual(config.load()["soniox"]["model"], loaded)
+                path.write_text("soniox: null\n", encoding="utf-8")
+                self.assertIsNone(config.load()["soniox"])
+                path.write_text("provider: soniox\n", encoding="utf-8")
+                self.assertEqual(config.load()["soniox"]["model"], "stt-rt-v6")
 
     def test_languages_and_config(self):
         self.assertEqual(len(SONIOX_LANGUAGES), 60)
@@ -89,7 +105,11 @@ class SonioxConfigTests(unittest.TestCase):
         self.assertEqual(cfg["max_endpoint_delay_ms"], 3000)
         self.assertEqual(cfg["endpoint_sensitivity"], -0.3)
         self.assertGreater(sx.GAP_FILL_MAX_SEC, cfg["max_endpoint_delay_ms"] / 1000)
+        self.assertEqual(cfg["model"], "stt-rt-v6")
+        self.assertEqual(
+            make_session(model="stt-rt-v5")._session_config("en")["endpoint_sensitivity"], -0.3)
         self.assertNotIn("endpoint_sensitivity", make_session(model="stt-rt-v4")._session_config("en"))
+        self.assertEqual(make_session(model="")._session_config("en")["model"], "stt-rt-v6")
         self.assertEqual(cfg["context"]["translation_terms"], [
             {"source": "VRChat", "target": "브이알챗"}, {"source": "X", "target": "Y"}])
         self.assertNotIn("language_hints", make_session()._session_config("en"))

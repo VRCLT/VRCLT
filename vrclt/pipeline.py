@@ -311,7 +311,7 @@ class _TranslationPipeline:
             # close a long-idle session rather than billing silence forever.
             common["idle_disconnect_sec"] = config_mod.soniox_idle_disconnect_sec(cfg)
             self.session = SonioxLiveTranslateSession(
-                model=sx.get("model", "stt-rt-v5"),
+                model=sx.get("model", config_mod.SONIOX_DEFAULT_MODEL),
                 tts_model=sx.get("tts_model", "tts-rt-v2"),
                 voice=sx.get("voice", "Daniel"),
                 get_source_language=get_source_language,

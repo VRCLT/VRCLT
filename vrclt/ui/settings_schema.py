@@ -55,7 +55,7 @@ GROUPS: tuple = (
         F("soniox.api_key", "password"),
         F("soniox.model", "text"),
         F("soniox.tts_model", "text"),
-        F("soniox.voice", "text"),
+        F("soniox.voice", "soniox_voice"),
         F("soniox.keep_speaker_context", "bool"),
         _sec("soniox.speaker_context_idle_sec", 5.0, 600.0, 5.0),
     )),

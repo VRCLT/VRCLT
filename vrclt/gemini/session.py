@@ -35,7 +35,7 @@ log = logging.getLogger(__name__)
 AGENT_FALLBACK_LANGUAGES = {
     "yue": "Cantonese",
 }
-AGENT_MODEL = "gemini-3.1-flash-live-preview"
+AGENT_MODEL = "gemini-3.8-live"
 AGENT_INSTRUCTION = (
     "You are a professional simultaneous interpreter. Translate everything "
     "you hear into {language}. Speak ONLY the translation - never answer "

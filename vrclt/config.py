@@ -23,6 +23,10 @@ QWEN_ENDPOINTS = ("intl", "beijing")
 QWEN_VOICE_CLONE_MODES = ("once", "always", "off")
 QWEN_DEFAULT_MODEL = "qwen3.8-livetranslate-flash-realtime"
 _QWEN_VERSION_RE = re.compile(r"qwen(\d+)\.(\d+)-livetranslate", re.IGNORECASE)
+SONIOX_DEFAULT_MODEL = "stt-rt-v6"
+# Soniox removes stt-rt-v5 on 2026-12-15 and routes it to v6 (same API).
+# Saved configs spell out the old default, so load() moves them to the new one.
+_SONIOX_RETIRED_MODELS = ("stt-rt-v5",)
 # source-transcript ASR inside a gpt-realtime-translate session; "" = no
 # original-language subtitles (and no transcription charge)
 OPENAI_TRANSCRIBE_MODELS = ("gpt-realtime-whisper", "gpt-live-transcribe", "")
@@ -119,9 +123,10 @@ DEFAULTS = {
     },
     "soniox": {                         # streaming STT + translation, optional TTS
         "api_key": "",                  # empty -> use SONIOX_API_KEY env var
-        "model": "stt-rt-v5",
+        "model": SONIOX_DEFAULT_MODEL,
         "tts_model": "tts-rt-v2",        # only used when translated voice is enabled
-        "voice": "Daniel",              # multilingual stock voice or cloned voice ID
+        "voice": "Daniel",              # stock voice name, or a cloned voice's UUID
+                                        # (Settings > Soniox voice > Clone voice)
         "keep_speaker_context": True,    # preserve speaker IDs through short pauses
         "speaker_context_idle_sec": 60.0, # close after long silence, including in keep mode;
                                          # connected silence is still billed
@@ -364,6 +369,9 @@ def load() -> dict:
             # existing users keep the dashboard they know; new installs start simple
             cfg["ui"]["easy_mode"] = False
         cfg = _merge(cfg, data)
+        sx = cfg.get("soniox")
+        if isinstance(sx, dict) and sx.get("model") in _SONIOX_RETIRED_MODELS:
+            sx["model"] = SONIOX_DEFAULT_MODEL
     return cfg
 
 
