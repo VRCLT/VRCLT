@@ -15,7 +15,7 @@ from fontTools.ttLib import TTFont
 
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "site" / "assets"
-FONTS = ROOT / "vrclt" / "assets" / "fonts"
+FONTS = ROOT / "assets" / "fonts"
 
 
 def main() -> None:

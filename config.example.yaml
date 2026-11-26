@@ -1,6 +1,6 @@
 # vrclt configuration example
 # Developer reference config. The standalone exe stores user settings in AppData.
-# In a source checkout, copy this file to config.yaml if you want local overrides.
+# Set VRCLT_CONFIG to an alternate YAML path to use a separate configuration.
 # Leave api_key empty to use the GEMINI_API_KEY environment variable instead.
 provider: gemini             # gemini | qwen | openai | soniox (BOTH pipelines)
 api_key: ""                  # Gemini API key (Google AI Studio)
@@ -37,7 +37,7 @@ soniox:                      # Soniox streaming speech recognition + translation
   tts_model: tts-rt-v2        # used only when translated voice is enabled
   voice: Daniel             # stock voice name, or a cloned voice ID (a UUID;
                              # Settings > Soniox voice > Clone voice creates one)
-                             # source_language is an optional recognition hint
+                             # spoken languages are automatically identified for each direction
                              # glossary source=target pairs are supported
                              # speaker diarization is enabled; IDs are session-local
   keep_speaker_context: true # preserve the session/IDs through short pauses
@@ -45,7 +45,7 @@ soniox:                      # Soniox streaming speech recognition + translation
                                 # connected silence is billed; reconnect resets IDs
 
 app:
-  mode: vrchat                 # vrchat | discord | custom; override with: python -m vrclt run --app vrchat
+  mode: vrchat                 # vrchat | discord | custom; override with: VRCLT.exe run --app vrchat
   profiles:
     vrchat:
       process: VRChat.exe      # process captured for inbound subtitles
@@ -82,7 +82,7 @@ dashboard:
   subtitles_on: true           # last Dashboard subtitles toggle state
 
 meta:
-  last_version: ""             # internal: last version that reviewed config reset
+  setup_done: false            # marked after first-run setup
 
 hotkeys:                       # Windows global hotkeys for PC/desktop controls
   enabled: true
@@ -95,10 +95,11 @@ outbound:                 # my voice -> others (VRChat hears the translation)
   enabled: true
   target_language: ja     # BCP-47: ja, en, ko, zh-Hans, ...
   source_language: ""     # my spoken language; REQUIRED for Qwen 3.5 (no auto-detect,
-                          # "" is treated as English). Optional hint for Soniox;
-                          # Gemini, OpenAI and Qwen 3.8 auto-detect.
+                          # "" is treated as English). Soniox, Gemini, OpenAI and Qwen 3.8 auto-detect.
   echo_target_language: false
   mic_device: ""          # substring of device name; "" = default input
+  speech_filter: false    # optional restoration; default uses the original microphone audio
+  nemotron_reuse: false   # optional local GPU restoration, first use downloads ~68 MiB
   tts_device: CABLE Input # VB-Cable playback side (VRChat mic = CABLE Output)
   tts_gain: 1.0           # translated-voice volume 0.0-2.0 (also the monitor)
   monitor_device: ""      # also hear the translation myself ("" = off)
@@ -112,14 +113,16 @@ inbound:                  # others' voices -> me (subtitles)
   enabled: true
   provider: ""            # subtitle engine: "" = same as provider | gemini | qwen | openai | soniox
   target_language: ko
-  source_language: ""     # Qwen 3.5 source language / optional Soniox recognition hint
+  source_language: ""     # Qwen 3.5 source language; Soniox identifies speech automatically
   languages: [ko, en, ja] # wrist menu cycles subtitle language through these
   process: VRChat.exe
   allow_system_audio: false  # per-process capture needs Windows 11 (build 20348+);
                              # true = fall back to capturing ALL desktop audio there
   play_audio: false       # also speak the translation into my headphones
   audio_device: ""
-  vad_enabled: true       # Silero VAD: send only speech to Gemini
+  speech_filter: false    # optional restoration; default sends original Silero-gated game audio
+  nemotron_reuse: false   # use NVIDIA Nemotron RE-USE for this direction
+  vad_enabled: true       # run Silero on original game audio before optional voice restoration
   vad_threshold: 0.5      # 0-1; raise toward 0.7 to reject more music
   vad_hangover_sec: 0.35  # keep capturing this long after speech stops
 
@@ -172,9 +175,10 @@ control:                      # in-VR control via avatar parameters (OSC radial 
 
 ui:
   mode: auto                  # auto | vr | desktop
+  desktop_subtitles: true     # show incoming captions over desktop apps, with mouse clicks passing through
+  caption_font_size: 17       # conversation text in the console, independent of overlay.font_size
   lang: ""                    # ""=auto | en | ko | ja | zh
   close_action: tray          # tray | exit; window close button behavior
-  easy_mode: true             # simple dashboard: essentials + setup check (false = full)
 
 wrist_ui:                     # SteamVR wrist watch menu
   enabled: true
@@ -191,9 +195,8 @@ wrist_ui:                     # SteamVR wrist watch menu
   font: bundled:NotoSansCJKkr-Bold.otf
 
 steamvr:
-  register: true              # list vrclt in SteamVR Settings > Startup/Overlay Apps
-                              # (the auto-launch on/off itself lives in SteamVR;
-                              # toggle it there or in vrclt Settings)
+  register: true              # enable auto-start on first registration
+                              # change it later in SteamVR Settings > Startup/Shutdown
   dashboard_panel: true       # settings panel inside the SteamVR dashboard
 
 log_level: INFO

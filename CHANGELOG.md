@@ -5,7 +5,15 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Release artifacts are attached to [GitHub Releases](https://github.com/VRCLT/VRCLT/releases)
-as `vrclt-v<version>-windows-x64.exe` plus a `.sha256` checksum.
+as a Windows x64 executable and a ZIP, each with its SHA-256 checksum.
+
+## [2.0.0] - 2026-11-26
+
+- Rebuilt the Windows app in Rust. The native console combines microphone translation, incoming captions, device selection and setup checks.
+- Restored Soniox voice recording and cloning, separate subtitle engines, translated audio monitoring, volume controls, VRChat text mode and OSC controls.
+- Added optional CPU and GPU speech filters. Soniox automatically identifies the spoken language and groups captions by speaker.
+- Renewed the desktop caption window, SteamVR dashboard, wrist controls and adjustable headset caption panel. SteamVR can start the app automatically and repeated launches reuse the running console.
+- Switched Windows CI, packaging and releases to Cargo. Both downloads contain the same native executable and use the existing settings file.
 
 ## [1.1.0] - 2026-11-24
 

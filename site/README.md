@@ -31,7 +31,7 @@ menus and buttons have short transitions. The site respects reduced-motion
 preferences, including changes during a visit; content remains visible without JS.
 
 Content comes from `content.json`; `config.json` holds the canonical URL.
-v1.0 is marked as released. Downloads link to the latest public
+Downloads link to the latest public
 release at `https://github.com/VRCLT/VRCLT/releases/latest`.
 
 From the application repository root:
@@ -53,5 +53,4 @@ on desktop and mobile, automatic entry and remembered choices, the four gallery
 tabs (including arrow-key navigation), language links, FAQ disclosures, and
 download/documentation targets. The builder validates local files and anchors.
 
-Refresh the app screenshots with `scripts/make_screenshots.py` and brand exports
-with `scripts/make_icon.py` when those sources change, then rebuild this site.
+The release gallery uses native app captures and captions rendered with example text. To regenerate the headset panels, set `VRCLT_PREVIEW_DIR` to the absolute path of `docs/images` and run `cargo test --release export_headset_previews -- --ignored`.

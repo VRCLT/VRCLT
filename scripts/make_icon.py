@@ -19,7 +19,7 @@ from PIL import Image, ImageDraw, ImageFont
 from PySide6 import QtCore, QtGui, QtSvg
 
 ROOT = Path(__file__).resolve().parent.parent
-ASSETS = ROOT / "vrclt" / "assets"
+ASSETS = ROOT / "assets"
 BRAND = ROOT / "docs" / "brand"
 FONT = ASSETS / "fonts" / "PretendardJP-Bold.otf"
 ICO_SIZES = [(n, n) for n in (16, 20, 24, 32, 40, 48, 64, 128, 256)]

@@ -49,3 +49,6 @@ desktop.ini
 .claude/
 
 PLAN.md
+/target/
+
+/output/

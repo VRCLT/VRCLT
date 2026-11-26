@@ -2,7 +2,7 @@
 
 Run from any directory: .venv/Scripts/python scripts/build_site.py
 Only allowlisted public assets are copied. No app settings, logs or executables
-are included. Uses Pillow, already a dependency of the application.
+are included. Requires Pillow for the site artwork.
 """
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def social_image(assets: Path) -> None:
     logo.thumbnail((748, 220), Image.Resampling.LANCZOS)
     canvas.paste(logo, (80, 100), logo)
     draw = ImageDraw.Draw(canvas)
-    font = ROOT / "vrclt" / "assets" / "fonts" / "PretendardJP-Regular.otf"
+    font = ROOT / "assets" / "fonts" / "PretendardJP-Regular.otf"
     draw.text((92, 370), "Real-time voice translation and subtitles",
               font=ImageFont.truetype(str(font), 45), fill="#F5F3ED")
     draw.text((94, 465), "VRChat  /  Discord  /  Windows",
@@ -102,7 +102,7 @@ def main() -> None:
         "[vrclt.github.io](https://vrclt.github.io/)\n\n"
         "Static pages in English, Korean, Japanese, Simplified Chinese and Traditional Chinese.\n"
         "The root detects the browser language; explicit language choices are remembered locally.\n"
-        "v1.0 is released; downloads link to the latest published release.\n\n"
+        "Downloads link to the latest published Windows release.\n\n"
         "[Application source and downloads](https://github.com/VRCLT/VRCLT)\n\n"
         "The website templates live in the application checkout's `site/` directory,\n"
         "built with `scripts/build_site.py`. This repository contains the public\n"
@@ -111,7 +111,7 @@ def main() -> None:
     for name in ("logo-light.svg", "logo-dark.svg"):
         shutil.copyfile(ROOT / "docs" / "brand" / name, assets / name)
     for name in ("icon.svg", "icon.ico"):
-        shutil.copyfile(ROOT / "vrclt" / "assets" / name, assets / name)
+        shutil.copyfile(ROOT / "assets" / name, assets / name)
     for name in ("vrclt-sans-regular.woff2", "vrclt-sans-bold.woff2", "LICENSE-NotoSansCJK.txt"):
         shutil.copyfile(SOURCE / "assets" / name, assets / name)
     css = (SOURCE / "styles.css").read_text(encoding="utf-8")
@@ -122,7 +122,7 @@ def main() -> None:
         css = css.replace(name, f"{name}?v={font_versions[weight]}")
     (OUTPUT / "styles.css").write_text(css, encoding="utf-8", newline="\n")
     for locale in SCREENSHOT_LOCALES:
-        for kind in ("dashboard", "vr-subtitles", "vr-wrist", "vr-dashboard"):
+        for kind in ("native-console", "native-subtitles", "native-wrist", "native-steamvr-dashboard"):
             name = f"{kind}-{locale}.png"
             shutil.copyfile(ROOT / "docs" / "images" / name, assets / name)
     social_image(assets)

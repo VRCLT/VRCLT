@@ -1,8 +1,7 @@
 # VRCLT — editorial product direction
 
 The page introduces a Windows voice translation tool to VRChat and Discord
-users. The primary action is to download the latest public release. v1.0 is
-released; the gallery uses illustrative app screens with sample conversations.
+users. The primary action is to download the latest public release. The gallery uses the native app and sample conversations.
 
 ## References inspected
 
