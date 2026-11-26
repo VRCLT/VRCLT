@@ -7,6 +7,12 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 Release artifacts are attached to [GitHub Releases](https://github.com/VRCLT/VRCLT/releases)
 as a Windows x64 executable and a ZIP, each with its SHA-256 checksum.
 
+## [2.1.0] - 2026-11-26
+
+- VRCLT checks for stable Windows releases on startup and every six hours. It verifies the download and installs it in place on normal exit, including portable installations.
+- The console's **Updates** button shows download progress, lets you disable automatic updates, and can restart immediately when a release is ready. Closing to the tray keeps the session running.
+- Users on 2.0.0 or earlier need to download 2.1.0 once to start receiving automatic updates.
+
 ## [2.0.0] - 2026-11-26
 
 - Rebuilt the Windows app in Rust. The native console combines microphone translation, incoming captions, device selection and setup checks.

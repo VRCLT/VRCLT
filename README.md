@@ -5,11 +5,11 @@
 
 [English](README.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [简体中文](README.zh.md)
 
-# VRCLT 2.0
+# VRCLT 2.1
 
 Live translation for VRChat and Discord on Windows. Speak into your microphone, read what other people say, and control both directions from a single native console.
 
-**[Download for Windows](https://github.com/VRCLT/VRCLT/releases/latest)** | [Release notes](docs/releases/v2.0.0.md) | [Guides](https://github.com/VRCLT/VRCLT/wiki)
+**[Download for Windows](https://github.com/VRCLT/VRCLT/releases/latest)** | [Release notes](docs/releases/v2.1.0.md) | [Guides](https://github.com/VRCLT/VRCLT/wiki)
 
 ![VRCLT 2.0](docs/images/native-console-en.png)
 
@@ -18,6 +18,8 @@ Live translation for VRChat and Discord on Windows. Speak into your microphone, 
 1. Close the previous version and run the Windows x64 EXE. The ZIP contains the same executable at `vrclt/vrclt.exe`. Both read your existing settings and keys from `%LOCALAPPDATA%\vrclt\config.yaml`.
 2. Open **Connections**, choose a translation engine and enter your provider API key. We recommend **Soniox** for speaker-labeled conversations and **Gemini 3.5 Live Translate** for its free tier. **Qwen** and **GPT (OpenAI Realtime)** are also available. Each provider sets its rates and limits.
 3. Select your microphone, the app to caption and the target languages. The **Setup checklist** shows the detected devices and opens **Auto setup**. Select **Start** to translate.
+
+From 2.1, VRCLT downloads stable updates and installs them when you quit. Open **Updates** at the bottom of the console to check manually, restart immediately or turn automatic updates off.
 
 If Windows reports a missing VCRUNTIME or MSVCP DLL, install the [Microsoft Visual C++ x64 runtime](https://aka.ms/vs/17/release/vc_redist.x64.exe).
 

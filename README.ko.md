@@ -5,11 +5,11 @@
 
 [English](README.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [简体中文](README.zh.md)
 
-# VRCLT 2.0
+# VRCLT 2.1
 
 내 말은 상대의 언어로 보내고, 상대방이 하는 말은 자막으로 읽을 수 있습니다. Windows용 통역 콘솔 한 화면에서 VRChat과 Discord의 양방향 통역을 조작합니다.
 
-**[Windows용 다운로드](https://github.com/VRCLT/VRCLT/releases/latest)** | [릴리스 노트](docs/releases/v2.0.0.md) | [사용 안내](https://github.com/VRCLT/VRCLT/wiki)
+**[Windows용 다운로드](https://github.com/VRCLT/VRCLT/releases/latest)** | [릴리스 노트](docs/releases/v2.1.0.md) | [사용 안내](https://github.com/VRCLT/VRCLT/wiki)
 
 ![VRCLT 2.0](docs/images/native-console-ko.png)
 
@@ -18,6 +18,8 @@
 1. 기존 VRCLT를 종료하고 Windows x64 실행 파일을 여세요. ZIP을 받았다면 압축을 풀고 `vrclt/vrclt.exe`를 실행하세요. 두 파일 모두 `%LOCALAPPDATA%\vrclt\config.yaml`에서 기존 설정과 API 키를 읽습니다.
 2. **연결 설정**에서 번역 엔진을 선택하고 API 키를 입력하세요. 화자를 구분하는 대화에는 **Soniox**를 가장 추천합니다. 무료로 시작하려면 **Gemini 3.5 Live Translate**를 선택하세요. **Qwen**과 **GPT (OpenAI Realtime)**도 지원합니다. 요금과 사용 한도는 서비스별로 다릅니다.
 3. 내 마이크, 자막을 받을 앱, 번역할 언어를 고르세요. 상단 **설정 체크리스트**에서 연결을 확인하거나 **자동 설정**을 연 뒤 **통역 시작**을 누르세요.
+
+2.1부터는 새 버전을 미리 내려받아 앱을 종료할 때 설치합니다. 콘솔 하단 **업데이트**에서 수동으로 확인하거나, 바로 재시작하거나, 자동 업데이트를 끌 수 있습니다.
 
 Windows에서 VCRUNTIME 또는 MSVCP DLL이 없다고 나오면 [Microsoft Visual C++ x64 런타임](https://aka.ms/vs/17/release/vc_redist.x64.exe)을 설치하세요.
 

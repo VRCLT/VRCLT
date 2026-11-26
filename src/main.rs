@@ -11,6 +11,7 @@ mod runtime;
 mod setup;
 mod theme;
 mod ui;
+mod update;
 mod voices;
 mod vr;
 
@@ -19,6 +20,14 @@ use std::env;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<_> = env::args().skip(1).collect();
+    if args.first().is_some_and(|s| s == "--finish-update") {
+        if let Err(error) = update::finish_install(&args[1..]) {
+            use std::io::Write;
+            let _ = writeln!(std::io::stdout().lock(), "ERROR {error:#}");
+            std::process::exit(1);
+        }
+        return Ok(());
+    }
     if args.first().is_some_and(|s| s == "--nemotron-worker") {
         if let Err(e) = audio::reuse::worker_main() {
             use std::io::Write;
