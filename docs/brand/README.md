@@ -10,8 +10,8 @@ Two offset speech bubbles represent a voice and its reply. The mark uses navy
 | [logo-light.svg](logo-light.svg) / [PNG](logo-light.png) | Wordmark on light backgrounds; transparent |
 | [logo-dark.svg](logo-dark.svg) / [PNG](logo-dark.png) | Wordmark on dark backgrounds; transparent |
 | [icon-1024.png](icon-1024.png) | Square app/profile icon; transparent corners |
-| [icon.svg](../../vrclt/assets/icon.svg) | Editable master mark |
-| [icon.ico](../../vrclt/assets/icon.ico) | Windows app, taskbar, tray and executable icon |
+| [icon.svg](../../assets/icon.svg) | Editable master mark |
+| [icon.ico](../../assets/icon.ico) | Windows app, taskbar, tray and executable icon |
 
 README usage (automatically follows the reader's color scheme):
 
@@ -22,13 +22,13 @@ README usage (automatically follows the reader's color scheme):
 </picture>
 ```
 
-Edit `vrclt/assets/icon.svg`, then regenerate all exports from the repository root:
+Edit `assets/icon.svg`, then regenerate all exports from the repository root:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\make_icon.py
 ```
 
-The wordmark uses the bundled [Pretendard JP Bold](../../vrclt/assets/fonts/LICENSE-PretendardJP.txt)
+The wordmark uses the bundled [Pretendard JP Bold](../../assets/fonts/LICENSE-PretendardJP.txt)
 under the SIL Open Font License. SVG lettering is converted to paths, so the
 logo does not depend on the viewer's installed fonts. The PNG logos are 1088 ×
 320; the ICO includes 16, 20, 24, 32, 40, 48, 64, 128 and 256 px frames.
