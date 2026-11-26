@@ -546,36 +546,54 @@ pub struct Route {
     tasks: Vec<JoinHandle<()>>,
     workers: Vec<thread::JoinHandle<()>>,
 }
-impl Route {
-    fn audio_outputs(
+#[derive(Debug, PartialEq)]
+pub struct AudioRoute<'a> {
+    pub translating: bool,
+    speak: bool,
+    passthrough: Option<&'a str>,
+}
+impl<'a> AudioRoute<'a> {
+    pub fn select(
         cfg: &Config,
         inbound: bool,
-        translating: bool,
-        cable: crate::setup::Cable,
-    ) -> (bool, bool) {
+        held: bool,
+        devices: &'a crate::setup::Environment,
+    ) -> Option<Self> {
+        let translating = cfg.translation_active(inbound) && (inbound || !held);
         if inbound {
-            return (cfg.b("/inbound/play_audio"), false);
-        }
-        if cable != crate::setup::Cable::Ready {
-            return (false, false);
+            return translating.then(|| Self {
+                translating,
+                speak: cfg.b("/inbound/play_audio"),
+                passthrough: None,
+            });
         }
         let text = cfg.b("/outbound/text_only");
-        (
-            translating && !text && cfg.b("/outbound/voice_output"),
-            text || !translating || cfg.b("/outbound/passthrough_while_translating"),
-        )
+        let cable = devices.passthrough_output(cfg.s("/outbound/tts_device"));
+        let passthrough = cable
+            .filter(|_| text || !translating || cfg.b("/outbound/passthrough_while_translating"));
+        let speak = translating && !text && cable.is_some() && cfg.b("/outbound/voice_output");
+        (translating || passthrough.is_some()).then_some(Self {
+            translating,
+            speak,
+            passthrough,
+        })
     }
+}
+impl Route {
     pub fn start(
         rt: &Runtime,
         cfg: Config,
         inbound: bool,
-        translating: bool,
+        route: AudioRoute<'_>,
         ctx: egui::Context,
         echo: Arc<Mutex<Option<Instant>>>,
         captions: Option<watch::Sender<(String, String)>>,
-        cable: crate::setup::Cable,
     ) -> Self {
-        let (speak, pass) = Self::audio_outputs(&cfg, inbound, translating, cable);
+        let AudioRoute {
+            translating,
+            speak,
+            passthrough,
+        } = route;
         let rate = if cfg.engine(inbound) == "openai" {
             24000
         } else {
@@ -631,10 +649,11 @@ impl Route {
                 this.set_monitor(&cfg);
             }
         }
-        let raw = pass.then(|| Arc::new(AudioQueue::new(48000 * 2 / 8)));
-        if let Some(q) = raw.clone() {
-            this.player(output, q, 48000, audio::Playback::Unity);
-        }
+        let raw = passthrough.map(|cable_input| {
+            let queue = Arc::new(AudioQueue::new(48000 * 2 / 8));
+            this.player(cable_input, queue.clone(), 48000, audio::Playback::Unity);
+            queue
+        });
         if translating {
             this.tasks
                 .push(rt.spawn(provider::supervise(cfg.clone(), lane.clone(), speak)));
@@ -712,33 +731,53 @@ impl Drop for Route {
 mod tests {
     use super::*;
     #[test]
-    fn missing_cable_starts_neither_outbound_audio_player() {
-        use crate::setup::Cable;
+    fn original_microphone_uses_the_cable_in_text_mode_and_when_translation_is_off() {
+        use crate::setup::Environment;
+        let mut devices = Environment {
+            outputs: vec![
+                "Headphones".into(),
+                "CABLE Input".into(),
+                "CABLE-B Input".into(),
+            ],
+            cable_mics: vec!["CABLE Output".into()],
+            cable_speakers: vec!["CABLE Input".into(), "CABLE-B Input".into()],
+            ..Default::default()
+        };
         let mut cfg = Config::default();
-        cfg.data["inbound"]["play_audio"] = true.into();
-        cfg.data["outbound"]["voice_output"] = true.into();
-        cfg.data["outbound"]["passthrough_while_translating"] = true.into();
-        for cable in [Cable::Unknown, Cable::Missing, Cable::Inactive] {
-            for text in [false, true] {
-                cfg.data["outbound"]["text_only"] = text.into();
-                for enabled in [true, false] {
-                    assert_eq!(
-                        Route::audio_outputs(&cfg, false, enabled, cable),
-                        (false, false)
-                    );
-                }
-                assert_eq!(Route::audio_outputs(&cfg, true, true, cable), (true, false));
-            }
-        }
-        assert_eq!(
-            Route::audio_outputs(&cfg, false, true, Cable::Ready),
-            (false, true)
-        );
+        cfg.data["outbound"]["tts_device"] = "Headphones".into();
+        cfg.data["outbound"]["text_only"] = true.into();
+        let select = |c: &Config, held, devices: &Environment| {
+            AudioRoute::select(c, false, held, devices)
+                .map(|r| (r.translating, r.speak, r.passthrough.map(str::to_owned)))
+        };
+        let expected = |translating| Some((translating, false, Some("CABLE Input".to_owned())));
+        assert_eq!(select(&cfg, false, &devices), expected(true));
         cfg.data["outbound"]["text_only"] = false.into();
+        assert_eq!(select(&cfg, false, &devices), Some((true, true, None)));
+        assert_eq!(select(&cfg, true, &devices), expected(false));
+        cfg.data["dashboard"]["translation_on"] = false.into();
+        assert_eq!(select(&cfg, false, &devices), expected(false));
+        cfg.data["dashboard"]["translation_on"] = true.into();
+        cfg.data["outbound"]["enabled"] = false.into();
+        assert_eq!(select(&cfg, false, &devices), expected(false));
+        cfg.data["outbound"]["tts_device"] = "CABLE-B Input".into();
         assert_eq!(
-            Route::audio_outputs(&cfg, false, true, Cable::Ready),
-            (true, true)
+            select(&cfg, false, &devices),
+            Some((false, false, Some("CABLE-B Input".into())))
         );
+        devices.cable_mics.clear();
+        assert_eq!(select(&cfg, false, &devices), None);
+        cfg.data["outbound"]["enabled"] = true.into();
+        assert_eq!(select(&cfg, false, &devices), Some((true, false, None)));
+        cfg.data["inbound"]["play_audio"] = true.into();
+        assert!(
+            AudioRoute::select(&cfg, true, false, &devices)
+                .unwrap()
+                .speak
+        );
+        devices.cable_speakers.clear();
+        assert_eq!(select(&cfg, false, &devices), Some((true, false, None)));
+        assert_eq!(select(&cfg, true, &devices), None);
     }
     #[test]
     fn first_inbound_words_and_translation_wake_the_overlay_before_the_next_tick() {

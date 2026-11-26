@@ -740,6 +740,35 @@ mod tests {
         assert!(!duplicate.is_open());
     }
     #[test]
+    #[ignore = "requires an active VB-CABLE input and output on Windows"]
+    fn cable_passthrough_opens_the_detected_endpoint_and_renders_at_48_khz() -> Result<()> {
+        let env = devices()?;
+        let name = env
+            .passthrough_output("unrelated saved output")
+            .context("No active VB-CABLE pair")?;
+        let _com = ComApartment::open()?;
+        let endpoint = device(Direction::Render, name)?;
+        anyhow::ensure!(vb_cable_endpoint(&endpoint, &endpoint.get_friendlyname()?));
+        let lane = Lane::new(false, 16000, false, Default::default(), None);
+        let queue = AudioQueue::new(9600);
+        queue.push(&[0; 9600]);
+        std::thread::scope(|scope| -> Result<()> {
+            let worker = scope.spawn(|| playback(&lane, &queue, name, 48000, &Playback::Unity));
+            let deadline = Instant::now() + Duration::from_secs(4);
+            while !queue.samples.lock().is_empty()
+                && !worker.is_finished()
+                && Instant::now() < deadline
+            {
+                std::thread::sleep(Duration::from_millis(10));
+            }
+            let drained = queue.samples.lock().is_empty();
+            queue.close();
+            worker.join().unwrap()?;
+            anyhow::ensure!(drained, "VB-CABLE did not consume the audio");
+            Ok(())
+        })
+    }
+    #[test]
     #[ignore = "Requires a Windows audio endpoint and process-loopback support"]
     fn wasapi_process_loopback() {
         let _com = ComApartment::open().unwrap();

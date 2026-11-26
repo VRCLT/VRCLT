@@ -162,6 +162,13 @@ impl Config {
             .filter(|v| v.is_finite())
             .unwrap_or(default)
     }
+    pub fn translation_active(&self, inbound: bool) -> bool {
+        if inbound {
+            self.b("/inbound/enabled") && self.b("/dashboard/subtitles_on")
+        } else {
+            self.b("/outbound/enabled") && self.b("/dashboard/translation_on")
+        }
+    }
     pub fn engine(&self, inbound: bool) -> &str {
         let p = self.s("/inbound/provider");
         if inbound && ENGINES.contains(&p) {

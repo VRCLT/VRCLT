@@ -13,6 +13,7 @@ as a Windows x64 executable and a ZIP, each with its SHA-256 checksum.
 - Restored Soniox voice recording and cloning, separate subtitle engines, translated audio monitoring, volume controls, VRChat text mode and OSC controls.
 - Added optional CPU and GPU speech filters. Soniox automatically identifies the spoken language and groups captions by speaker.
 - Renewed the desktop caption window, SteamVR dashboard, wrist controls and adjustable headset caption panel. SteamVR can start the app automatically and repeated launches reuse the running console.
+- Route the original microphone to the detected VB-CABLE in text mode or when outgoing translation is off, including subtitle-only sessions.
 - Switched Windows CI, packaging and releases to Cargo. Both downloads contain the same native executable and use the existing settings file.
 
 ## [1.1.0] - 2026-11-24
