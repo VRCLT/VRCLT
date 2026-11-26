@@ -19,6 +19,8 @@
 2. 打开连接设置，选择翻译引擎并输入 API 密钥。需要区分说话人时推荐 **Soniox**，想从免费额度开始可选 **Gemini 3.5 Live Translate**。也支持 **Qwen** 和 **GPT (OpenAI Realtime)**。费用和额度以各服务为准。
 3. 选择麦克风、需要字幕的应用和目标语言。在设置检查清单中确认连接，按需使用自动设置，然后开始翻译。
 
+如果 Windows 提示缺少 VCRUNTIME 或 MSVCP DLL，请安装 [Microsoft Visual C++ x64 运行库](https://aka.ms/vs/17/release/vc_redist.x64.exe)。
+
 ## 语音与文字
 
 文字模式通过 OSC 向 VRChat 聊天框发送译文。文字模式和对方的字幕无需安装 VB-CABLE。发送翻译语音时，将输出设为 CABLE Input，在通话应用中选择 CABLE Output 作为麦克风。你也可以用耳机监听译音并调节音量。

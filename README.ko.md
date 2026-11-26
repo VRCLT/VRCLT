@@ -19,6 +19,8 @@
 2. **연결 설정**에서 번역 엔진을 선택하고 API 키를 입력하세요. 화자를 구분하는 대화에는 **Soniox**를 가장 추천합니다. 무료로 시작하려면 **Gemini 3.5 Live Translate**를 선택하세요. **Qwen**과 **GPT (OpenAI Realtime)**도 지원합니다. 요금과 사용 한도는 서비스별로 다릅니다.
 3. 내 마이크, 자막을 받을 앱, 번역할 언어를 고르세요. 상단 **설정 체크리스트**에서 연결을 확인하거나 **자동 설정**을 연 뒤 **통역 시작**을 누르세요.
 
+Windows에서 VCRUNTIME 또는 MSVCP DLL이 없다고 나오면 [Microsoft Visual C++ x64 런타임](https://aka.ms/vs/17/release/vc_redist.x64.exe)을 설치하세요.
+
 ## 음성과 텍스트
 
 텍스트 모드는 내 말의 번역문을 OSC로 VRChat 채팅창에 보냅니다. 텍스트 모드와 상대방 자막은 VB-CABLE 없이도 쓸 수 있습니다. 번역 음성을 보낼 때는 출력 장치를 CABLE Input으로, 상대 앱의 마이크를 CABLE Output으로 선택하세요. 내 헤드폰으로 번역 음성을 들으면서 음량도 조절할 수 있습니다.

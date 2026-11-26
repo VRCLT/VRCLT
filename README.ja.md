@@ -19,6 +19,8 @@ VRChat と Discord 向けの Windows 用リアルタイム通訳アプリです�
 2. 接続設定で翻訳エンジンを選び、API キーを入力します。話者を区別する会話には **Soniox**、無料枠で始めるには **Gemini 3.5 Live Translate** がおすすめです。**Qwen** と **GPT (OpenAI Realtime)** も選べます。料金と利用枠は各サービスでご確認ください。
 3. マイク、字幕の対象アプリ、翻訳先の言語を選びます。設定チェックリストで接続を確認し、必要に応じて自動設定を使ってから通訳を開始します。
 
+VCRUNTIME または MSVCP の DLL が見つからない場合は [Microsoft Visual C++ x64 ランタイム](https://aka.ms/vs/17/release/vc_redist.x64.exe)をインストールしてください。
+
 ## 音声とテキスト
 
 テキストモードは翻訳文を OSC で VRChat のチャットボックスに送ります。テキストと相手の字幕には VB-CABLE は不要です。翻訳音声を送る場合は出力を CABLE Input、通話アプリのマイクを CABLE Output にします。ヘッドホンで翻訳音声を確認し、音量を調整できます。

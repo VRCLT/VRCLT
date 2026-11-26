@@ -1,6 +1,6 @@
 # vrclt configuration example
 # Developer reference config. The standalone exe stores user settings in AppData.
-# In a source checkout, copy this file to config.yaml if you want local overrides.
+# Set VRCLT_CONFIG to an alternate YAML path to use a separate configuration.
 # Leave api_key empty to use the GEMINI_API_KEY environment variable instead.
 provider: gemini             # gemini | qwen | openai | soniox (BOTH pipelines)
 api_key: ""                  # Gemini API key (Google AI Studio)
@@ -82,7 +82,7 @@ dashboard:
   subtitles_on: true           # last Dashboard subtitles toggle state
 
 meta:
-  last_version: ""             # internal: last version that reviewed config reset
+  setup_done: false            # marked after first-run setup
 
 hotkeys:                       # Windows global hotkeys for PC/desktop controls
   enabled: true
@@ -179,7 +179,6 @@ ui:
   caption_font_size: 17       # conversation text in the console, independent of overlay.font_size
   lang: ""                    # ""=auto | en | ko | ja | zh
   close_action: tray          # tray | exit; window close button behavior
-  easy_mode: true             # simple dashboard: essentials + setup check (false = full)
 
 wrist_ui:                     # SteamVR wrist watch menu
   enabled: true

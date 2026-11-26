@@ -19,6 +19,8 @@ Live translation for VRChat and Discord on Windows. Speak into your microphone, 
 2. Open **Connections**, choose a translation engine and enter your provider API key. We recommend **Soniox** for speaker-labeled conversations and **Gemini 3.5 Live Translate** for its free tier. **Qwen** and **GPT (OpenAI Realtime)** are also available. Each provider sets its rates and limits.
 3. Select your microphone, the app to caption and the target languages. The **Setup checklist** shows the detected devices and opens **Auto setup**. Select **Start** to translate.
 
+If Windows reports a missing VCRUNTIME or MSVCP DLL, install the [Microsoft Visual C++ x64 runtime](https://aka.ms/vs/17/release/vc_redist.x64.exe).
+
 ## Voice and text
 
 Text mode sends microphone translations to the VRChat chatbox through OSC. Incoming captions and text mode work without VB-CABLE. For translated voice, select CABLE Input as the output and CABLE Output in the receiving app. The console can also play your translated voice through your headphones and adjust its volume.
