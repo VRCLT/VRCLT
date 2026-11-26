@@ -320,20 +320,18 @@ impl Studio {
                 fix,
             })
         };
-        let missing = [false, true]
+        let active = [false, true]
             .into_iter()
-            .filter(|i| {
-                cfg.b(if *i {
-                    "/inbound/enabled"
-                } else {
-                    "/outbound/enabled"
-                })
-            })
+            .filter(|i| cfg.translation_active(*i));
+        let any_engine = active.clone().next().is_some();
+        let missing = active
             .map(|i| cfg.engine(i))
             .find(|p| cfg.key(p).is_empty());
         add(
             l.t("엔진 API 키", "Engine API key", "API キー", "引擎密钥"),
-            if missing.is_some() {
+            if !any_engine {
+                l.t("사용 안 함", "Not in use", "未使用", "未使用")
+            } else if missing.is_some() {
                 l.t("입력 필요", "Missing key", "未入力", "缺少密钥")
             } else {
                 l.t("입력됨", "Configured", "入力済み", "已填写")
@@ -344,8 +342,8 @@ impl Studio {
                 .unwrap_or_else(|| engine_name(cfg.engine(false))),
             Fix::Key,
         );
-        if cfg.b("/outbound/enabled") {
-            let cable = self.cable();
+        let cable = self.cable();
+        if cfg.b("/outbound/enabled") || cable == Cable::Ready {
             add(
                 "VB-CABLE",
                 if cable == Cable::Ready {
@@ -380,11 +378,26 @@ impl Studio {
                 },
                 Fix::Mic,
             );
-            if cable == Cable::Ready && !cfg.b("/outbound/text_only") {
-                let out = env.current(false, cfg.s("/outbound/tts_device"));
+            if cable == Cable::Ready {
+                let original = !cfg.translation_active(false) || cfg.b("/outbound/text_only");
+                let saved = cfg.s("/outbound/tts_device");
+                let out = if original {
+                    env.passthrough_output(saved).unwrap_or_default()
+                } else {
+                    env.current(false, saved)
+                };
                 let valid = env.cable_output_selected(out);
                 add(
-                    l.t("번역 출력", "Voice output", "翻訳出力", "翻译输出"),
+                    if original {
+                        l.t(
+                            "원음 출력",
+                            "Original microphone output",
+                            "原音の出力",
+                            "原声输出",
+                        )
+                    } else {
+                        l.t("번역 출력", "Voice output", "翻訳出力", "翻译输出")
+                    },
                     if valid {
                         ready
                     } else if out.is_empty() {

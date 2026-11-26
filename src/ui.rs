@@ -162,7 +162,7 @@ impl Studio {
             hotkeys: None,
         };
         app.discover(ctx);
-        if !first && !app.load_error && Self::validate(&app.cfg, app.lang).is_ok() {
+        if !first && !app.load_error && Self::validate(&app.cfg, app.lang, app.cable()).is_ok() {
             app.start(ctx);
         } else if !app.load_error {
             app.start_vr(ctx);
@@ -259,8 +259,11 @@ impl Studio {
             }
         }
     }
-    fn validate(c: &Config, l: Lang) -> Result<(), (usize, String)> {
-        if !c.b("/outbound/enabled") && !c.b("/inbound/enabled") {
+    fn validate(c: &Config, l: Lang, cable: Cable) -> Result<(), (usize, String)> {
+        if !c.b("/outbound/enabled")
+            && !c.b("/inbound/enabled")
+            && matches!(cable, Cable::Missing | Cable::Inactive)
+        {
             return Err((
                 0,
                 l.t(
@@ -272,7 +275,7 @@ impl Studio {
                 .into(),
             ));
         }
-        if c.b("/inbound/enabled") && c.s("/inbound/process").is_empty() {
+        if c.translation_active(true) && c.s("/inbound/process").is_empty() {
             return Err((
                 0,
                 l.t(
@@ -284,8 +287,8 @@ impl Studio {
                 .into(),
             ));
         }
-        for (on, i) in [("/outbound/enabled", false), ("/inbound/enabled", true)] {
-            if c.b(on) {
+        for i in [false, true] {
+            if c.translation_active(i) {
                 let p = c.engine(i);
                 let key = c.key(p);
                 if key.is_empty() || key.contains("://") {
@@ -336,7 +339,7 @@ impl Studio {
         self.update_vr();
     }
     fn start(&mut self, ctx: &Context) {
-        if let Err((n, e)) = Self::validate(&self.cfg, self.lang) {
+        if let Err((n, e)) = Self::validate(&self.cfg, self.lang, self.cable()) {
             self.start_vr(ctx);
             self.setup_page(n);
             self.error = e;
@@ -388,12 +391,6 @@ impl Studio {
         } else {
             "/outbound/enabled"
         });
-        let on = (inbound || !self.held)
-            && self.cfg.b(if inbound {
-                "/dashboard/subtitles_on"
-            } else {
-                "/dashboard/translation_on"
-            });
         let mut captions = None;
         let cable = self.cable();
         if !inbound {
@@ -413,16 +410,18 @@ impl Studio {
                 self.chatbox.take();
             }
         }
-        if self.running && enabled && (!inbound || on) {
+        if self.running
+            && let Some(route) =
+                crate::runtime::AudioRoute::select(&self.cfg, inbound, self.held, &self.devices)
+        {
             self.routes[i] = Some(Route::start(
                 &self.rt,
                 self.cfg.clone(),
                 inbound,
-                on,
+                route,
                 ctx.clone(),
                 self.echo.clone(),
                 captions,
-                cable,
             ));
         }
         self.update_vr();
@@ -491,7 +490,7 @@ impl Studio {
         }
     }
     fn finish_setup(&mut self, ctx: &Context) {
-        if let Err((n, e)) = Self::validate(&self.draft, self.lang) {
+        if let Err((n, e)) = Self::validate(&self.draft, self.lang, self.cable()) {
             self.error = e;
             self.page = Page::Setup(n);
             return;
@@ -1668,11 +1667,6 @@ impl Studio {
     fn lane_status(&mut self, ui: &mut Ui, i: usize) {
         let l = self.lang;
         let inbound = i == 1;
-        let on = self.cfg.b(if inbound {
-            "/dashboard/subtitles_on"
-        } else {
-            "/dashboard/translation_on"
-        });
         let lane = self.routes[i].as_ref().map(|r| r.lane.clone());
         let level = lane
             .as_ref()
@@ -1710,11 +1704,11 @@ impl Studio {
                 Phase::Connecting => l.t("엔진 연결 중", "Connecting", "接続中", "正在连接"),
                 Phase::Live => l.t("엔진 연결됨", "Connected", "接続済み", "已连接"),
                 Phase::Retry => l.t("재연결 중", "Reconnecting", "再接続中", "重新连接中"),
-                _ if !on => l.t(
-                    "원래 목소리 전달",
-                    "Original voice",
-                    "原音を送信",
-                    "传输原声",
+                _ if lane.as_ref().is_some_and(|l| !l.translating) => l.t(
+                    "VB-CABLE로 원래 목소리 전달",
+                    "Original microphone to VB-CABLE",
+                    "元の音声を VB-CABLE へ送信",
+                    "原声传至 VB-CABLE",
                 ),
                 _ => l.t("음성 대기", "Listening", "音声待機中", "等待语音"),
             })
@@ -1887,7 +1881,7 @@ impl eframe::App for Studio {
                 Action::Nemotron(inbound) => self.toggle_filter_option(inbound, true),
                 Action::SpeechFilter(inbound) => self.toggle_filter_option(inbound, false),
                 Action::StartSession => {
-                    if Self::validate(&self.cfg, self.lang).is_err() {
+                    if Self::validate(&self.cfg, self.lang, self.cable()).is_err() {
                         ctx.send_viewport_cmd(ViewportCommand::Visible(true));
                         ctx.send_viewport_cmd(ViewportCommand::Focus);
                     }
@@ -1973,6 +1967,10 @@ impl eframe::App for Studio {
         if let Some(rx) = &self.devices_rx {
             if let Ok(devices) = rx.try_recv() {
                 let previous = self.cable();
+                let previous_output = self
+                    .devices
+                    .passthrough_output(self.cfg.s("/outbound/tts_device"))
+                    .map(str::to_owned);
                 let mut mic_changed = false;
                 match devices {
                     Ok(snapshot) => {
@@ -1994,6 +1992,7 @@ impl eframe::App for Studio {
                         }
                     }
                     Err(e) => {
+                        self.devices = Default::default();
                         self.devices_ready = false;
                         self.error = e.to_string();
                     }
@@ -2001,6 +2000,10 @@ impl eframe::App for Studio {
                 self.devices_rx = None;
                 if self.running
                     && (mic_changed
+                        || previous_output.as_deref()
+                            != self
+                                .devices
+                                .passthrough_output(self.cfg.s("/outbound/tts_device"))
                         || self.routes[0].is_none() && self.cfg.b("/outbound/enabled")
                         || (previous == Cable::Ready) != (self.cable() == Cable::Ready))
                 {

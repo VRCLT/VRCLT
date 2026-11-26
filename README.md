@@ -23,7 +23,7 @@ If Windows reports a missing VCRUNTIME or MSVCP DLL, install the [Microsoft Visu
 
 ## Voice and text
 
-Text mode sends microphone translations to the VRChat chatbox through OSC. Incoming captions and text mode work without VB-CABLE. For translated voice, select CABLE Input as the output and CABLE Output in the receiving app. The console can also play your translated voice through your headphones and adjust its volume.
+Text mode sends microphone translations to the VRChat chatbox through OSC. With VB-CABLE connected, your original microphone continues through the cable in text mode and while **Translate my voice** is off. Incoming captions and text mode work without VB-CABLE. For translated voice, select CABLE Input as the output and CABLE Output in the receiving app. The console can also play your translated voice through your headphones and adjust its volume.
 
 ## Captions and SteamVR
 

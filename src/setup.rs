@@ -320,6 +320,21 @@ impl Environment {
             .or_else(|| self.cable_speakers.first())
             .map(String::as_str)
     }
+    pub fn passthrough_output(&self, saved: &str) -> Option<&str> {
+        if self.cable() != Cable::Ready {
+            return None;
+        }
+        self.cable_speakers
+            .iter()
+            .find(|name| name.as_str() == saved)
+            .or_else(|| {
+                self.cable_speakers
+                    .iter()
+                    .find(|name| matches_device(name, saved))
+            })
+            .map(String::as_str)
+            .or_else(|| self.cable_in())
+    }
     pub fn cable_out(&self) -> Option<&str> {
         self.cable_mics
             .iter()
@@ -381,7 +396,7 @@ impl Environment {
     }
     pub fn plan(&self, c: &crate::config::Config) -> Plan {
         let mut plan = Plan::default();
-        if c.b("/outbound/enabled") {
+        if c.b("/outbound/enabled") || self.cable() == Cable::Ready {
             let mic = self.current(true, c.s("/outbound/mic_device"));
             let real: Vec<_> = self.inputs.iter().filter(|n| !virtual_device(n)).collect();
             let preferred = self
@@ -406,6 +421,7 @@ impl Environment {
                     .cloned();
             }
             if self.cable() == Cable::Ready
+                && c.translation_active(false)
                 && !c.b("/outbound/text_only")
                 && !self.cable_output_selected(self.current(false, c.s("/outbound/tts_device")))
             {
@@ -413,7 +429,6 @@ impl Environment {
             }
             if self.game
                 && self.cable() == Cable::Ready
-                && !c.b("/outbound/text_only")
                 && !self.game_open
                 && c.s("/app/mode") == "vrchat"
                 && !self.game_mics_ready()

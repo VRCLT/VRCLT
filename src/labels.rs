@@ -30,10 +30,10 @@ impl Lang {
     }
     pub fn text_only_audio_hint(self) -> &'static str {
         self.t(
-            "번역 음성 모드에서 재생됩니다.",
-            "Playback resumes in translated voice mode.",
-            "翻訳音声モードで再生します。",
-            "切换到翻译语音模式后播放。",
+            "마이크 원음은 VB-CABLE로 전달됩니다.",
+            "Original microphone → VB-CABLE",
+            "マイクの原音を VB-CABLE へ送信します。",
+            "麦克风原声传至 VB-CABLE。",
         )
     }
     pub fn new(code: &str) -> Self {
