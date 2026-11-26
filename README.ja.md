@@ -5,11 +5,11 @@
 
 [English](README.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [简体中文](README.zh.md)
 
-# VRCLT 2.0
+# VRCLT 2.1
 
 VRChat と Discord 向けの Windows 用リアルタイム通訳アプリです。自分の声の翻訳と相手の字幕をひとつのネイティブ画面で操作できます。
 
-**[Windows 版をダウンロード](https://github.com/VRCLT/VRCLT/releases/latest)** | [リリースノート](docs/releases/v2.0.0.md) | [ガイド](https://github.com/VRCLT/VRCLT/wiki)
+**[Windows 版をダウンロード](https://github.com/VRCLT/VRCLT/releases/latest)** | [リリースノート](docs/releases/v2.1.0.md) | [ガイド](https://github.com/VRCLT/VRCLT/wiki)
 
 ![VRCLT 2.0](docs/images/native-console-ja.png)
 
@@ -18,6 +18,8 @@ VRChat と Discord 向けの Windows 用リアルタイム通訳アプリです�
 1. 旧版を終了して Windows x64 用 EXE を起動します。ZIP の場合は展開して `vrclt/vrclt.exe` を起動します。どちらも `%LOCALAPPDATA%\vrclt\config.yaml` にある設定と API キーを引き継ぎます。
 2. 接続設定で翻訳エンジンを選び、API キーを入力します。話者を区別する会話には **Soniox**、無料枠で始めるには **Gemini 3.5 Live Translate** がおすすめです。**Qwen** と **GPT (OpenAI Realtime)** も選べます。料金と利用枠は各サービスでご確認ください。
 3. マイク、字幕の対象アプリ、翻訳先の言語を選びます。設定チェックリストで接続を確認し、必要に応じて自動設定を使ってから通訳を開始します。
+
+2.1 以降は新しい正式版をダウンロードし、アプリの終了時にインストールします。コンソール下部の **更新** で手動確認、すぐに再起動、自動更新の切り替えができます。
 
 VCRUNTIME または MSVCP の DLL が見つからない場合は [Microsoft Visual C++ x64 ランタイム](https://aka.ms/vs/17/release/vc_redist.x64.exe)をインストールしてください。
 

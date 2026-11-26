@@ -1,6 +1,6 @@
 [package]
 name = "vrclt"
-version = "2.0.0"
+version = "2.1.0"
 edition = "2024"
 publish = false
 
@@ -20,6 +20,7 @@ parking_lot = "0.12"
 raw-window-handle = "0.6"
 reqwest = { version = "0.12", default-features = false, features = ["native-tls", "json", "multipart", "blocking"] }
 rosc = "0.11"
+semver = "1"
 serde_json = "1"
 serde_yaml_ng = "0.10"
 sha2 = "0.10.9"
@@ -30,7 +31,7 @@ tokio-tungstenite = { version = "0.28", features = ["native-tls"] }
 tray-icon = { version = "0.21", default-features = false }
 wasapi = "0.27"
 windows = { version = "0.62", features = ["Win32_Graphics_Direct3D11", "Win32_Graphics_Direct3D", "Win32_Graphics_Dxgi_Common"] }
-windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_UI_HiDpi", "Win32_Security", "Win32_System_Threading", "Win32_System_Diagnostics_ToolHelp", "Win32_UI_WindowsAndMessaging", "Win32_Globalization", "Win32_UI_Input_KeyboardAndMouse"] }
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_UI_HiDpi", "Win32_Security", "Win32_Storage_FileSystem", "Win32_System_Threading", "Win32_System_Diagnostics_ToolHelp", "Win32_UI_WindowsAndMessaging", "Win32_Globalization", "Win32_UI_Input_KeyboardAndMouse"] }
 winreg = "0.55"
 zip = { version = "4", default-features = false, features = ["deflate"] }
 

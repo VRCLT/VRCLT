@@ -1,5 +1,6 @@
 mod checkup;
 mod subtitles;
+mod updates;
 use crate::{
     audio,
     config::{Config, ENGINES},
@@ -56,6 +57,8 @@ pub struct Studio {
     load_error: bool,
     exiting: bool,
     about: bool,
+    updates: crate::update::Updater,
+    updates_open: bool,
     voice_help: bool,
     voices: crate::voices::Voices,
     held: bool,
@@ -153,6 +156,8 @@ impl Studio {
             error,
             exiting: false,
             about: false,
+            updates: Default::default(),
+            updates_open: false,
             voice_help: false,
             voices: Default::default(),
             held: false,
@@ -686,6 +691,13 @@ impl Studio {
                                 "表示言語",
                                 "界面语言",
                             ));
+                        let label = match &self.updates.status {
+                            crate::update::Status::Ready(version, _) => format!("v{version}  ↑"),
+                            _ => l.t("업데이트", "Updates", "更新", "更新").to_owned(),
+                        };
+                        if ui.button(label).clicked() {
+                            self.updates_open = true;
+                        }
                     });
                 });
             });
@@ -1850,6 +1862,10 @@ fn check(ui: &mut Ui, c: &mut Config, path: &str, label: &str) {
 }
 impl eframe::App for Studio {
     fn update(&mut self, ctx: &Context, _: &mut eframe::Frame) {
+        if !self.exiting {
+            self.updates
+                .tick(!self.load_error && self.cfg.b("/ui/auto_update"), ctx);
+        }
         while let Ok(a) = self.events.try_recv() {
             match a {
                 Action::Interface(code) => self.set_interface_language(code),
@@ -2062,6 +2078,7 @@ impl eframe::App for Studio {
                     });
             });
         self.checkup_dialog(ctx);
+        self.update_dialog(ctx);
         if self.voice_help {
             let l = self.lang;
             let cable = self.cable();
@@ -2164,6 +2181,7 @@ impl eframe::App for Studio {
         self.overlay.finish_edit();
         self.vr.take();
         self.stop();
+        self.updates.install(false);
     }
 }
 

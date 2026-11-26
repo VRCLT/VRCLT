@@ -19,6 +19,10 @@ try {
     }
     cargo build --release --locked
     if ($LASTEXITCODE) { throw "Rust build failed" }
+    if ($Test) {
+        $metadata = cargo metadata --locked --no-deps --format-version 1 | ConvertFrom-Json
+        & "$PSScriptRoot/../tests/native_update.ps1" -Executable (Join-Path $metadata.target_directory "release/vrclt.exe")
+    }
 } finally {
     Pop-Location
 }

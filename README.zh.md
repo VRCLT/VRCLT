@@ -5,11 +5,11 @@
 
 [English](README.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [简体中文](README.zh.md)
 
-# VRCLT 2.0
+# VRCLT 2.1
 
 适用于 VRChat 和 Discord 的 Windows 实时翻译应用。在同一个原生窗口中控制自己的语音翻译和对方发言的字幕。
 
-**[下载 Windows 版](https://github.com/VRCLT/VRCLT/releases/latest)** | [发行说明](docs/releases/v2.0.0.md) | [指南](https://github.com/VRCLT/VRCLT/wiki)
+**[下载 Windows 版](https://github.com/VRCLT/VRCLT/releases/latest)** | [发行说明](docs/releases/v2.1.0.md) | [指南](https://github.com/VRCLT/VRCLT/wiki)
 
 ![VRCLT 2.0](docs/images/native-console-zh.png)
 
@@ -18,6 +18,8 @@
 1. 退出旧版后运行 Windows x64 的 EXE。如果下载 ZIP，请解压并运行 `vrclt/vrclt.exe`。两种方式都会读取 `%LOCALAPPDATA%\vrclt\config.yaml` 中已有的设置和 API 密钥。
 2. 打开连接设置，选择翻译引擎并输入 API 密钥。需要区分说话人时推荐 **Soniox**，想从免费额度开始可选 **Gemini 3.5 Live Translate**。也支持 **Qwen** 和 **GPT (OpenAI Realtime)**。费用和额度以各服务为准。
 3. 选择麦克风、需要字幕的应用和目标语言。在设置检查清单中确认连接，按需使用自动设置，然后开始翻译。
+
+从 2.1 起，VRCLT 会提前下载正式版，在退出应用时安装。点击控制台底部的 **更新** 可手动检查、立即重启或关闭自动更新。
 
 如果 Windows 提示缺少 VCRUNTIME 或 MSVCP DLL，请安装 [Microsoft Visual C++ x64 运行库](https://aka.ms/vs/17/release/vc_redist.x64.exe)。
 
